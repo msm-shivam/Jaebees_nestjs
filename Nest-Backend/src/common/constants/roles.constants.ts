@@ -15,9 +15,16 @@ export enum DefaultPermissions {
   PRODUCT_VIEW = 'product.view',
   PRODUCT_PUBLISH = 'product.publish',
   PRODUCT_ARCHIVE = 'product.archive',
+  // Product Variant
+  VARIANT_CREATE = 'variant.create',
+  VARIANT_UPDATE = 'variant.update',
+  VARIANT_DELETE = 'variant.delete',
+  VARIANT_VIEW = 'variant.view',
   // Inventory
+  INVENTORY_CREATE = 'inventory.create',
   INVENTORY_VIEW = 'inventory.view',
   INVENTORY_UPDATE = 'inventory.update',
+  INVENTORY_ADJUST = 'inventory.adjust',
   // Order
   ORDER_VIEW = 'order.view',
   ORDER_UPDATE = 'order.update',

@@ -12,6 +12,7 @@ import { Brand } from '../../brands/entities/brand.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../sub-categories/entities/sub-category.entity';
 import { ProductImage } from './product-image.entity';
+import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
 
 export enum ProductStatus {
   DRAFT = 'DRAFT',
@@ -96,4 +97,10 @@ export class Product extends BaseEntity {
     onDelete: 'CASCADE',
   })
   images: ProductImage[];
+
+  @OneToMany(() => ProductVariant, (variant) => variant.product, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  variants: ProductVariant[];
 }

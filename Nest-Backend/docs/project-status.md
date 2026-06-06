@@ -303,6 +303,124 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 
 ---
 
-*Last updated: 2026-06-06 — Layer 3 Product Module complete with enhanced query features*
+---
+
+## Layer 4 — Product Variants & Inventory Foundation (Complete)
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Product Variants | ✅ Complete | 2026-06-06 | 2026-06-06 |
+| Variant Attributes | ✅ Complete | 2026-06-06 | 2026-06-06 |
+| Inventory | ✅ Complete | 2026-06-06 | 2026-06-06 |
+
+### Phase 4 Deliverables
+
+- [x] ProductVariant Entity (with VariantStatus enum: ACTIVE, INACTIVE, OUT_OF_STOCK, ARCHIVED)
+- [x] ProductVariantAttribute Entity (join table for variant-attribute-value mappings)
+- [x] Inventory Entity (with stock management: quantity, reserved_quantity, available_quantity)
+- [x] DTOs for Product Variants (Create, Update, Query, Response)
+- [x] DTOs for Inventory (Create, Update, Adjust, Reserve, Release, Response)
+- [x] ProductVariantsService (SKU validation, default variant management, attribute assignment)
+- [x] InventoryService (stock adjustment, reservation, release, availability calculation)
+- [x] ProductVariantsController (CRUD + default + attributes management)
+- [x] InventoryController (CRUD + adjust + reserve + release)
+- [x] ProductVariantsModule
+- [x] InventoryModule
+- [x] Migration (product_variants, product_variant_attributes, inventories tables + FKs + indexes)
+- [x] Permission seeds (4 variant permissions + 4 inventory permissions)
+- [x] Updated existing entities with reverse relations (Product, Attribute, AttributeValue)
+- [x] Swagger documentation (all endpoints documented with examples and validation)
+- [x] RBAC integration (AdminJwtGuard + PermissionsGuard)
+- [x] Postman collection updates (with Variant and Inventory APIs)
+
+### Variant Permissions
+
+| Permission | Slug |
+|------------|------|
+| Create Variant | `variant.create` |
+| Update Variant | `variant.update` |
+| Delete Variant | `variant.delete` |
+| View Variant | `variant.view` |
+
+### Inventory Permissions
+
+| Permission | Slug |
+|------------|------|
+| Create Inventory | `inventory.create` |
+| Update Inventory | `inventory.update` |
+| View Inventory | `inventory.view` |
+| Adjust Inventory | `inventory.adjust` |
+
+### API Endpoints
+
+#### Product Variants — `/api/v1/admin/product-variants`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /product-variants | Admin JWT + variant.create | ✅ |
+| GET | /product-variants | Admin JWT + variant.view | ✅ |
+| GET | /product-variants/:id | Admin JWT + variant.view | ✅ |
+| PATCH | /product-variants/:id | Admin JWT + variant.update | ✅ |
+| DELETE | /product-variants/:id | Admin JWT + variant.delete | ✅ |
+| PATCH | /product-variants/:id/default | Admin JWT + variant.update | ✅ |
+| POST | /product-variants/:id/attributes | Admin JWT + variant.update | ✅ |
+| DELETE | /product-variants/:id/attributes/:mappingId | Admin JWT + variant.update | ✅ |
+
+#### Inventory — `/api/v1/admin/inventory`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /inventory | Admin JWT + inventory.create | ✅ |
+| GET | /inventory | Admin JWT + inventory.view | ✅ |
+| GET | /inventory/:id | Admin JWT + inventory.view | ✅ |
+| PATCH | /inventory/:id | Admin JWT + inventory.update | ✅ |
+| PATCH | /inventory/:id/adjust | Admin JWT + inventory.adjust | ✅ |
+| PATCH | /inventory/:id/reserve | Admin JWT + inventory.adjust | ✅ |
+| PATCH | /inventory/:id/release | Admin JWT + inventory.adjust | ✅ |
+
+### Database Tables (Layer 4)
+
+| Table | Status |
+|-------|--------|
+| product_variants | ✅ Entity + Migration |
+| product_variant_attributes | ✅ Entity + Migration |
+| inventories | ✅ Entity + Migration |
+
+### Migration Details
+
+**Migration:** `1749200400000-Phase4ProductVariantsAndInventory.ts`
+
+**Tables Created:**
+- `product_variants` with columns: id, product_id, sku, barcode, price, compare_at_price, cost_price, weight, status, is_default, created_at, updated_at, deleted_at
+- `product_variant_attributes` with columns: id, variant_id, attribute_id, attribute_value_id, created_at
+- `inventories` with columns: id, variant_id, quantity, reserved_quantity, available_quantity, low_stock_threshold, created_at, updated_at
+
+**Foreign Keys Added:**
+- `product_variants.product_id` → `products.id` (ON DELETE CASCADE)
+- `product_variant_attributes.variant_id` → `product_variants.id` (ON DELETE CASCADE)
+- `product_variant_attributes.attribute_id` → `attributes.id` (ON DELETE CASCADE)
+- `product_variant_attributes.attribute_value_id` → `attribute_values.id` (ON DELETE CASCADE)
+- `inventories.variant_id` → `product_variants.id` (ON DELETE CASCADE)
+
+**Indexes Created:**
+- product_variants: product_id, sku (unique), status, is_default
+- product_variant_attributes: variant_id, attribute_id, attribute_value_id
+- inventories: variant_id (unique), quantity, available_quantity
+
+**Unique Constraints:**
+- product_variants: sku
+- product_variant_attributes: (variant_id, attribute_id)
+- inventories: variant_id
+
+### Layer 4 Out of Scope
+
+- Product Variants with complex pricing rules
+- Multi-warehouse inventory
+- Inventory transfers
+- Stock forecasting
+- Cart / Orders / Payments
+- Reviews / Search / Analytics
+
+*Last updated: 2026-06-06 — Layer 4 Product Variants & Inventory Foundation complete*
 
 

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Sport E-Commerce API",
-    "description": "Sport E-Commerce Backend — Layer 1 + Phase 2 Catalog Foundation + Layer 3 Product Module",
+    "description": "Sport E-Commerce Backend — Layer 1 + Phase 2 Catalog Foundation + Layer 3 Product Module + Layer 4 Product Variants & Inventory",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -15,7 +15,9 @@
     { "key": "attributeValueId", "value": "" },
     { "key": "tagId", "value": "" },
     { "key": "productId", "value": "" },
-    { "key": "productImageId", "value": "" }
+    { "key": "productImageId", "value": "" },
+    { "key": "variantId", "value": "" },
+    { "key": "inventoryId", "value": "" }
   ],
   "auth": {
     "type": "bearer",
@@ -425,6 +427,140 @@
         {
           "name": "Set Primary Image",
           "request": { "method": "PATCH", "url": "{{baseUrl}}/admin/products/images/{{productImageId}}/primary" }
+        }
+      ]
+    },
+    {
+      "name": "Catalog — Product Variants",
+      "item": [
+        {
+          "name": "Create Product Variant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"sku\": \"NIKE-PEGASUS-41-BLK-10\",\n  \"barcode\": \"1234567890123\",\n  \"price\": 129.99,\n  \"compareAtPrice\": 149.99,\n  \"costPrice\": 89.99,\n  \"weight\": 0.85,\n  \"status\": \"ACTIVE\",\n  \"isDefault\": true,\n  \"attributes\": [\n    { \"attributeId\": \"{{attributeId}}\", \"attributeValueId\": \"{{attributeValueId}}\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/admin/product-variants"
+          }
+        },
+        {
+          "name": "List Product Variants",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/product-variants?page=1&limit=20&productId={{productId}}&status=ACTIVE&search=&sortBy=createdAt&sortOrder=DESC" }
+        },
+        {
+          "name": "Get Variant By ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/product-variants/{{variantId}}" }
+        },
+        {
+          "name": "Update Variant",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 119.99,\n  \"status\": \"INACTIVE\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/product-variants/{{variantId}}"
+          }
+        },
+        {
+          "name": "Delete Variant",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/product-variants/{{variantId}}" }
+        },
+        {
+          "name": "Set As Default Variant",
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/admin/product-variants/{{variantId}}/default" }
+        },
+        {
+          "name": "Assign Attributes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attributes\": [\n    { \"attributeId\": \"{{attributeId}}\", \"attributeValueId\": \"{{attributeValueId}}\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/admin/product-variants/{{variantId}}/attributes"
+          }
+        },
+        {
+          "name": "Remove Attribute",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/admin/product-variants/{{variantId}}/attributes/{{attributeValueId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Catalog — Inventory",
+      "item": [
+        {
+          "name": "Create Inventory",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"variantId\": \"{{variantId}}\",\n  \"quantity\": 100,\n  \"reservedQuantity\": 0,\n  \"lowStockThreshold\": 5\n}"
+            },
+            "url": "{{baseUrl}}/admin/inventory"
+          }
+        },
+        {
+          "name": "List Inventory",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/inventory" }
+        },
+        {
+          "name": "Get Inventory By ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/inventory/{{inventoryId}}" }
+        },
+        {
+          "name": "Update Inventory",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 150,\n  \"lowStockThreshold\": 10\n}"
+            },
+            "url": "{{baseUrl}}/admin/inventory/{{inventoryId}}"
+          }
+        },
+        {
+          "name": "Adjust Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 10\n}"
+            },
+            "url": "{{baseUrl}}/admin/inventory/{{inventoryId}}/adjust"
+          }
+        },
+        {
+          "name": "Reserve Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": "{{baseUrl}}/admin/inventory/{{inventoryId}}/reserve"
+          }
+        },
+        {
+          "name": "Release Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": "{{baseUrl}}/admin/inventory/{{inventoryId}}/release"
+          }
         }
       ]
     }
