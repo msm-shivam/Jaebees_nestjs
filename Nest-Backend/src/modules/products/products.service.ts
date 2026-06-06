@@ -106,13 +106,58 @@ export class ProductsService {
   async findAll(query: ProductQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
+    const sortBy = query.sortBy ?? 'name';
+    const sortOrder = query.sortOrder ?? 'ASC';
 
-    const [items, total] = await this.productRepo.findAndCount({
-      order: { name: 'ASC' },
-      skip: (page - 1) * limit,
-      take: limit,
-      withDeleted: false,
-    });
+    const queryBuilder = this.productRepo.createQueryBuilder('product');
+
+    // Search filter
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(product.name ILIKE :search OR product.description ILIKE :search OR product.shortDescription ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    // Status filter
+    if (query.status) {
+      queryBuilder.andWhere('product.status = :status', { status: query.status });
+    }
+
+    // Brand filter
+    if (query.brandId) {
+      queryBuilder.andWhere('product.brandId = :brandId', { brandId: query.brandId });
+    }
+
+    // Category filter
+    if (query.categoryId) {
+      queryBuilder.andWhere('product.categoryId = :categoryId', { categoryId: query.categoryId });
+    }
+
+    // Sub-category filter
+    if (query.subCategoryId) {
+      queryBuilder.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: query.subCategoryId });
+    }
+
+    // Featured filter
+    if (query.isFeatured !== undefined) {
+      queryBuilder.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured });
+    }
+
+    // Active filter
+    if (query.isActive !== undefined) {
+      queryBuilder.andWhere('product.isActive = :isActive', { isActive: query.isActive });
+    }
+
+    // Sorting
+    const validSortFields = ['name', 'createdAt', 'updatedAt', 'status'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'name';
+    queryBuilder.orderBy({ [`product.${sortField}`]: sortOrder });
+
+    // Pagination
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    const [items, total] = await queryBuilder.getManyAndCount();
 
     return paginate(
       items.map((item) => this.toResponse(item)),

@@ -1,0 +1,720 @@
+{
+  "info": {
+    "name": "Sport E-Commerce API — Layer 1",
+    "description": "Foundation layer: Auth, Users, Admin, RBAC.\n\nBase URL: http://localhost:3000/api/v1\nSwagger: http://localhost:3000/api/docs\n\nImport this collection, then run:\n1. Admin Login  → auto-saves admin_token + admin_refresh\n2. Register      → registers a customer\n3. Verify Email  → paste OTP from server logs\n4. Customer Login → auto-saves customer_token + customer_refresh",
+    "_postman_id": "sport-ecom-layer1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",         "value": "http://localhost:3000/api/v1",  "type": "string" },
+    { "key": "customer_token",   "value": "",                              "type": "string" },
+    { "key": "customer_refresh", "value": "",                              "type": "string" },
+    { "key": "admin_token",      "value": "",                              "type": "string" },
+    { "key": "admin_refresh",    "value": "",                              "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "01 — Customer Auth",
+      "item": [
+
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"mobile\": \"+1234567890\",\n  \"password\": \"Str0ng@Pass!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/verify-email",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "resend-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"type\": \"EMAIL_VERIFY\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "type: EMAIL_VERIFY — resend verification OTP after registration\ntype: FORGOT_PASSWORD — resend password reset OTP"
+          }
+        },
+
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('customer_token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('customer_refresh', res.data.refreshToken);",
+                  "  console.log('✅ Customer tokens saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Str0ng@Pass!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('customer_token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('customer_refresh', res.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{customer_refresh}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{customer_refresh}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewStr0ng@Pass!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "02 — Customer Profile",
+      "item": [
+
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          }
+        },
+
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Johnny\",\n  \"lastName\": \"Doe\",\n  \"mobile\": \"+1234567890\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me/password",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Str0ng@Pass!\",\n  \"newPassword\": \"NewStr0ng@Pass!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "03 — Admin Auth",
+      "item": [
+
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('admin_token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('admin_refresh', res.data.refreshToken);",
+                  "  console.log('✅ Admin tokens saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/admin/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@sport.com\",\n  \"password\": \"SuperAdmin@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Admin Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('admin_token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('admin_refresh', res.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/admin/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{admin_refresh}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Admin Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{admin_refresh}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "04 — Admin RBAC — Roles",
+      "item": [
+
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Content Manager\",\n  \"slug\": \"content_manager\",\n  \"description\": \"Manages CMS content\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "List All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles"]
+            }
+          }
+        },
+
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Role UUID" }]
+            }
+          }
+        },
+
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Role UUID" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Content Manager\",\n  \"description\": \"Updated description\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Role UUID" }]
+            }
+          }
+        },
+
+        {
+          "name": "Assign Permissions to Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles/:id/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles", ":id", "permissions"],
+              "variable": [{ "key": "id", "value": "", "description": "Role UUID" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [\n    \"<permission-uuid-1>\",\n    \"<permission-uuid-2>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Remove Permissions from Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/roles/:id/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "roles", ":id", "permissions"],
+              "variable": [{ "key": "id", "value": "", "description": "Role UUID" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [\n    \"<permission-uuid-1>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "05 — Admin RBAC — Permissions",
+      "item": [
+
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"View Reports\",\n  \"slug\": \"reports.view\",\n  \"module\": \"reports\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "List All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "permissions"]
+            }
+          }
+        },
+
+        {
+          "name": "Get Permission by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/permissions/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "permissions", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Permission UUID" }]
+            }
+          }
+        },
+
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/permissions/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "permissions", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Permission UUID" }]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "06 — Admin User Management",
+      "item": [
+
+        {
+          "name": "Create Admin User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Admin\",\n  \"email\": \"jane.admin@sport.com\",\n  \"password\": \"Str0ng@Pass!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "List All Admin Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            }
+          }
+        },
+
+        {
+          "name": "Get Admin User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Admin User UUID" }]
+            }
+          }
+        },
+
+        {
+          "name": "Update Admin User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Admin User UUID" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Updated\",\n  \"isActive\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Delete Admin User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [{ "key": "id", "value": "", "description": "Admin User UUID" }]
+            }
+          }
+        },
+
+        {
+          "name": "Assign Roles to Admin User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", ":id", "roles"],
+              "variable": [{ "key": "id", "value": "", "description": "Admin User UUID" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleIds\": [\n    \"<role-uuid>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+
+        {
+          "name": "Revoke Roles from Admin User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", ":id", "roles"],
+              "variable": [{ "key": "id", "value": "", "description": "Admin User UUID" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleIds\": [\n    \"<role-uuid>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+
+      ]
+    }
+
+  ]
+}
