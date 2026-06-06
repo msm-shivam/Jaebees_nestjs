@@ -21,6 +21,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -44,11 +45,26 @@ export class AuthController {
   @Public()
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verify customer email with OTP' })
-  @ApiResponse({ status: 200, description: 'Email verified successfully.' })
+  @ApiOperation({ summary: 'Verify customer email with OTP — returns tokens (auto-login)' })
+  @ApiResponse({ status: 200, description: 'Email verified. Access and refresh tokens returned.' })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP.' })
-  async verifyEmail(@Body() dto: VerifyEmailDto) {
-    return this.authService.verifyEmail(dto);
+  async verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
+    return this.authService.verifyEmail(dto, req.ip, req.headers['user-agent']);
+  }
+
+  @Public()
+  @Post('resend-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Resend OTP',
+    description:
+      'Resends an OTP for email verification or forgot password. ' +
+      'Use `type: EMAIL_VERIFY` after registration, or `type: FORGOT_PASSWORD` to re-trigger a password reset OTP.',
+  })
+  @ApiResponse({ status: 200, description: 'OTP resent successfully.' })
+  @ApiResponse({ status: 400, description: 'Email already verified.' })
+  async resendOtp(@Body() dto: ResendOtpDto) {
+    return this.authService.resendOtp(dto);
   }
 
   @Public()
@@ -80,7 +96,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT')
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Customer logout' })

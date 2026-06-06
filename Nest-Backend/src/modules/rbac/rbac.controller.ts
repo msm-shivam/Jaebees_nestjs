@@ -29,7 +29,7 @@ import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 
 @ApiTags('Admin — RBAC')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT')
 @UseGuards(AdminJwtGuard, RolesGuard, PermissionsGuard)
 @Controller('admin')
 export class RbacController {

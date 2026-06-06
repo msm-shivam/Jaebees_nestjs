@@ -29,7 +29,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { DefaultPermissions, DefaultRoles } from '../../common/constants/roles.constants';
 
 @ApiTags('Admin — User Management')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT')
 @UseGuards(AdminJwtGuard, RolesGuard, PermissionsGuard)
 @Controller('admin/users')
 export class AdminController {

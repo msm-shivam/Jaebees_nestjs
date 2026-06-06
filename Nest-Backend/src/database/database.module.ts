@@ -8,36 +8,69 @@ import { AdminSession } from '../modules/admin/entities/admin-session.entity';
 import { Role } from '../modules/rbac/entities/role.entity';
 import { Permission } from '../modules/rbac/entities/permission.entity';
 import { OtpVerification } from '../modules/auth/entities/otp-verification.entity';
+import { Category } from '../modules/categories/entities/category.entity';
+import { Brand } from '../modules/brands/entities/brand.entity';
+import { Product } from '../modules/products/entities/product.entity';
+import { ProductImage } from '../modules/products/entities/product-image.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('database.host'),
-        port: config.get<number>('database.port'),
-        username: config.get<string>('database.username'),
-        password: config.get<string>('database.password'),
-        database: config.get<string>('database.name'),
-        entities: [
-          User,
-          UserSession,
-          AdminUser,
-          AdminSession,
-          Role,
-          Permission,
-          OtpVerification,
-        ],
-        migrations: ['dist/database/migrations/*.js'],
-        synchronize: false,
-        logging: config.get<string>('app.nodeEnv') === 'development',
-        ssl:
-          config.get<string>('app.nodeEnv') === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const isProd = config.get<string>('app.nodeEnv') === 'production';
+
+        return {
+          type: 'postgres',
+          host: config.get<string>('database.host'),
+          port: config.get<number>('database.port'),
+          username: config.get<string>('database.username'),
+          password: config.get<string>('database.password'),
+          database: config.get<string>('database.name'),
+          entities: [
+            User,
+            UserSession,
+            AdminUser,
+            AdminSession,
+            Role,
+            Permission,
+            OtpVerification,
+            Category,
+            Brand,
+            Product,
+            ProductImage,
+          ],
+          migrations: ['dist/database/migrations/*.js'],
+          synchronize: false,
+          logging: !isProd,
+          ssl: isProd ? { rejectUnauthorized: false } : false,
+
+          // ─── Connection Pool ─────────────────────────────────────────────
+          // TypeORM delegates pooling to node-postgres (pg).
+          // A single pool is created once at startup and reused for every
+          // request — no new TCP handshake per query.
+          extra: {
+            // Minimum connections kept alive in the pool (always-ready)
+            min: 2,
+            // Maximum concurrent connections allowed
+            max: isProd ? 20 : 10,
+            // ms to wait for a free connection before throwing (10 s)
+            connectionTimeoutMillis: 10_000,
+            // ms an idle connection can sit in the pool before being closed
+            idleTimeoutMillis: 30_000,
+            // Reuse connections that were never used (reduces latency)
+            allowExitOnIdle: false,
+          },
+
+          // ─── Query Cache (in-memory, per DataSource) ──────────────────────
+          // Caches SELECT query results for 5 seconds to avoid repeated
+          // identical reads hitting the database on every request.
+          cache: {
+            duration: 5_000, // milliseconds
+          },
+        };
+      },
     }),
   ],
 })

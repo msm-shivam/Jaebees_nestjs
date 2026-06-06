@@ -8,6 +8,10 @@ import { AdminSession } from '../modules/admin/entities/admin-session.entity';
 import { Role } from '../modules/rbac/entities/role.entity';
 import { Permission } from '../modules/rbac/entities/permission.entity';
 import { OtpVerification } from '../modules/auth/entities/otp-verification.entity';
+import { Category } from '../modules/categories/entities/category.entity';
+import { Brand } from '../modules/brands/entities/brand.entity';
+import { Product } from '../modules/products/entities/product.entity';
+import { ProductImage } from '../modules/products/entities/product-image.entity';
 
 dotenv.config();
 
@@ -26,6 +30,10 @@ export const AppDataSource = new DataSource({
     Role,
     Permission,
     OtpVerification,
+    Category,
+    Brand,
+    Product,
+    ProductImage,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

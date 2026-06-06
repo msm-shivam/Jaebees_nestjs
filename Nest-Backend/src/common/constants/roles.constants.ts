@@ -36,4 +36,14 @@ export enum DefaultPermissions {
   // Support
   SUPPORT_VIEW = 'support.view',
   SUPPORT_UPDATE = 'support.update',
+
+  // Categories
+  CATEGORY_CREATE = 'category.create',
+  CATEGORY_UPDATE = 'category.update',
+  CATEGORY_DELETE = 'category.delete',
+
+  // Brands
+  BRAND_CREATE = 'brand.create',
+  BRAND_UPDATE = 'brand.update',
+  BRAND_DELETE = 'brand.delete',
 }

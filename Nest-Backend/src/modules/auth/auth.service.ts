@@ -18,6 +18,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 import { hashPassword, comparePassword } from '../../common/utils/password.util';
 import { generateOtp } from '../../common/utils/otp.util';
 import {
@@ -78,13 +79,47 @@ export class AuthService {
   }
 
   // ─── Verify Email ─────────────────────────────────────────────────────────
-  async verifyEmail(dto: VerifyEmailDto): Promise<{ message: string }> {
+  async verifyEmail(
+    dto: VerifyEmailDto,
+    ipAddress: string | undefined,
+    userAgent: string | undefined,
+  ): Promise<{ message: string; data: TokenPair }> {
     await this.consumeOtp(dto.email.toLowerCase(), dto.otp, OtpType.EMAIL_VERIFY);
+
     await this.userRepo.update(
       { email: dto.email.toLowerCase() },
       { isEmailVerified: true },
     );
-    return { message: AuthMessages.OTP_VERIFIED };
+
+    // Fetch the updated user and issue tokens so the caller is logged in immediately
+    const user = await this.userRepo.findOneOrFail({
+      where: { email: dto.email.toLowerCase() },
+    });
+
+    const tokens = await this.generateCustomerTokens(user, ipAddress, userAgent);
+    return { message: AuthMessages.OTP_VERIFIED, data: tokens };
+  }
+
+  // ─── Resend OTP ───────────────────────────────────────────────────────────
+  async resendOtp(dto: ResendOtpDto): Promise<{ message: string }> {
+    const email = dto.email.toLowerCase();
+
+    if (dto.type === OtpType.EMAIL_VERIFY) {
+      const user = await this.userRepo.findOne({ where: { email } });
+      // Always return the same message to prevent user enumeration
+      if (!user) return { message: AuthMessages.OTP_SENT };
+      if (user.isEmailVerified) {
+        throw new BadRequestException(AuthMessages.EMAIL_ALREADY_VERIFIED);
+      }
+    }
+
+    if (dto.type === OtpType.FORGOT_PASSWORD) {
+      const user = await this.userRepo.findOne({ where: { email } });
+      if (!user) return { message: AuthMessages.OTP_SENT };
+    }
+
+    await this.createAndSaveOtp(email, dto.type);
+    return { message: AuthMessages.OTP_SENT };
   }
 
   // ─── Login ────────────────────────────────────────────────────────────────
@@ -245,6 +280,7 @@ export class AuthService {
       .execute();
 
     const otp = generateOtp();
+    
     const expiresAt: Date = dayjs().add(OTP_EXPIRY_MINUTES, 'minute').toDate();
     const otpRecord = this.otpRepo.create({ email, otp, type, expiresAt });
     await this.otpRepo.save(otpRecord);

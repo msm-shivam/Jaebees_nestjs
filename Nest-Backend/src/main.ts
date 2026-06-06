@@ -60,10 +60,11 @@ async function bootstrap() {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        name: 'Authorization',
+        name: 'JWT',
+        description: 'Enter your JWT access token',
         in: 'header',
       },
-      'Authorization',
+      'JWT',
     )
     .addTag('Customer Auth', 'Customer registration, login, token management')
     .addTag('Admin Auth', 'Admin login, token management')

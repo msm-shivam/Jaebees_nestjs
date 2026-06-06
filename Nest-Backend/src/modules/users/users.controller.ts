@@ -22,7 +22,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from './entities/user.entity';
 
 @ApiTags('Customer Profile')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('users/me')
 export class UsersController {

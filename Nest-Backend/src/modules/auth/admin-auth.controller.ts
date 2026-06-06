@@ -51,7 +51,7 @@ export class AdminAuthController {
   }
 
   @UseGuards(AdminJwtGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT')
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Admin logout' })
