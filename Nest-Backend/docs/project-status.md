@@ -886,4 +886,144 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - Route Optimization
 - Subscription Delivery
 
+---
+
+## Layer 9 — Promotions, Coupons & Discounts Management (Complete)
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Coupon Management | ✅ Complete | 2026-06-08 | 2026-06-08 |
+| Discount Rules Engine | ✅ Complete | 2026-06-08 | 2026-06-08 |
+| Promotion Campaigns | ✅ Complete | 2026-06-08 | 2026-06-08 |
+| Coupon Redemption Tracking | ✅ Complete | 2026-06-08 | 2026-06-08 |
+| Checkout Discount Engine | ✅ Complete | 2026-06-08 | 2026-06-08 |
+
+### Phase 9 Deliverables
+
+- [x] Coupon Entity (soft delete, unique code, timestamps)
+- [x] Promotion Entity (status, discount type, date range, priority, stackable)
+- [x] CouponUsage Entity (couponId, userId, orderId, discountAmount)
+- [x] DiscountRule Entity (promotionId, categoryId, productId, variantId, minimumQty, minimumAmount, buyX/getY)
+- [x] DiscountType Enum (PERCENTAGE, FIXED, FREE_SHIPPING)
+- [x] CouponType Enum (GENERAL, FIRST_ORDER, CATEGORY, PRODUCT)
+- [x] PromotionStatus Enum (DRAFT, ACTIVE, EXPIRED, PAUSED)
+- [x] DTOs (CreateCoupon, UpdateCoupon, ApplyCoupon, CreatePromotion with nested rules, UpdatePromotion, CouponQuery, PromotionQuery, DiscountResponse)
+- [x] CouponsService (CRUD, unique code validation, code lookup, validation rules)
+- [x] PromotionsService (CRUD with nested rules, active promotions lookup, auto-expire)
+- [x] DiscountEngineService (applyCoupon, applyBestPromotion, calculateDiscountAmount, user validation, rule matching)
+- [x] CouponUsageService (recordUsage, getUserUsageCount, findByOrder, findByUser)
+- [x] CouponsController (admin CRUD with RBAC)
+- [x] PromotionsController (admin CRUD with RBAC)
+- [x] CustomerCouponsController (apply coupon, validate coupon)
+- [x] PromotionsModule (TypeOrm + providers + exports)
+- [x] Migration Phase9 (coupons, promotions, discount_rules, coupon_usages tables + FK + indexes)
+- [x] Permission seeds (8 new: coupon.* + promotion.*)
+- [x] Role mappings (PRODUCT_MANAGER gets coupon CRUD + promotion.view; ORDER_MANAGER gets coupon/promotion view)
+- [x] Module registered in app.module.ts + data-source.ts
+- [x] Swagger documentation (all endpoints documented with ApiTags, ApiOperation, ApiBearerAuth)
+- [x] RBAC integration (AdminJwtGuard + PermissionsGuard + DefaultPermissions enum)
+- [x] Zero TypeScript build errors
+- [x] Zero new lint errors
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| Coupon Code Unique | Enforced at DB + service level (case-insensitive uppercase storage) |
+| Coupon Code Validation | Inactive, not-yet-started, expired, used-up, min-order, first-order-only checks |
+| Per-User Limit | Tracks usage per user via CouponUsage table |
+| Usage Limit | Global cap on total coupon redemptions |
+| Percentage Discount | `amount = orderAmount × discountValue / 100`, capped by maximumDiscountAmount |
+| Fixed Discount | `amount = min(discountValue, orderAmount)` |
+| Free Shipping | Discount amount is 0 (handled by order service) |
+| First Order Coupon | Only valid if user has no prior orders |
+| Promotion Status | DRAFT → ACTIVE → EXPIRED (auto) or PAUSED |
+| Auto-Expire | Promotions past endDate auto-set to EXPIRED |
+| Priority System | Higher priority promotions applied first |
+| Buy X Get Y | Buy X quantity → Get Y quantity free (via DiscountRule buyQuantity/getQuantity) |
+| Product/Category Rules | Promotions restricted to specific products or categories |
+| Minimum Quantity Rules | Requires minimum item quantity for promotion |
+| Minimum Amount Rules | Requires minimum order amount for promotion |
+| Best Promotion Auto-Select | autoExpirePromotions returns the best applicable promotion |
+| Coupon + Promotion Independence | Coupons and promotions are evaluated separately |
+| Soft Delete Coupons | Coupons support soft delete |
+| Promotion Cascade Delete | Deleting a promotion cascades to its discount rules |
+
+### API Endpoints
+
+#### Admin Coupons — `/api/v1/admin/coupons`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /admin/coupons | Admin JWT + coupon.create | ✅ |
+| GET | /admin/coupons | Admin JWT + coupon.view | ✅ |
+| GET | /admin/coupons/:id | Admin JWT + coupon.view | ✅ |
+| PATCH | /admin/coupons/:id | Admin JWT + coupon.update | ✅ |
+| DELETE | /admin/coupons/:id | Admin JWT + coupon.delete | ✅ |
+
+#### Admin Promotions — `/api/v1/admin/promotions`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /admin/promotions | Admin JWT + promotion.create | ✅ |
+| GET | /admin/promotions | Admin JWT + promotion.view | ✅ |
+| GET | /admin/promotions/:id | Admin JWT + promotion.view | ✅ |
+| PATCH | /admin/promotions/:id | Admin JWT + promotion.update | ✅ |
+| DELETE | /admin/promotions/:id | Admin JWT + promotion.delete | ✅ |
+
+#### Customer Coupons — `/api/v1/coupons`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /coupons/apply | Customer JWT | ✅ |
+| GET | /coupons/validate/:code | Customer JWT | ✅ |
+
+### Database Tables (Layer 9)
+
+| Table | Status |
+|-------|--------|
+| coupons | ✅ Entity + Migration |
+| promotions | ✅ Entity + Migration |
+| discount_rules | ✅ Entity + Migration |
+| coupon_usages | ✅ Entity + Migration |
+
+### Migration Details
+
+**Migration:** `1749200900000-Phase9PromotionsAndDiscounts.ts`
+
+**Tables Created:**
+- `coupons` — id, code (unique), name, description, type, discount_type, discount_value, minimum_order_amount, maximum_discount_amount, usage_limit, usage_per_user, used_count, starts_at, expires_at, is_active, created_by (FK→admin_users), timestamps, deleted_at
+- `promotions` — id, name, description, status, discount_type, discount_value, start_date, end_date, priority, is_stackable, timestamps
+- `discount_rules` — id, promotion_id (FK→promotions), category_id, product_id, variant_id, minimum_quantity, minimum_amount, buy_quantity, get_quantity, created_at
+- `coupon_usages` — id, coupon_id (FK→coupons), user_id (FK→users), order_id (FK→orders), discount_amount, used_at
+
+### Permissions Added
+
+| Permission | Slug |
+|------------|------|
+| Create Coupon | `coupon.create` |
+| View Coupon | `coupon.view` |
+| Update Coupon | `coupon.update` |
+| Delete Coupon | `coupon.delete` |
+| Create Promotion | `promotion.create` |
+| View Promotion | `promotion.view` |
+| Update Promotion | `promotion.update` |
+| Delete Promotion | `promotion.delete` |
+
+### Layer 9 Out of Scope
+
+- Buy X Get Y cart adjustment logic (rule stored, checkout application pending)
+- Tiered/Multi-Tier Discounts
+- Bulk Coupon Generation
+- Cart-Level Promotion Auto-Application
+- Customer-Facing Promotion List
+- Abandoned Cart Recovery Coupons
+- Referral Discounts
+- Loyalty Points System
+- Gift Card / Store Credit
+- BOGO (Buy One Get One) auto-apply
+- Time-limited flash sale countdown
+
+
+
 

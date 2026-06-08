@@ -1,0 +1,6 @@
+export enum CouponType {
+  GENERAL = 'GENERAL',
+  FIRST_ORDER = 'FIRST_ORDER',
+  CATEGORY = 'CATEGORY',
+  PRODUCT = 'PRODUCT',
+}

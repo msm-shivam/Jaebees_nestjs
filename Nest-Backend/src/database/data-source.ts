@@ -36,6 +36,10 @@ import { Warehouse } from '../modules/warehouses/entities/warehouse.entity';
 import { DeliverySetting } from '../modules/delivery-settings/entities/delivery-setting.entity';
 import { Shipment } from '../modules/shipments/entities/shipment.entity';
 import { ShipmentTrackingLog } from '../modules/shipments/entities/shipment-tracking-log.entity';
+import { Coupon } from '../modules/promotions/entities/coupon.entity';
+import { Promotion } from '../modules/promotions/entities/promotion.entity';
+import { DiscountRule } from '../modules/promotions/entities/discount-rule.entity';
+import { CouponUsage } from '../modules/promotions/entities/coupon-usage.entity';
 
 dotenv.config();
 
@@ -82,6 +86,10 @@ export const AppDataSource = new DataSource({
     DeliverySetting,
     Shipment,
     ShipmentTrackingLog,
+    Coupon,
+    Promotion,
+    DiscountRule,
+    CouponUsage,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

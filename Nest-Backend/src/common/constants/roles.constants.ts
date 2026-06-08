@@ -100,4 +100,14 @@ export enum DefaultPermissions {
   TAG_VIEW = 'tag.view',
   TAG_UPDATE = 'tag.update',
   TAG_DELETE = 'tag.delete',
+  // Coupon
+  COUPON_CREATE = 'coupon.create',
+  COUPON_VIEW = 'coupon.view',
+  COUPON_UPDATE = 'coupon.update',
+  COUPON_DELETE = 'coupon.delete',
+  // Promotion
+  PROMOTION_CREATE = 'promotion.create',
+  PROMOTION_VIEW = 'promotion.view',
+  PROMOTION_UPDATE = 'promotion.update',
+  PROMOTION_DELETE = 'promotion.delete',
 }

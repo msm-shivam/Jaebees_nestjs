@@ -372,6 +372,46 @@ const PERMISSIONS: PermissionDef[] = [
   { slug: DefaultPermissions.TAG_VIEW, name: 'View Tag', module: 'tag' },
   { slug: DefaultPermissions.TAG_UPDATE, name: 'Update Tag', module: 'tag' },
   { slug: DefaultPermissions.TAG_DELETE, name: 'Delete Tag', module: 'tag' },
+  {
+    slug: DefaultPermissions.COUPON_CREATE,
+    name: 'Create Coupon',
+    module: 'coupon',
+  },
+  {
+    slug: DefaultPermissions.COUPON_VIEW,
+    name: 'View Coupon',
+    module: 'coupon',
+  },
+  {
+    slug: DefaultPermissions.COUPON_UPDATE,
+    name: 'Update Coupon',
+    module: 'coupon',
+  },
+  {
+    slug: DefaultPermissions.COUPON_DELETE,
+    name: 'Delete Coupon',
+    module: 'coupon',
+  },
+  {
+    slug: DefaultPermissions.PROMOTION_CREATE,
+    name: 'Create Promotion',
+    module: 'promotion',
+  },
+  {
+    slug: DefaultPermissions.PROMOTION_VIEW,
+    name: 'View Promotion',
+    module: 'promotion',
+  },
+  {
+    slug: DefaultPermissions.PROMOTION_UPDATE,
+    name: 'Update Promotion',
+    module: 'promotion',
+  },
+  {
+    slug: DefaultPermissions.PROMOTION_DELETE,
+    name: 'Delete Promotion',
+    module: 'promotion',
+  },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -410,6 +450,11 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.TAG_VIEW,
     DefaultPermissions.TAG_UPDATE,
     DefaultPermissions.TAG_DELETE,
+    DefaultPermissions.COUPON_CREATE,
+    DefaultPermissions.COUPON_VIEW,
+    DefaultPermissions.COUPON_UPDATE,
+    DefaultPermissions.COUPON_DELETE,
+    DefaultPermissions.PROMOTION_VIEW,
   ],
   [DefaultRoles.INVENTORY_MANAGER]: [
     DefaultPermissions.INVENTORY_CREATE,
@@ -428,6 +473,8 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.SHIPMENT_VIEW,
     DefaultPermissions.SHIPMENT_UPDATE,
     DefaultPermissions.DELIVERY_MANAGE,
+    DefaultPermissions.COUPON_VIEW,
+    DefaultPermissions.PROMOTION_VIEW,
     DefaultPermissions.USER_VIEW,
   ],
   [DefaultRoles.FINANCE_MANAGER]: [
