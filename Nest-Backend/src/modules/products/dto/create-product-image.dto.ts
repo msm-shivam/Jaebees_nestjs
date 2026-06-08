@@ -15,7 +15,9 @@ export class CreateProductImageDto {
   @IsNotEmpty()
   productId: string;
 
-  @ApiProperty({ example: 'https://cdn.sport.com/products/nike-pegasus-41-1.jpg' })
+  @ApiProperty({
+    example: 'https://cdn.sport.com/products/nike-pegasus-41-1.jpg',
+  })
   @IsString()
   @IsNotEmpty()
   imageUrl: string;

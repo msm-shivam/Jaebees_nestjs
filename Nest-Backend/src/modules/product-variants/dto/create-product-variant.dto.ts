@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, IsBoolean, Min, Max } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsBoolean,
+  Min,
+  Max,
+} from 'class-validator';
 import { VariantStatus } from '../entities/product-variant.entity';
 
 export class CreateProductVariantDto {
@@ -7,7 +16,10 @@ export class CreateProductVariantDto {
   @IsUUID()
   productId: string;
 
-  @ApiProperty({ example: 'NIKE-PEGASUS-41-BLK-10', description: 'Stock Keeping Unit - must be unique' })
+  @ApiProperty({
+    example: 'NIKE-PEGASUS-41-BLK-10',
+    description: 'Stock Keeping Unit - must be unique',
+  })
   @IsString()
   sku: string;
 
@@ -21,13 +33,19 @@ export class CreateProductVariantDto {
   @Min(0)
   price: number;
 
-  @ApiPropertyOptional({ example: 149.99, description: 'Original price for comparison/discount display' })
+  @ApiPropertyOptional({
+    example: 149.99,
+    description: 'Original price for comparison/discount display',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   compareAtPrice?: number;
 
-  @ApiPropertyOptional({ example: 89.99, description: 'Cost price for profit calculation' })
+  @ApiPropertyOptional({
+    example: 89.99,
+    description: 'Cost price for profit calculation',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -39,11 +57,18 @@ export class CreateProductVariantDto {
   @Min(0)
   weight?: number;
 
-  @ApiProperty({ enum: VariantStatus, example: VariantStatus.ACTIVE, description: 'Variant status' })
+  @ApiProperty({
+    enum: VariantStatus,
+    example: VariantStatus.ACTIVE,
+    description: 'Variant status',
+  })
   @IsEnum(VariantStatus)
   status: VariantStatus;
 
-  @ApiPropertyOptional({ example: false, description: 'Whether this is the default variant for the product' })
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Whether this is the default variant for the product',
+  })
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
@@ -53,7 +78,8 @@ export class CreateProductVariantDto {
       { attributeId: 'attr-uuid-1', attributeValueId: 'value-uuid-1' },
       { attributeId: 'attr-uuid-2', attributeValueId: 'value-uuid-2' },
     ],
-    description: 'Attribute mappings for this variant (e.g., Color: Black, Size: 10)',
+    description:
+      'Attribute mappings for this variant (e.g., Color: Black, Size: 10)',
   })
   @IsOptional()
   attributes?: Array<{ attributeId: string; attributeValueId: string }>;

@@ -421,6 +421,89 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - Cart / Orders / Payments
 - Reviews / Search / Analytics
 
-*Last updated: 2026-06-06 — Layer 4 Product Variants & Inventory Foundation complete*
+*Last updated: 2026-06-08 — Layer 4 Product Variants & Inventory Foundation complete*
+
+---
+
+## Layer 5 — Cart Management (Complete)
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Cart | ✅ Complete | 2026-06-08 | 2026-06-08 |
+| Cart Items | ✅ Complete | 2026-06-08 | 2026-06-08 |
+
+### Phase 5 Deliverables
+
+- [x] Cart Entity (with User relation, subtotal, totalItems)
+- [x] CartItem Entity (with Cart, ProductVariant relations)
+- [x] DTOs (AddCartItemDto, UpdateCartItemDto, CartResponseDto, CartItemResponseDto)
+- [x] CartService (getOrCreateCart, addItem, updateItem, removeItem, clearCart, recalculateCart)
+- [x] CartController (5 endpoints with JwtAuthGuard)
+- [x] CartModule (with TypeOrm imports for Cart, CartItem, ProductVariant, Product, Inventory)
+- [x] Migration (carts, cart_items tables + FKs + indexes)
+- [x] Swagger documentation (all endpoints documented with request/response examples)
+- [x] JWT integration (JwtAuthGuard for customer authentication)
+- [x] Business rules (variant validation, inventory check, duplicate handling, auto-recalculation)
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| One Cart Per User | Auto-creates cart if none exists (getOrCreateCart) |
+| Variant Exists | 404 if variant not found |
+| Variant Active | 400 if variant status is not ACTIVE |
+| Product Not Archived | 400 if product status is ARCHIVED |
+| Inventory Exists | 400 if no inventory record |
+| Stock Validation | 400 if quantity > availableQuantity |
+| Duplicate Variant | Increases quantity instead of creating duplicate row |
+| Line Total | `quantity * unitPrice` |
+| Cart Totals | `subtotal = sum(lineTotals)`, `totalItems = sum(quantities)` |
+| Auto Recalculate | After every add/update/remove operation |
+
+### API Endpoints
+
+#### Cart — `/api/v1/cart`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| GET | /cart | Customer JWT | ✅ |
+| POST | /cart/items | Customer JWT | ✅ |
+| PATCH | /cart/items/:itemId | Customer JWT | ✅ |
+| DELETE | /cart/items/:itemId | Customer JWT | ✅ |
+| DELETE | /cart/clear | Customer JWT | ✅ |
+
+### Database Tables (Layer 5)
+
+| Table | Status |
+|-------|--------|
+| carts | ✅ Entity + Migration |
+| cart_items | ✅ Entity + Migration |
+
+### Migration Details
+
+**Migration:** `1749200500000-Phase5CartModule.ts`
+
+**Tables Created:**
+- `carts` with columns: id, user_id, subtotal, total_items, created_at, updated_at, deleted_at
+- `cart_items` with columns: id, cart_id, variant_id, quantity, unit_price, line_total, created_at, updated_at
+
+**Foreign Keys Added:**
+- `carts.user_id` → `users.id` (ON DELETE CASCADE)
+- `cart_items.cart_id` → `carts.id` (ON DELETE CASCADE)
+- `cart_items.variant_id` → `product_variants.id` (ON DELETE CASCADE)
+
+**Indexes Created:**
+- carts: user_id
+- cart_items: cart_id, variant_id
+
+### Layer 5 Out of Scope
+
+- Wishlist (Layer 6)
+- Address Book (Layer 7)
+- Checkout (Layer 8)
+- Orders (Layer 9)
+- Payments
+- Reviews
+- Search / Analytics
 
 

@@ -36,7 +36,10 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new customer account' })
-  @ApiResponse({ status: 201, description: 'Registration successful. OTP sent to email.' })
+  @ApiResponse({
+    status: 201,
+    description: 'Registration successful. OTP sent to email.',
+  })
   @ApiResponse({ status: 400, description: 'Email or mobile already taken.' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -45,8 +48,13 @@ export class AuthController {
   @Public()
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verify customer email with OTP — returns tokens (auto-login)' })
-  @ApiResponse({ status: 200, description: 'Email verified. Access and refresh tokens returned.' })
+  @ApiOperation({
+    summary: 'Verify customer email with OTP — returns tokens (auto-login)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Email verified. Access and refresh tokens returned.',
+  })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP.' })
   async verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
     return this.authService.verifyEmail(dto, req.ip, req.headers['user-agent']);
@@ -74,11 +82,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   async login(@Body() dto: LoginDto, @Req() req: Request) {
-    return this.authService.login(
-      dto,
-      req.ip,
-      req.headers['user-agent'],
-    );
+    return this.authService.login(dto, req.ip, req.headers['user-agent']);
   }
 
   @Public()
@@ -86,7 +90,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh customer access token' })
   @ApiResponse({ status: 200, description: 'Tokens refreshed.' })
-  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token.' })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired refresh token.',
+  })
   async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
     return this.authService.refreshToken(
       dto,
@@ -101,10 +108,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Customer logout' })
   @ApiResponse({ status: 200, description: 'Logged out successfully.' })
-  async logout(
-    @CurrentUser() user: User,
-    @Body() dto: RefreshTokenDto,
-  ) {
+  async logout(@CurrentUser() user: User, @Body() dto: RefreshTokenDto) {
     return this.authService.logout(user.id, dto.refreshToken);
   }
 
@@ -112,7 +116,10 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset OTP' })
-  @ApiResponse({ status: 200, description: 'OTP sent to email if account exists.' })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP sent to email if account exists.',
+  })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }

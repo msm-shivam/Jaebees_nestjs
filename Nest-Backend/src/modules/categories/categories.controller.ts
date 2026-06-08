@@ -58,7 +58,11 @@ export class CategoriesController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.CATEGORY_VIEW)
   @ApiOperation({ summary: 'Get category by ID' })
-  @ApiResponse({ status: 200, description: 'Category returned.', type: CategoryResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Category returned.',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Category not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.categoriesService.findOne(id);

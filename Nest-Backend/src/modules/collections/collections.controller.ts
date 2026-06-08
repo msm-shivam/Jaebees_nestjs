@@ -58,7 +58,11 @@ export class CollectionsController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.COLLECTION_VIEW)
   @ApiOperation({ summary: 'Get collection by ID' })
-  @ApiResponse({ status: 200, description: 'Collection returned.', type: CollectionResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection returned.',
+    type: CollectionResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Collection not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.collectionsService.findOne(id);

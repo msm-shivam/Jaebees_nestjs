@@ -70,13 +70,17 @@ export class CreateProductDto {
   @IsNotEmpty()
   status: ProductStatus;
 
-  @ApiPropertyOptional({ example: 'Nike Air Zoom Pegasus 41 - Lightweight Running Shoe' })
+  @ApiPropertyOptional({
+    example: 'Nike Air Zoom Pegasus 41 - Lightweight Running Shoe',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(255)
   metaTitle?: string;
 
-  @ApiPropertyOptional({ example: 'Fast and responsive running shoe for all distances' })
+  @ApiPropertyOptional({
+    example: 'Fast and responsive running shoe for all distances',
+  })
   @IsOptional()
   @IsString()
   metaDescription?: string;

@@ -34,7 +34,9 @@ export class CreateSubCategoryDto {
   })
   slug?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.sport.com/sub-categories/running.jpg' })
+  @ApiPropertyOptional({
+    example: 'https://cdn.sport.com/sub-categories/running.jpg',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)

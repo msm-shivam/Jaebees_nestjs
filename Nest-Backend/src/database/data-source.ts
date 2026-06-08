@@ -22,6 +22,8 @@ import { ProductImage } from '../modules/products/entities/product-image.entity'
 import { ProductVariant } from '../modules/product-variants/entities/product-variant.entity';
 import { ProductVariantAttribute } from '../modules/product-variants/entities/product-variant-attribute.entity';
 import { Inventory } from '../modules/inventory/entities/inventory.entity';
+import { Cart } from '../modules/cart/entities/cart.entity';
+import { CartItem } from '../modules/cart/entities/cart-item.entity';
 
 dotenv.config();
 
@@ -54,6 +56,8 @@ export const AppDataSource = new DataSource({
     ProductVariant,
     ProductVariantAttribute,
     Inventory,
+    Cart,
+    CartItem,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

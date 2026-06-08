@@ -1,4 +1,11 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex, TableUnique } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+  TableIndex,
+  TableUnique,
+} from 'typeorm';
 
 export class Phase4ProductVariantsAndInventory1749200400000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -329,26 +336,65 @@ export class Phase4ProductVariantsAndInventory1749200400000 implements Migration
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop foreign keys
-    await queryRunner.dropForeignKey('inventories', 'fk_inventories_variant_id');
-    await queryRunner.dropForeignKey('product_variant_attributes', 'fk_product_variant_attributes_attribute_value_id');
-    await queryRunner.dropForeignKey('product_variant_attributes', 'fk_product_variant_attributes_attribute_id');
-    await queryRunner.dropForeignKey('product_variant_attributes', 'fk_product_variant_attributes_variant_id');
-    await queryRunner.dropForeignKey('product_variants', 'fk_product_variants_product_id');
+    await queryRunner.dropForeignKey(
+      'inventories',
+      'fk_inventories_variant_id',
+    );
+    await queryRunner.dropForeignKey(
+      'product_variant_attributes',
+      'fk_product_variant_attributes_attribute_value_id',
+    );
+    await queryRunner.dropForeignKey(
+      'product_variant_attributes',
+      'fk_product_variant_attributes_attribute_id',
+    );
+    await queryRunner.dropForeignKey(
+      'product_variant_attributes',
+      'fk_product_variant_attributes_variant_id',
+    );
+    await queryRunner.dropForeignKey(
+      'product_variants',
+      'fk_product_variants_product_id',
+    );
 
     // Drop indexes
-    await queryRunner.dropIndex('inventories', 'idx_inventories_available_quantity');
+    await queryRunner.dropIndex(
+      'inventories',
+      'idx_inventories_available_quantity',
+    );
     await queryRunner.dropIndex('inventories', 'idx_inventories_quantity');
     await queryRunner.dropIndex('inventories', 'idx_inventories_variant_id');
-    await queryRunner.dropIndex('product_variant_attributes', 'idx_product_variant_attributes_attribute_value_id');
-    await queryRunner.dropIndex('product_variant_attributes', 'idx_product_variant_attributes_attribute_id');
-    await queryRunner.dropIndex('product_variant_attributes', 'idx_product_variant_attributes_variant_id');
-    await queryRunner.dropIndex('product_variants', 'idx_product_variants_is_default');
-    await queryRunner.dropIndex('product_variants', 'idx_product_variants_status');
+    await queryRunner.dropIndex(
+      'product_variant_attributes',
+      'idx_product_variant_attributes_attribute_value_id',
+    );
+    await queryRunner.dropIndex(
+      'product_variant_attributes',
+      'idx_product_variant_attributes_attribute_id',
+    );
+    await queryRunner.dropIndex(
+      'product_variant_attributes',
+      'idx_product_variant_attributes_variant_id',
+    );
+    await queryRunner.dropIndex(
+      'product_variants',
+      'idx_product_variants_is_default',
+    );
+    await queryRunner.dropIndex(
+      'product_variants',
+      'idx_product_variants_status',
+    );
     await queryRunner.dropIndex('product_variants', 'idx_product_variants_sku');
-    await queryRunner.dropIndex('product_variants', 'idx_product_variants_product_id');
+    await queryRunner.dropIndex(
+      'product_variants',
+      'idx_product_variants_product_id',
+    );
 
     // Drop unique constraint
-    await queryRunner.dropUniqueConstraint('product_variant_attributes', 'uq_product_variant_attributes_variant_attribute');
+    await queryRunner.dropUniqueConstraint(
+      'product_variant_attributes',
+      'uq_product_variant_attributes_variant_attribute',
+    );
 
     // Drop tables
     await queryRunner.dropTable('inventories');

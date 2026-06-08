@@ -26,7 +26,8 @@ export class RbacService {
 
   async createRole(dto: CreateRoleDto): Promise<Role> {
     const existing = await this.roleRepo.findOne({ where: { slug: dto.slug } });
-    if (existing) throw new BadRequestException(RbacMessages.ROLE_ALREADY_EXISTS);
+    if (existing)
+      throw new BadRequestException(RbacMessages.ROLE_ALREADY_EXISTS);
 
     const role = this.roleRepo.create({
       name: dto.name,
@@ -59,7 +60,8 @@ export class RbacService {
       const slugExists = await this.roleRepo.findOne({
         where: { slug: dto.slug },
       });
-      if (slugExists) throw new BadRequestException(RbacMessages.ROLE_ALREADY_EXISTS);
+      if (slugExists)
+        throw new BadRequestException(RbacMessages.ROLE_ALREADY_EXISTS);
     }
 
     Object.assign(role, {

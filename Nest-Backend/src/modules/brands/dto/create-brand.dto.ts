@@ -27,7 +27,9 @@ export class CreateBrandDto {
   })
   slug?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.sport.com/brands/nike-logo.png' })
+  @ApiPropertyOptional({
+    example: 'https://cdn.sport.com/brands/nike-logo.png',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)

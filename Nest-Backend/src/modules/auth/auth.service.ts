@@ -19,14 +19,20 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
-import { hashPassword, comparePassword } from '../../common/utils/password.util';
+import {
+  hashPassword,
+  comparePassword,
+} from '../../common/utils/password.util';
 import { generateOtp } from '../../common/utils/otp.util';
 import {
   AuthMessages,
   UserMessages,
 } from '../../common/constants/messages.constants';
 import { OTP_EXPIRY_MINUTES } from '../../common/constants/app.constants';
-import { JwtPayload, RefreshTokenPayload } from './interfaces/jwt-payload.interface';
+import {
+  JwtPayload,
+  RefreshTokenPayload,
+} from './interfaces/jwt-payload.interface';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const dayjs = require('dayjs');
 
@@ -59,7 +65,8 @@ export class AuthService {
       const mobileExists = await this.userRepo.findOne({
         where: { mobile: dto.mobile },
       });
-      if (mobileExists) throw new BadRequestException(UserMessages.MOBILE_TAKEN);
+      if (mobileExists)
+        throw new BadRequestException(UserMessages.MOBILE_TAKEN);
     }
 
     const passwordHash = await hashPassword(dto.password);
@@ -84,7 +91,11 @@ export class AuthService {
     ipAddress: string | undefined,
     userAgent: string | undefined,
   ): Promise<{ message: string; data: TokenPair }> {
-    await this.consumeOtp(dto.email.toLowerCase(), dto.otp, OtpType.EMAIL_VERIFY);
+    await this.consumeOtp(
+      dto.email.toLowerCase(),
+      dto.otp,
+      OtpType.EMAIL_VERIFY,
+    );
 
     await this.userRepo.update(
       { email: dto.email.toLowerCase() },
@@ -96,7 +107,11 @@ export class AuthService {
       where: { email: dto.email.toLowerCase() },
     });
 
-    const tokens = await this.generateCustomerTokens(user, ipAddress, userAgent);
+    const tokens = await this.generateCustomerTokens(
+      user,
+      ipAddress,
+      userAgent,
+    );
     return { message: AuthMessages.OTP_VERIFIED, data: tokens };
   }
 
@@ -132,14 +147,22 @@ export class AuthService {
       where: { email: dto.email.toLowerCase() },
     });
 
-    if (!user) throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
-    if (!user.isActive) throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
-    if (!user.isEmailVerified) throw new ForbiddenException(AuthMessages.EMAIL_NOT_VERIFIED);
+    if (!user)
+      throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
+    if (!user.isActive)
+      throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
+    if (!user.isEmailVerified)
+      throw new ForbiddenException(AuthMessages.EMAIL_NOT_VERIFIED);
 
     const valid = await comparePassword(dto.password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
+    if (!valid)
+      throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
 
-    const tokens = await this.generateCustomerTokens(user, ipAddress, userAgent);
+    const tokens = await this.generateCustomerTokens(
+      user,
+      ipAddress,
+      userAgent,
+    );
     return { message: AuthMessages.LOGIN_SUCCESS, data: tokens };
   }
 
@@ -175,7 +198,11 @@ export class AuthService {
     }
 
     await this.userSessionRepo.remove(session);
-    const tokens = await this.generateCustomerTokens(user, ipAddress, userAgent);
+    const tokens = await this.generateCustomerTokens(
+      user,
+      ipAddress,
+      userAgent,
+    );
     return { message: AuthMessages.TOKEN_REFRESHED, data: tokens };
   }
 
@@ -233,8 +260,11 @@ export class AuthService {
 
     const jwtSecret = this.configService.getOrThrow<string>('jwt.secret');
     const jwtExpiresIn = this.configService.getOrThrow<string>('jwt.expiresIn');
-    const refreshSecret = this.configService.getOrThrow<string>('jwt.refreshSecret');
-    const refreshExpiresIn = this.configService.getOrThrow<string>('jwt.refreshExpiresIn');
+    const refreshSecret =
+      this.configService.getOrThrow<string>('jwt.refreshSecret');
+    const refreshExpiresIn = this.configService.getOrThrow<string>(
+      'jwt.refreshExpiresIn',
+    );
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: jwtSecret,
@@ -280,7 +310,7 @@ export class AuthService {
       .execute();
 
     const otp = generateOtp();
-    
+
     const expiresAt: Date = dayjs().add(OTP_EXPIRY_MINUTES, 'minute').toDate();
     const otpRecord = this.otpRepo.create({ email, otp, type, expiresAt });
     await this.otpRepo.save(otpRecord);

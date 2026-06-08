@@ -20,8 +20,12 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
         CONSTRAINT "UQ_brands_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_brands_slug"      ON "brands" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "IDX_brands_is_active" ON "brands" ("is_active")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_brands_slug"      ON "brands" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_brands_is_active" ON "brands" ("is_active")`,
+    );
 
     // ─── categories ──────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -40,9 +44,15 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
         CONSTRAINT "UQ_categories_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_categories_slug"       ON "categories" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "IDX_categories_sort_order" ON "categories" ("sort_order")`);
-    await queryRunner.query(`CREATE INDEX "IDX_categories_is_active"  ON "categories" ("is_active")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_categories_slug"       ON "categories" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_categories_sort_order" ON "categories" ("sort_order")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_categories_is_active"  ON "categories" ("is_active")`,
+    );
 
     // ─── sub_categories ──────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -64,9 +74,15 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
           REFERENCES "categories" ("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_sub_categories_category_id" ON "sub_categories" ("category_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_sub_categories_slug"        ON "sub_categories" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "IDX_sub_categories_sort_order"  ON "sub_categories" ("sort_order")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_sub_categories_category_id" ON "sub_categories" ("category_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_sub_categories_slug"        ON "sub_categories" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_sub_categories_sort_order"  ON "sub_categories" ("sort_order")`,
+    );
 
     // ─── collections ─────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -84,8 +100,12 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
         CONSTRAINT "UQ_collections_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_collections_slug"      ON "collections" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "IDX_collections_is_active" ON "collections" ("is_active")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_collections_slug"      ON "collections" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_collections_is_active" ON "collections" ("is_active")`,
+    );
 
     // ─── attributes ──────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -102,8 +122,12 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
         CONSTRAINT "UQ_attributes_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_attributes_slug"       ON "attributes" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "IDX_attributes_sort_order" ON "attributes" ("sort_order")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_attributes_slug"       ON "attributes" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_attributes_sort_order" ON "attributes" ("sort_order")`,
+    );
 
     // ─── attribute_values ────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -121,9 +145,15 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
           REFERENCES "attributes" ("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_attribute_values_attribute_id" ON "attribute_values" ("attribute_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_attribute_values_slug"         ON "attribute_values" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "IDX_attribute_values_sort_order"   ON "attribute_values" ("sort_order")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_attribute_values_attribute_id" ON "attribute_values" ("attribute_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_attribute_values_slug"         ON "attribute_values" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_attribute_values_sort_order"   ON "attribute_values" ("sort_order")`,
+    );
 
     // ─── product_tags ────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -137,7 +167,9 @@ export class CreateLayer2Tables1749200100000 implements MigrationInterface {
         CONSTRAINT "UQ_product_tags_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_tags_slug" ON "product_tags" ("slug")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_tags_slug" ON "product_tags" ("slug")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

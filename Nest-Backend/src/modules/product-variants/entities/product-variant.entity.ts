@@ -65,9 +65,13 @@ export class ProductVariant {
   @Column({ name: 'is_default', type: 'boolean', default: false })
   isDefault: boolean;
 
-  @OneToMany(() => ProductVariantAttribute, (variantAttribute: ProductVariantAttribute) => variantAttribute.variant, {
-    cascade: true,
-  })
+  @OneToMany(
+    () => ProductVariantAttribute,
+    (variantAttribute: ProductVariantAttribute) => variantAttribute.variant,
+    {
+      cascade: true,
+    },
+  )
   attributes: ProductVariantAttribute[];
 
   @OneToMany(() => Inventory, (inventory) => inventory.variant, {

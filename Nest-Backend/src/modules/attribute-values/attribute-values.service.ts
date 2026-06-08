@@ -108,7 +108,9 @@ export class AttributeValuesService {
   }
 
   private async findByIdOrFail(id: string): Promise<AttributeValue> {
-    const attributeValue = await this.attributeValueRepo.findOne({ where: { id } });
+    const attributeValue = await this.attributeValueRepo.findOne({
+      where: { id },
+    });
     if (!attributeValue) {
       throw new NotFoundException(CatalogMessages.ATTRIBUTE_VALUE_NOT_FOUND);
     }
@@ -124,11 +126,15 @@ export class AttributeValuesService {
       where: { attributeId, slug },
     });
     if (existing && existing.id !== excludeId) {
-      throw new BadRequestException(CatalogMessages.ATTRIBUTE_VALUE_SLUG_EXISTS);
+      throw new BadRequestException(
+        CatalogMessages.ATTRIBUTE_VALUE_SLUG_EXISTS,
+      );
     }
   }
 
-  private toResponse(attributeValue: AttributeValue): AttributeValueResponseDto {
+  private toResponse(
+    attributeValue: AttributeValue,
+  ): AttributeValueResponseDto {
     return plainToInstance(AttributeValueResponseDto, attributeValue, {
       excludeExtraneousValues: true,
     });

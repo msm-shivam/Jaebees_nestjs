@@ -58,7 +58,11 @@ export class SubCategoriesController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.CATEGORY_VIEW)
   @ApiOperation({ summary: 'Get sub category by ID' })
-  @ApiResponse({ status: 200, description: 'Sub category returned.', type: SubCategoryResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Sub category returned.',
+    type: SubCategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Sub category not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.subCategoriesService.findOne(id);

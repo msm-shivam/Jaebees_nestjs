@@ -51,7 +51,8 @@ export const CatalogMessages = {
   ATTRIBUTE_NOT_FOUND: 'Attribute not found.',
   ATTRIBUTE_SLUG_EXISTS: 'An attribute with this slug already exists.',
   ATTRIBUTE_VALUE_NOT_FOUND: 'Attribute value not found.',
-  ATTRIBUTE_VALUE_SLUG_EXISTS: 'An attribute value with this slug already exists for this attribute.',
+  ATTRIBUTE_VALUE_SLUG_EXISTS:
+    'An attribute value with this slug already exists for this attribute.',
   TAG_NOT_FOUND: 'Product tag not found.',
   TAG_SLUG_EXISTS: 'A product tag with this slug already exists.',
 };

@@ -11,7 +11,8 @@ export class ResendOtpDto {
   @ApiProperty({
     enum: OtpType,
     example: OtpType.EMAIL_VERIFY,
-    description: 'EMAIL_VERIFY — for email verification, FORGOT_PASSWORD — for password reset',
+    description:
+      'EMAIL_VERIFY — for email verification, FORGOT_PASSWORD — for password reset',
   })
   @IsEnum(OtpType)
   type: OtpType;

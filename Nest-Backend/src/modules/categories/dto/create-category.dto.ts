@@ -29,7 +29,9 @@ export class CreateCategoryDto {
   })
   slug?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.sport.com/categories/shoes.jpg' })
+  @ApiPropertyOptional({
+    example: 'https://cdn.sport.com/categories/shoes.jpg',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)

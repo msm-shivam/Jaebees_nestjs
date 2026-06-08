@@ -6,8 +6,8 @@ export function toSlug(value: string): string {
   return value
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')   // remove non-word chars except hyphens
-    .replace(/[\s_]+/g, '-')    // spaces/underscores → hyphen
-    .replace(/--+/g, '-')       // collapse multiple hyphens
-    .replace(/^-+|-+$/g, '');   // trim leading/trailing hyphens
+    .replace(/[^\w\s-]/g, '') // remove non-word chars except hyphens
+    .replace(/[\s_]+/g, '-') // spaces/underscores → hyphen
+    .replace(/--+/g, '-') // collapse multiple hyphens
+    .replace(/^-+|-+$/g, ''); // trim leading/trailing hyphens
 }

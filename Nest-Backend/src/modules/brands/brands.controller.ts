@@ -58,7 +58,11 @@ export class BrandsController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.BRAND_VIEW)
   @ApiOperation({ summary: 'Get brand by ID' })
-  @ApiResponse({ status: 200, description: 'Brand returned.', type: BrandResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Brand returned.',
+    type: BrandResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Brand not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.brandsService.findOne(id);

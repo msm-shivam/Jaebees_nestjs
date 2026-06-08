@@ -34,7 +34,9 @@ import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-resp
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller('admin/attribute-values')
 export class AttributeValuesController {
-  constructor(private readonly attributeValuesService: AttributeValuesService) {}
+  constructor(
+    private readonly attributeValuesService: AttributeValuesService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -58,7 +60,11 @@ export class AttributeValuesController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.ATTRIBUTE_VIEW)
   @ApiOperation({ summary: 'Get attribute value by ID' })
-  @ApiResponse({ status: 200, description: 'Attribute value returned.', type: AttributeValueResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Attribute value returned.',
+    type: AttributeValueResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Attribute value not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.attributeValuesService.findOne(id);

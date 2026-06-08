@@ -48,13 +48,13 @@ async function bootstrap() {
     .setTitle(APP_NAME)
     .setDescription(
       'Sport E-Commerce Platform API — Layer 1 + Catalog Foundation\n\n' +
-      '**Base URL:** `/api/v1`\n\n' +
-      'All endpoints are prefixed with `/api/v1`.\n\n' +
-      '### Authentication\n' +
-      '- **Customer JWT** — obtained from `POST /api/v1/auth/login`\n' +
-      '- **Admin JWT** — obtained from `POST /api/v1/admin/auth/login`\n\n' +
-      '### Catalog Admin Endpoints\n' +
-      'All catalog admin routes require **Admin JWT** and the appropriate **permission**.',
+        '**Base URL:** `/api/v1`\n\n' +
+        'All endpoints are prefixed with `/api/v1`.\n\n' +
+        '### Authentication\n' +
+        '- **Customer JWT** — obtained from `POST /api/v1/auth/login`\n' +
+        '- **Admin JWT** — obtained from `POST /api/v1/admin/auth/login`\n\n' +
+        '### Catalog Admin Endpoints\n' +
+        'All catalog admin routes require **Admin JWT** and the appropriate **permission**.',
     )
     .setVersion(APP_VERSION)
     .addBearerAuth(
@@ -96,7 +96,9 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`\n🚀 Application running on: http://localhost:${port}/api/v1`);
-  console.log(`📄 Swagger docs:            http://localhost:${port}/api/docs\n`);
+  console.log(
+    `📄 Swagger docs:            http://localhost:${port}/api/docs\n`,
+  );
 }
 
 bootstrap();

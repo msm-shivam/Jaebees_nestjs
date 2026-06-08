@@ -26,22 +26,36 @@ export class ProductResponseDto {
   @ApiPropertyOptional({ example: 'Lightweight and responsive running shoe' })
   shortDescription?: string;
 
-  @ApiPropertyOptional({ example: 'The Nike Air Zoom Pegasus 41 is a versatile running shoe that provides a smooth, responsive ride for everyday running.' })
+  @ApiPropertyOptional({
+    example:
+      'The Nike Air Zoom Pegasus 41 is a versatile running shoe that provides a smooth, responsive ride for everyday running.',
+  })
   description?: string;
 
-  @ApiProperty({ enum: ProductStatus, example: ProductStatus.ACTIVE, description: 'Product status: DRAFT, ACTIVE, INACTIVE, ARCHIVED' })
+  @ApiProperty({
+    enum: ProductStatus,
+    example: ProductStatus.ACTIVE,
+    description: 'Product status: DRAFT, ACTIVE, INACTIVE, ARCHIVED',
+  })
   status: ProductStatus;
 
-  @ApiPropertyOptional({ example: 'Nike Air Zoom Pegasus 41 - Lightweight Running Shoe' })
+  @ApiPropertyOptional({
+    example: 'Nike Air Zoom Pegasus 41 - Lightweight Running Shoe',
+  })
   metaTitle?: string;
 
-  @ApiPropertyOptional({ example: 'Fast and responsive running shoe for all distances' })
+  @ApiPropertyOptional({
+    example: 'Fast and responsive running shoe for all distances',
+  })
   metaDescription?: string;
 
   @ApiPropertyOptional({ example: 'running shoes, lightweight, responsive' })
   metaKeywords?: string;
 
-  @ApiProperty({ example: false, description: 'Whether the product is featured' })
+  @ApiProperty({
+    example: false,
+    description: 'Whether the product is featured',
+  })
   isFeatured: boolean;
 
   @ApiProperty({ example: true, description: 'Whether the product is active' })

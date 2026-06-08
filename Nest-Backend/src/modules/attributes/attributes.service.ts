@@ -48,7 +48,8 @@ export class AttributesService {
     const limit = query.limit ?? 20;
 
     const where: Record<string, unknown> = {};
-    if (query.isFilterable !== undefined) where.isFilterable = query.isFilterable;
+    if (query.isFilterable !== undefined)
+      where.isFilterable = query.isFilterable;
     if (query.search) where.name = ILike(`%${query.search}%`);
 
     const [items, total] = await this.attributeRepo.findAndCount({
@@ -89,7 +90,8 @@ export class AttributesService {
     }
 
     if (dto.name !== undefined) attribute.name = dto.name;
-    if (dto.isFilterable !== undefined) attribute.isFilterable = dto.isFilterable;
+    if (dto.isFilterable !== undefined)
+      attribute.isFilterable = dto.isFilterable;
     if (dto.isRequired !== undefined) attribute.isRequired = dto.isRequired;
     if (dto.sortOrder !== undefined) attribute.sortOrder = dto.sortOrder;
 
@@ -114,7 +116,10 @@ export class AttributesService {
     return attribute;
   }
 
-  private async ensureSlugUnique(slug: string, excludeId?: string): Promise<void> {
+  private async ensureSlugUnique(
+    slug: string,
+    excludeId?: string,
+  ): Promise<void> {
     const existing = await this.attributeRepo.findOne({ where: { slug } });
     if (existing && existing.id !== excludeId) {
       throw new BadRequestException(CatalogMessages.ATTRIBUTE_SLUG_EXISTS);

@@ -105,7 +105,10 @@ export class ProductTagsService {
     return tag;
   }
 
-  private async ensureSlugUnique(slug: string, excludeId?: string): Promise<void> {
+  private async ensureSlugUnique(
+    slug: string,
+    excludeId?: string,
+  ): Promise<void> {
     const existing = await this.productTagRepo.findOne({ where: { slug } });
     if (existing && existing.id !== excludeId) {
       throw new BadRequestException(CatalogMessages.TAG_SLUG_EXISTS);

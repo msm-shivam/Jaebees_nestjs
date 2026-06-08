@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Inventory } from './entities/inventory.entity';
@@ -34,7 +38,9 @@ export class InventoryService {
     });
 
     if (existingInventory) {
-      throw new BadRequestException('Inventory already exists for this variant');
+      throw new BadRequestException(
+        'Inventory already exists for this variant',
+      );
     }
 
     // Create inventory
@@ -93,16 +99,24 @@ export class InventoryService {
     // Validate reserved quantity doesn't exceed quantity
     if (dto.quantity !== undefined && dto.reservedQuantity !== undefined) {
       if (dto.reservedQuantity > dto.quantity) {
-        throw new BadRequestException('Reserved quantity cannot exceed total quantity');
+        throw new BadRequestException(
+          'Reserved quantity cannot exceed total quantity',
+        );
       }
-    } else if (dto.reservedQuantity !== undefined && dto.reservedQuantity > inventory.quantity) {
-      throw new BadRequestException('Reserved quantity cannot exceed total quantity');
+    } else if (
+      dto.reservedQuantity !== undefined &&
+      dto.reservedQuantity > inventory.quantity
+    ) {
+      throw new BadRequestException(
+        'Reserved quantity cannot exceed total quantity',
+      );
     }
 
     Object.assign(inventory, dto);
 
     // Recalculate available quantity
-    inventory.availableQuantity = inventory.quantity - inventory.reservedQuantity;
+    inventory.availableQuantity =
+      inventory.quantity - inventory.reservedQuantity;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
     return this.toResponse(updatedInventory);
@@ -121,7 +135,8 @@ export class InventoryService {
     }
 
     inventory.quantity = newQuantity;
-    inventory.availableQuantity = inventory.quantity - inventory.reservedQuantity;
+    inventory.availableQuantity =
+      inventory.quantity - inventory.reservedQuantity;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
     return this.toResponse(updatedInventory);
@@ -140,7 +155,8 @@ export class InventoryService {
     }
 
     inventory.reservedQuantity = newReservedQuantity;
-    inventory.availableQuantity = inventory.quantity - inventory.reservedQuantity;
+    inventory.availableQuantity =
+      inventory.quantity - inventory.reservedQuantity;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
     return this.toResponse(updatedInventory);
@@ -155,11 +171,14 @@ export class InventoryService {
     const newReservedQuantity = inventory.reservedQuantity - dto.quantity;
 
     if (newReservedQuantity < 0) {
-      throw new BadRequestException('Cannot release more than reserved quantity');
+      throw new BadRequestException(
+        'Cannot release more than reserved quantity',
+      );
     }
 
     inventory.reservedQuantity = newReservedQuantity;
-    inventory.availableQuantity = inventory.quantity - inventory.reservedQuantity;
+    inventory.availableQuantity =
+      inventory.quantity - inventory.reservedQuantity;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
     return this.toResponse(updatedInventory);

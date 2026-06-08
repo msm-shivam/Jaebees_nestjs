@@ -14,7 +14,10 @@ import {
   comparePassword,
   hashPassword,
 } from '../../common/utils/password.util';
-import { AuthMessages, UserMessages } from '../../common/constants/messages.constants';
+import {
+  AuthMessages,
+  UserMessages,
+} from '../../common/constants/messages.constants';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +28,9 @@ export class UsersService {
 
   async getProfile(userId: string): Promise<UserResponseDto> {
     const user = await this.findByIdOrFail(userId);
-    return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
+    return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async updateProfile(
@@ -48,7 +53,9 @@ export class UsersService {
     });
 
     const saved = await this.userRepo.save(user);
-    const data = plainToInstance(UserResponseDto, saved, { excludeExtraneousValues: true });
+    const data = plainToInstance(UserResponseDto, saved, {
+      excludeExtraneousValues: true,
+    });
     return { message: UserMessages.PROFILE_UPDATED, data };
   }
 

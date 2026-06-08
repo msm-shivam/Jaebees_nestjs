@@ -46,11 +46,14 @@ export class AdminAuthService {
       relations: { roles: { permissions: true } },
     });
 
-    if (!admin) throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
-    if (!admin.isActive) throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
+    if (!admin)
+      throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
+    if (!admin.isActive)
+      throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
 
     const valid = await comparePassword(dto.password, admin.passwordHash);
-    if (!valid) throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
+    if (!valid)
+      throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
 
     await this.adminRepo.update(admin.id, { lastLoginAt: new Date() });
 
@@ -113,7 +116,8 @@ export class AdminAuthService {
     const roles = admin.roles?.map((r) => r.slug) ?? [];
     const permissions = [
       ...new Set(
-        admin.roles?.flatMap((r) => r.permissions?.map((p) => p.slug) ?? []) ?? [],
+        admin.roles?.flatMap((r) => r.permissions?.map((p) => p.slug) ?? []) ??
+          [],
       ),
     ];
 
@@ -127,8 +131,11 @@ export class AdminAuthService {
 
     const jwtSecret = this.configService.getOrThrow<string>('jwt.secret');
     const jwtExpiresIn = this.configService.getOrThrow<string>('jwt.expiresIn');
-    const refreshSecret = this.configService.getOrThrow<string>('jwt.refreshSecret');
-    const refreshExpiresIn = this.configService.getOrThrow<string>('jwt.refreshExpiresIn');
+    const refreshSecret =
+      this.configService.getOrThrow<string>('jwt.refreshSecret');
+    const refreshExpiresIn = this.configService.getOrThrow<string>(
+      'jwt.refreshExpiresIn',
+    );
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: jwtSecret,

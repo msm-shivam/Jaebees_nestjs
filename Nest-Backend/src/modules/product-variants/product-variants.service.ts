@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductVariant } from './entities/product-variant.entity';
@@ -85,17 +90,23 @@ export class ProductVariantsService {
 
     // Product filter
     if (query.productId) {
-      queryBuilder.andWhere('variant.productId = :productId', { productId: query.productId });
+      queryBuilder.andWhere('variant.productId = :productId', {
+        productId: query.productId,
+      });
     }
 
     // Status filter
     if (query.status) {
-      queryBuilder.andWhere('variant.status = :status', { status: query.status });
+      queryBuilder.andWhere('variant.status = :status', {
+        status: query.status,
+      });
     }
 
     // Search by SKU
     if (query.search) {
-      queryBuilder.andWhere('variant.sku ILIKE :search', { search: `%${query.search}%` });
+      queryBuilder.andWhere('variant.sku ILIKE :search', {
+        search: `%${query.search}%`,
+      });
     }
 
     // Sorting
@@ -188,8 +199,13 @@ export class ProductVariantsService {
     return this.toResponse(variant);
   }
 
-  async assignAttributes(variantId: string, attributes: Array<{ attributeId: string; attributeValueId: string }>) {
-    const variant = await this.variantRepo.findOne({ where: { id: variantId } });
+  async assignAttributes(
+    variantId: string,
+    attributes: Array<{ attributeId: string; attributeValueId: string }>,
+  ) {
+    const variant = await this.variantRepo.findOne({
+      where: { id: variantId },
+    });
     if (!variant) {
       throw new NotFoundException('Variant not found');
     }
@@ -208,12 +224,16 @@ export class ProductVariantsService {
         where: { id: attr.attributeValueId },
       });
       if (!attributeValue) {
-        throw new NotFoundException(`Attribute value ${attr.attributeValueId} not found`);
+        throw new NotFoundException(
+          `Attribute value ${attr.attributeValueId} not found`,
+        );
       }
 
       // Validate attribute value belongs to attribute
       if (attributeValue.attributeId !== attr.attributeId) {
-        throw new BadRequestException('Attribute value does not belong to the attribute');
+        throw new BadRequestException(
+          'Attribute value does not belong to the attribute',
+        );
       }
 
       // Check for duplicate mapping
@@ -225,7 +245,9 @@ export class ProductVariantsService {
       });
 
       if (existingMapping) {
-        throw new ConflictException(`Attribute ${attribute.name} is already assigned to this variant`);
+        throw new ConflictException(
+          `Attribute ${attribute.name} is already assigned to this variant`,
+        );
       }
 
       // Create mapping

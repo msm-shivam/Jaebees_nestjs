@@ -15,7 +15,10 @@ export interface ApiResponse<T> {
 }
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+export class ResponseInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -25,7 +28,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>
       map((data) => ({
         statusCode: response.statusCode,
         message: data?.message ?? 'Success',
-        data: data?.data !== undefined ? data.data : data?.message !== undefined ? undefined : data,
+        data:
+          data?.data !== undefined
+            ? data.data
+            : data?.message !== undefined
+              ? undefined
+              : data,
         timestamp: new Date().toISOString(),
       })),
     );

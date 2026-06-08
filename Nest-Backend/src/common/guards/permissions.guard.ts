@@ -22,7 +22,9 @@ export class PermissionsGuard implements CanActivate {
 
     if (!requiredPermissions || requiredPermissions.length === 0) return true;
 
-    const request = context.switchToHttp().getRequest<Request & { user: AdminJwtPayload }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user: AdminJwtPayload }>();
     const user = request.user;
 
     if (!user) throw new ForbiddenException(AuthMessages.FORBIDDEN);

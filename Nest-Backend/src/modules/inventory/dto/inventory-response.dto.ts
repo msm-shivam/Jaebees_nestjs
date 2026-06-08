@@ -13,7 +13,10 @@ export class InventoryResponseDto {
   @ApiProperty({ example: 10 })
   reservedQuantity: number;
 
-  @ApiProperty({ example: 90, description: 'Available for purchase (quantity - reservedQuantity)' })
+  @ApiProperty({
+    example: 90,
+    description: 'Available for purchase (quantity - reservedQuantity)',
+  })
   availableQuantity: number;
 
   @ApiProperty({ example: 5 })

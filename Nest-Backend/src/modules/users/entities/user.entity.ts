@@ -1,10 +1,4 @@
-import {
-  Column,
-  DeleteDateColumn,
-  Entity,
-  Index,
-  OneToMany,
-} from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { UserSession } from './user-session.entity';
 
@@ -21,7 +15,13 @@ export class User extends BaseEntity {
   @Column({ unique: true, length: 255 })
   email: string;
 
-  @Column({ unique: true, type: 'varchar', length: 20, nullable: true, default: null })
+  @Column({
+    unique: true,
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+    default: null,
+  })
   mobile: string | undefined;
 
   @Column({ name: 'password_hash', length: 255 })

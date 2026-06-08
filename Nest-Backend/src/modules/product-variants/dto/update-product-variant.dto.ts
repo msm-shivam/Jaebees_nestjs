@@ -1,10 +1,19 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString, IsBoolean, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 import { VariantStatus } from '../entities/product-variant.entity';
 import { PartialType } from '@nestjs/swagger';
 import { CreateProductVariantDto } from './create-product-variant.dto';
 
-export class UpdateProductVariantDto extends PartialType(CreateProductVariantDto) {
+export class UpdateProductVariantDto extends PartialType(
+  CreateProductVariantDto,
+) {
   @ApiPropertyOptional({ example: 'NIKE-PEGASUS-41-BLK-10-UPDATED' })
   @IsOptional()
   @IsString()

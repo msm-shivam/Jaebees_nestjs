@@ -1,10 +1,4 @@
-import {
-  Column,
-  DeleteDateColumn,
-  Entity,
-  Index,
-  OneToMany,
-} from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { SubCategory } from '../../sub-categories/entities/sub-category.entity';
 

@@ -58,7 +58,11 @@ export class AttributesController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.ATTRIBUTE_VIEW)
   @ApiOperation({ summary: 'Get attribute by ID' })
-  @ApiResponse({ status: 200, description: 'Attribute returned.', type: AttributeResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Attribute returned.',
+    type: AttributeResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Attribute not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.attributesService.findOne(id);

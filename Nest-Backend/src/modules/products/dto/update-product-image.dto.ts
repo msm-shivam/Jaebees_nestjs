@@ -2,7 +2,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class UpdateProductImageDto {
-  @ApiPropertyOptional({ example: 'https://cdn.sport.com/products/nike-pegasus-41-1.jpg' })
+  @ApiPropertyOptional({
+    example: 'https://cdn.sport.com/products/nike-pegasus-41-1.jpg',
+  })
   @IsOptional()
   @IsString()
   imageUrl?: string;

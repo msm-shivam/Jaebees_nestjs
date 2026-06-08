@@ -23,10 +23,18 @@ import { JwtAdminStrategy } from './strategies/jwt-admin.strategy';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('jwt.secret'),
-        signOptions: { expiresIn: config.getOrThrow<string>('jwt.expiresIn') as never },
+        signOptions: {
+          expiresIn: config.getOrThrow<string>('jwt.expiresIn') as never,
+        },
       }),
     }),
-    TypeOrmModule.forFeature([User, UserSession, AdminUser, AdminSession, OtpVerification]),
+    TypeOrmModule.forFeature([
+      User,
+      UserSession,
+      AdminUser,
+      AdminSession,
+      OtpVerification,
+    ]),
   ],
   providers: [
     AuthService,

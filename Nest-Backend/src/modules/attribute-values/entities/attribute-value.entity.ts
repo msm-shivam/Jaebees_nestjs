@@ -38,6 +38,9 @@ export class AttributeValue extends BaseEntity {
   @JoinColumn({ name: 'attribute_id' })
   attribute: Attribute;
 
-  @OneToMany(() => ProductVariantAttribute, (variantAttribute) => variantAttribute.attributeValue)
+  @OneToMany(
+    () => ProductVariantAttribute,
+    (variantAttribute) => variantAttribute.attributeValue,
+  )
   variantAttributes: ProductVariantAttribute[];
 }

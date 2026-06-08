@@ -97,7 +97,8 @@ export class SubCategoriesService {
 
     if (dto.name !== undefined) subCategory.name = dto.name;
     if (dto.image !== undefined) subCategory.image = dto.image;
-    if (dto.description !== undefined) subCategory.description = dto.description;
+    if (dto.description !== undefined)
+      subCategory.description = dto.description;
     if (dto.sortOrder !== undefined) subCategory.sortOrder = dto.sortOrder;
     if (dto.isActive !== undefined) subCategory.isActive = dto.isActive;
 
@@ -122,7 +123,10 @@ export class SubCategoriesService {
     return subCategory;
   }
 
-  private async ensureSlugUnique(slug: string, excludeId?: string): Promise<void> {
+  private async ensureSlugUnique(
+    slug: string,
+    excludeId?: string,
+  ): Promise<void> {
     const existing = await this.subCategoryRepo.findOne({ where: { slug } });
     if (existing && existing.id !== excludeId) {
       throw new BadRequestException(CatalogMessages.SUB_CATEGORY_SLUG_EXISTS);

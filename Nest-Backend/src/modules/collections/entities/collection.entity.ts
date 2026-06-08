@@ -11,7 +11,12 @@ export class Collection extends BaseEntity {
   @Column({ unique: true, length: 150 })
   slug: string;
 
-  @Column({ name: 'banner_image', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'banner_image',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   bannerImage: string | null;
 
   @Column({ type: 'text', nullable: true })

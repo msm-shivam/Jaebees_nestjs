@@ -110,11 +110,15 @@ export class CategoriesService {
 
   async findByIdOrFail(id: string): Promise<Category> {
     const category = await this.categoryRepo.findOne({ where: { id } });
-    if (!category) throw new NotFoundException(CatalogMessages.CATEGORY_NOT_FOUND);
+    if (!category)
+      throw new NotFoundException(CatalogMessages.CATEGORY_NOT_FOUND);
     return category;
   }
 
-  private async ensureSlugUnique(slug: string, excludeId?: string): Promise<void> {
+  private async ensureSlugUnique(
+    slug: string,
+    excludeId?: string,
+  ): Promise<void> {
     const existing = await this.categoryRepo.findOne({ where: { slug } });
     if (existing && existing.id !== excludeId) {
       throw new BadRequestException(CatalogMessages.CATEGORY_SLUG_EXISTS);

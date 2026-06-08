@@ -28,6 +28,9 @@ export class Attribute extends BaseEntity {
   @OneToMany(() => AttributeValue, (value) => value.attribute)
   values: AttributeValue[];
 
-  @OneToMany(() => ProductVariantAttribute, (variantAttribute) => variantAttribute.attribute)
+  @OneToMany(
+    () => ProductVariantAttribute,
+    (variantAttribute) => variantAttribute.attribute,
+  )
   variantAttributes: ProductVariantAttribute[];
 }

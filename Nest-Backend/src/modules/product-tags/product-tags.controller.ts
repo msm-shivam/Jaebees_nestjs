@@ -58,7 +58,11 @@ export class ProductTagsController {
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.TAG_VIEW)
   @ApiOperation({ summary: 'Get product tag by ID' })
-  @ApiResponse({ status: 200, description: 'Product tag returned.', type: ProductTagResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Product tag returned.',
+    type: ProductTagResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Product tag not found.' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.productTagsService.findOne(id);

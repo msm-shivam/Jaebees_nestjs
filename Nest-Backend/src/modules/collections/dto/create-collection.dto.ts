@@ -27,7 +27,9 @@ export class CreateCollectionDto {
   })
   slug?: string;
 
-  @ApiPropertyOptional({ example: 'https://cdn.sport.com/collections/summer-banner.jpg' })
+  @ApiPropertyOptional({
+    example: 'https://cdn.sport.com/collections/summer-banner.jpg',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)

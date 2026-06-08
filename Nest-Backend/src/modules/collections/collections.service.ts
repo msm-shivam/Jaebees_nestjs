@@ -114,7 +114,10 @@ export class CollectionsService {
     return collection;
   }
 
-  private async ensureSlugUnique(slug: string, excludeId?: string): Promise<void> {
+  private async ensureSlugUnique(
+    slug: string,
+    excludeId?: string,
+  ): Promise<void> {
     const existing = await this.collectionRepo.findOne({ where: { slug } });
     if (existing && existing.id !== excludeId) {
       throw new BadRequestException(CatalogMessages.COLLECTION_SLUG_EXISTS);

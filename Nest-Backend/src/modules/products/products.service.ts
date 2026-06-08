@@ -51,7 +51,9 @@ export class ProductsService {
     if (!brand) throw new BadRequestException('Brand not found.');
 
     // Validate Category
-    const category = await this.categoryRepo.findOne({ where: { id: dto.categoryId } });
+    const category = await this.categoryRepo.findOne({
+      where: { id: dto.categoryId },
+    });
     if (!category) throw new BadRequestException('Category not found.');
 
     // Validate SubCategory
@@ -62,7 +64,9 @@ export class ProductsService {
 
     // Validate SubCategory belongs to Category
     if (subCategory.categoryId !== dto.categoryId) {
-      throw new BadRequestException('Sub Category does not belong to the specified Category.');
+      throw new BadRequestException(
+        'Sub Category does not belong to the specified Category.',
+      );
     }
 
     // Generate slug
@@ -121,32 +125,44 @@ export class ProductsService {
 
     // Status filter
     if (query.status) {
-      queryBuilder.andWhere('product.status = :status', { status: query.status });
+      queryBuilder.andWhere('product.status = :status', {
+        status: query.status,
+      });
     }
 
     // Brand filter
     if (query.brandId) {
-      queryBuilder.andWhere('product.brandId = :brandId', { brandId: query.brandId });
+      queryBuilder.andWhere('product.brandId = :brandId', {
+        brandId: query.brandId,
+      });
     }
 
     // Category filter
     if (query.categoryId) {
-      queryBuilder.andWhere('product.categoryId = :categoryId', { categoryId: query.categoryId });
+      queryBuilder.andWhere('product.categoryId = :categoryId', {
+        categoryId: query.categoryId,
+      });
     }
 
     // Sub-category filter
     if (query.subCategoryId) {
-      queryBuilder.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: query.subCategoryId });
+      queryBuilder.andWhere('product.subCategoryId = :subCategoryId', {
+        subCategoryId: query.subCategoryId,
+      });
     }
 
     // Featured filter
     if (query.isFeatured !== undefined) {
-      queryBuilder.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured });
+      queryBuilder.andWhere('product.isFeatured = :isFeatured', {
+        isFeatured: query.isFeatured,
+      });
     }
 
     // Active filter
     if (query.isActive !== undefined) {
-      queryBuilder.andWhere('product.isActive = :isActive', { isActive: query.isActive });
+      queryBuilder.andWhere('product.isActive = :isActive', {
+        isActive: query.isActive,
+      });
     }
 
     // Sorting
@@ -180,11 +196,13 @@ export class ProductsService {
 
     if (dto.name !== undefined) product.name = dto.name;
     if (dto.skuPrefix !== undefined) product.skuPrefix = dto.skuPrefix;
-    if (dto.shortDescription !== undefined) product.shortDescription = dto.shortDescription;
+    if (dto.shortDescription !== undefined)
+      product.shortDescription = dto.shortDescription;
     if (dto.description !== undefined) product.description = dto.description;
     if (dto.status !== undefined) product.status = dto.status;
     if (dto.metaTitle !== undefined) product.metaTitle = dto.metaTitle;
-    if (dto.metaDescription !== undefined) product.metaDescription = dto.metaDescription;
+    if (dto.metaDescription !== undefined)
+      product.metaDescription = dto.metaDescription;
     if (dto.metaKeywords !== undefined) product.metaKeywords = dto.metaKeywords;
     if (dto.isFeatured !== undefined) product.isFeatured = dto.isFeatured;
     if (dto.isActive !== undefined) product.isActive = dto.isActive;
@@ -202,7 +220,9 @@ export class ProductsService {
     return { message: 'Product deleted successfully.' };
   }
 
-  async publish(id: string): Promise<{ message: string; data: ProductResponseDto }> {
+  async publish(
+    id: string,
+  ): Promise<{ message: string; data: ProductResponseDto }> {
     const product = await this.findByIdOrFail(id);
     product.status = ProductStatus.ACTIVE;
     const saved = await this.productRepo.save(product);
@@ -212,7 +232,9 @@ export class ProductsService {
     };
   }
 
-  async archive(id: string): Promise<{ message: string; data: ProductResponseDto }> {
+  async archive(
+    id: string,
+  ): Promise<{ message: string; data: ProductResponseDto }> {
     const product = await this.findByIdOrFail(id);
     product.status = ProductStatus.ARCHIVED;
     const saved = await this.productRepo.save(product);
@@ -250,7 +272,10 @@ export class ProductsService {
     return { message: 'Collections assigned successfully.' };
   }
 
-  async removeCollection(productId: string, collectionId: string): Promise<{ message: string }> {
+  async removeCollection(
+    productId: string,
+    collectionId: string,
+  ): Promise<{ message: string }> {
     await this.findByIdOrFail(productId);
 
     const mapping = await this.productCollectionRepo.findOne({
@@ -266,7 +291,10 @@ export class ProductsService {
 
   // ─── Tags ──────────────────────────────────────────────────────────────────
 
-  async assignTags(productId: string, tagIds: string[]): Promise<{ message: string }> {
+  async assignTags(
+    productId: string,
+    tagIds: string[],
+  ): Promise<{ message: string }> {
     await this.findByIdOrFail(productId);
 
     // Check for duplicates
@@ -275,7 +303,9 @@ export class ProductsService {
         where: { productId, tagId },
       });
       if (existing) {
-        throw new BadRequestException(`Tag ${tagId} is already assigned to this product.`);
+        throw new BadRequestException(
+          `Tag ${tagId} is already assigned to this product.`,
+        );
       }
     }
 
@@ -287,7 +317,10 @@ export class ProductsService {
     return { message: 'Tags assigned successfully.' };
   }
 
-  async removeTag(productId: string, tagId: string): Promise<{ message: string }> {
+  async removeTag(
+    productId: string,
+    tagId: string,
+  ): Promise<{ message: string }> {
     await this.findByIdOrFail(productId);
 
     const mapping = await this.productTagMappingRepo.findOne({
@@ -343,7 +376,9 @@ export class ProductsService {
     imageId: string,
     dto: UpdateProductImageDto,
   ): Promise<{ message: string; data: ProductImageResponseDto }> {
-    const image = await this.productImageRepo.findOne({ where: { id: imageId } });
+    const image = await this.productImageRepo.findOne({
+      where: { id: imageId },
+    });
     if (!image) throw new NotFoundException('Product image not found.');
 
     if (dto.imageUrl !== undefined) image.imageUrl = dto.imageUrl;
@@ -358,15 +393,21 @@ export class ProductsService {
   }
 
   async removeImage(imageId: string): Promise<{ message: string }> {
-    const image = await this.productImageRepo.findOne({ where: { id: imageId } });
+    const image = await this.productImageRepo.findOne({
+      where: { id: imageId },
+    });
     if (!image) throw new NotFoundException('Product image not found.');
 
     await this.productImageRepo.softRemove(image);
     return { message: 'Image deleted successfully.' };
   }
 
-  async setPrimaryImage(imageId: string): Promise<{ message: string; data: ProductImageResponseDto }> {
-    const image = await this.productImageRepo.findOne({ where: { id: imageId } });
+  async setPrimaryImage(
+    imageId: string,
+  ): Promise<{ message: string; data: ProductImageResponseDto }> {
+    const image = await this.productImageRepo.findOne({
+      where: { id: imageId },
+    });
     if (!image) throw new NotFoundException('Product image not found.');
 
     // Unset previous primary image for this product

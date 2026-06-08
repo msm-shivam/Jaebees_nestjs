@@ -90,8 +90,14 @@ export class Phase21CatalogImprovements1749200200000 implements MigrationInterfa
     await queryRunner.query(`DROP TABLE IF EXISTS "product_collections"`);
 
     // Remove soft-delete columns
-    await queryRunner.query(`ALTER TABLE "product_tags"     DROP COLUMN IF EXISTS "deleted_at"`);
-    await queryRunner.query(`ALTER TABLE "attribute_values" DROP COLUMN IF EXISTS "deleted_at"`);
-    await queryRunner.query(`ALTER TABLE "attributes"       DROP COLUMN IF EXISTS "deleted_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "product_tags"     DROP COLUMN IF EXISTS "deleted_at"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attribute_values" DROP COLUMN IF EXISTS "deleted_at"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attributes"       DROP COLUMN IF EXISTS "deleted_at"`,
+    );
   }
 }

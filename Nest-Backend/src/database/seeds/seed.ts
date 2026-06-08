@@ -14,7 +14,10 @@ import { AppDataSource } from '../data-source';
 import { Permission } from '../../modules/rbac/entities/permission.entity';
 import { Role } from '../../modules/rbac/entities/role.entity';
 import { AdminUser } from '../../modules/admin/entities/admin-user.entity';
-import { DefaultPermissions, DefaultRoles } from '../../common/constants/roles.constants';
+import {
+  DefaultPermissions,
+  DefaultRoles,
+} from '../../common/constants/roles.constants';
 import * as bcrypt from 'bcrypt';
 
 dotenv.config();
@@ -28,61 +31,225 @@ interface PermissionDef {
 }
 
 const PERMISSIONS: PermissionDef[] = [
-  { slug: DefaultPermissions.PRODUCT_CREATE,       name: 'Create Product',       module: 'product' },
-  { slug: DefaultPermissions.PRODUCT_UPDATE,       name: 'Update Product',       module: 'product' },
-  { slug: DefaultPermissions.PRODUCT_DELETE,       name: 'Delete Product',       module: 'product' },
-  { slug: DefaultPermissions.PRODUCT_VIEW,         name: 'View Product',         module: 'product' },
-  { slug: DefaultPermissions.PRODUCT_PUBLISH,      name: 'Publish Product',      module: 'product' },
-  { slug: DefaultPermissions.PRODUCT_ARCHIVE,      name: 'Archive Product',      module: 'product' },
+  {
+    slug: DefaultPermissions.PRODUCT_CREATE,
+    name: 'Create Product',
+    module: 'product',
+  },
+  {
+    slug: DefaultPermissions.PRODUCT_UPDATE,
+    name: 'Update Product',
+    module: 'product',
+  },
+  {
+    slug: DefaultPermissions.PRODUCT_DELETE,
+    name: 'Delete Product',
+    module: 'product',
+  },
+  {
+    slug: DefaultPermissions.PRODUCT_VIEW,
+    name: 'View Product',
+    module: 'product',
+  },
+  {
+    slug: DefaultPermissions.PRODUCT_PUBLISH,
+    name: 'Publish Product',
+    module: 'product',
+  },
+  {
+    slug: DefaultPermissions.PRODUCT_ARCHIVE,
+    name: 'Archive Product',
+    module: 'product',
+  },
   // Product Variant
-  { slug: DefaultPermissions.VARIANT_CREATE,       name: 'Create Variant',       module: 'variant' },
-  { slug: DefaultPermissions.VARIANT_UPDATE,       name: 'Update Variant',       module: 'variant' },
-  { slug: DefaultPermissions.VARIANT_DELETE,       name: 'Delete Variant',       module: 'variant' },
-  { slug: DefaultPermissions.VARIANT_VIEW,         name: 'View Variant',         module: 'variant' },
+  {
+    slug: DefaultPermissions.VARIANT_CREATE,
+    name: 'Create Variant',
+    module: 'variant',
+  },
+  {
+    slug: DefaultPermissions.VARIANT_UPDATE,
+    name: 'Update Variant',
+    module: 'variant',
+  },
+  {
+    slug: DefaultPermissions.VARIANT_DELETE,
+    name: 'Delete Variant',
+    module: 'variant',
+  },
+  {
+    slug: DefaultPermissions.VARIANT_VIEW,
+    name: 'View Variant',
+    module: 'variant',
+  },
   // Inventory
-  { slug: DefaultPermissions.INVENTORY_CREATE,     name: 'Create Inventory',     module: 'inventory' },
-  { slug: DefaultPermissions.INVENTORY_VIEW,       name: 'View Inventory',       module: 'inventory' },
-  { slug: DefaultPermissions.INVENTORY_UPDATE,     name: 'Update Inventory',     module: 'inventory' },
-  { slug: DefaultPermissions.INVENTORY_ADJUST,     name: 'Adjust Inventory',     module: 'inventory' },
-  { slug: DefaultPermissions.ORDER_VIEW,           name: 'View Orders',          module: 'order' },
-  { slug: DefaultPermissions.ORDER_UPDATE,         name: 'Update Orders',        module: 'order' },
-  { slug: DefaultPermissions.FINANCE_VIEW,         name: 'View Finance',         module: 'finance' },
-  { slug: DefaultPermissions.FINANCE_EXPORT,       name: 'Export Finance',       module: 'finance' },
-  { slug: DefaultPermissions.USER_VIEW,            name: 'View Users',           module: 'user' },
-  { slug: DefaultPermissions.USER_UPDATE,          name: 'Update Users',         module: 'user' },
-  { slug: DefaultPermissions.USER_DELETE,          name: 'Delete Users',         module: 'user' },
-  { slug: DefaultPermissions.ADMIN_CREATE,         name: 'Create Admin',         module: 'admin' },
-  { slug: DefaultPermissions.ADMIN_UPDATE,         name: 'Update Admin',         module: 'admin' },
-  { slug: DefaultPermissions.ADMIN_DELETE,         name: 'Delete Admin',         module: 'admin' },
-  { slug: DefaultPermissions.ROLES_MANAGE,         name: 'Manage Roles',         module: 'rbac' },
-  { slug: DefaultPermissions.PERMISSIONS_MANAGE,   name: 'Manage Permissions',   module: 'rbac' },
-  { slug: DefaultPermissions.SUPPORT_VIEW,         name: 'View Support',         module: 'support' },
-  { slug: DefaultPermissions.SUPPORT_UPDATE,       name: 'Update Support',       module: 'support' },
+  {
+    slug: DefaultPermissions.INVENTORY_CREATE,
+    name: 'Create Inventory',
+    module: 'inventory',
+  },
+  {
+    slug: DefaultPermissions.INVENTORY_VIEW,
+    name: 'View Inventory',
+    module: 'inventory',
+  },
+  {
+    slug: DefaultPermissions.INVENTORY_UPDATE,
+    name: 'Update Inventory',
+    module: 'inventory',
+  },
+  {
+    slug: DefaultPermissions.INVENTORY_ADJUST,
+    name: 'Adjust Inventory',
+    module: 'inventory',
+  },
+  { slug: DefaultPermissions.ORDER_VIEW, name: 'View Orders', module: 'order' },
+  {
+    slug: DefaultPermissions.ORDER_UPDATE,
+    name: 'Update Orders',
+    module: 'order',
+  },
+  {
+    slug: DefaultPermissions.FINANCE_VIEW,
+    name: 'View Finance',
+    module: 'finance',
+  },
+  {
+    slug: DefaultPermissions.FINANCE_EXPORT,
+    name: 'Export Finance',
+    module: 'finance',
+  },
+  { slug: DefaultPermissions.USER_VIEW, name: 'View Users', module: 'user' },
+  {
+    slug: DefaultPermissions.USER_UPDATE,
+    name: 'Update Users',
+    module: 'user',
+  },
+  {
+    slug: DefaultPermissions.USER_DELETE,
+    name: 'Delete Users',
+    module: 'user',
+  },
+  {
+    slug: DefaultPermissions.ADMIN_CREATE,
+    name: 'Create Admin',
+    module: 'admin',
+  },
+  {
+    slug: DefaultPermissions.ADMIN_UPDATE,
+    name: 'Update Admin',
+    module: 'admin',
+  },
+  {
+    slug: DefaultPermissions.ADMIN_DELETE,
+    name: 'Delete Admin',
+    module: 'admin',
+  },
+  {
+    slug: DefaultPermissions.ROLES_MANAGE,
+    name: 'Manage Roles',
+    module: 'rbac',
+  },
+  {
+    slug: DefaultPermissions.PERMISSIONS_MANAGE,
+    name: 'Manage Permissions',
+    module: 'rbac',
+  },
+  {
+    slug: DefaultPermissions.SUPPORT_VIEW,
+    name: 'View Support',
+    module: 'support',
+  },
+  {
+    slug: DefaultPermissions.SUPPORT_UPDATE,
+    name: 'Update Support',
+    module: 'support',
+  },
   // Brand
-  { slug: DefaultPermissions.BRAND_CREATE,       name: 'Create Brand',         module: 'brand' },
-  { slug: DefaultPermissions.BRAND_VIEW,         name: 'View Brand',           module: 'brand' },
-  { slug: DefaultPermissions.BRAND_UPDATE,       name: 'Update Brand',         module: 'brand' },
-  { slug: DefaultPermissions.BRAND_DELETE,       name: 'Delete Brand',         module: 'brand' },
+  {
+    slug: DefaultPermissions.BRAND_CREATE,
+    name: 'Create Brand',
+    module: 'brand',
+  },
+  { slug: DefaultPermissions.BRAND_VIEW, name: 'View Brand', module: 'brand' },
+  {
+    slug: DefaultPermissions.BRAND_UPDATE,
+    name: 'Update Brand',
+    module: 'brand',
+  },
+  {
+    slug: DefaultPermissions.BRAND_DELETE,
+    name: 'Delete Brand',
+    module: 'brand',
+  },
   // Category
-  { slug: DefaultPermissions.CATEGORY_CREATE,    name: 'Create Category',      module: 'category' },
-  { slug: DefaultPermissions.CATEGORY_VIEW,      name: 'View Category',        module: 'category' },
-  { slug: DefaultPermissions.CATEGORY_UPDATE,    name: 'Update Category',      module: 'category' },
-  { slug: DefaultPermissions.CATEGORY_DELETE,    name: 'Delete Category',      module: 'category' },
+  {
+    slug: DefaultPermissions.CATEGORY_CREATE,
+    name: 'Create Category',
+    module: 'category',
+  },
+  {
+    slug: DefaultPermissions.CATEGORY_VIEW,
+    name: 'View Category',
+    module: 'category',
+  },
+  {
+    slug: DefaultPermissions.CATEGORY_UPDATE,
+    name: 'Update Category',
+    module: 'category',
+  },
+  {
+    slug: DefaultPermissions.CATEGORY_DELETE,
+    name: 'Delete Category',
+    module: 'category',
+  },
   // Collection
-  { slug: DefaultPermissions.COLLECTION_CREATE,  name: 'Create Collection',    module: 'collection' },
-  { slug: DefaultPermissions.COLLECTION_VIEW,    name: 'View Collection',      module: 'collection' },
-  { slug: DefaultPermissions.COLLECTION_UPDATE,  name: 'Update Collection',    module: 'collection' },
-  { slug: DefaultPermissions.COLLECTION_DELETE,  name: 'Delete Collection',    module: 'collection' },
+  {
+    slug: DefaultPermissions.COLLECTION_CREATE,
+    name: 'Create Collection',
+    module: 'collection',
+  },
+  {
+    slug: DefaultPermissions.COLLECTION_VIEW,
+    name: 'View Collection',
+    module: 'collection',
+  },
+  {
+    slug: DefaultPermissions.COLLECTION_UPDATE,
+    name: 'Update Collection',
+    module: 'collection',
+  },
+  {
+    slug: DefaultPermissions.COLLECTION_DELETE,
+    name: 'Delete Collection',
+    module: 'collection',
+  },
   // Attribute
-  { slug: DefaultPermissions.ATTRIBUTE_CREATE,   name: 'Create Attribute',     module: 'attribute' },
-  { slug: DefaultPermissions.ATTRIBUTE_VIEW,     name: 'View Attribute',       module: 'attribute' },
-  { slug: DefaultPermissions.ATTRIBUTE_UPDATE,   name: 'Update Attribute',     module: 'attribute' },
-  { slug: DefaultPermissions.ATTRIBUTE_DELETE,   name: 'Delete Attribute',     module: 'attribute' },
+  {
+    slug: DefaultPermissions.ATTRIBUTE_CREATE,
+    name: 'Create Attribute',
+    module: 'attribute',
+  },
+  {
+    slug: DefaultPermissions.ATTRIBUTE_VIEW,
+    name: 'View Attribute',
+    module: 'attribute',
+  },
+  {
+    slug: DefaultPermissions.ATTRIBUTE_UPDATE,
+    name: 'Update Attribute',
+    module: 'attribute',
+  },
+  {
+    slug: DefaultPermissions.ATTRIBUTE_DELETE,
+    name: 'Delete Attribute',
+    module: 'attribute',
+  },
   // Tag
-  { slug: DefaultPermissions.TAG_CREATE,         name: 'Create Tag',           module: 'tag' },
-  { slug: DefaultPermissions.TAG_VIEW,           name: 'View Tag',             module: 'tag' },
-  { slug: DefaultPermissions.TAG_UPDATE,         name: 'Update Tag',           module: 'tag' },
-  { slug: DefaultPermissions.TAG_DELETE,         name: 'Delete Tag',           module: 'tag' },
+  { slug: DefaultPermissions.TAG_CREATE, name: 'Create Tag', module: 'tag' },
+  { slug: DefaultPermissions.TAG_VIEW, name: 'View Tag', module: 'tag' },
+  { slug: DefaultPermissions.TAG_UPDATE, name: 'Update Tag', module: 'tag' },
+  { slug: DefaultPermissions.TAG_DELETE, name: 'Delete Tag', module: 'tag' },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -150,38 +317,39 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
 
 // ─── Role Definitions ────────────────────────────────────────────────────────
 
-const ROLES: Array<{ slug: DefaultRoles; name: string; description: string }> = [
-  {
-    slug: DefaultRoles.SUPER_ADMIN,
-    name: 'Super Admin',
-    description: 'Full access to all system features and configurations.',
-  },
-  {
-    slug: DefaultRoles.PRODUCT_MANAGER,
-    name: 'Product Manager',
-    description: 'Manages product catalog, categories, and inventory.',
-  },
-  {
-    slug: DefaultRoles.INVENTORY_MANAGER,
-    name: 'Inventory Manager',
-    description: 'Manages stock levels and warehouse operations.',
-  },
-  {
-    slug: DefaultRoles.ORDER_MANAGER,
-    name: 'Order Manager',
-    description: 'Manages customer orders and fulfillment.',
-  },
-  {
-    slug: DefaultRoles.FINANCE_MANAGER,
-    name: 'Finance Manager',
-    description: 'Manages financial reports and payment reconciliation.',
-  },
-  {
-    slug: DefaultRoles.SUPPORT_MANAGER,
-    name: 'Support Manager',
-    description: 'Handles customer support tickets and inquiries.',
-  },
-];
+const ROLES: Array<{ slug: DefaultRoles; name: string; description: string }> =
+  [
+    {
+      slug: DefaultRoles.SUPER_ADMIN,
+      name: 'Super Admin',
+      description: 'Full access to all system features and configurations.',
+    },
+    {
+      slug: DefaultRoles.PRODUCT_MANAGER,
+      name: 'Product Manager',
+      description: 'Manages product catalog, categories, and inventory.',
+    },
+    {
+      slug: DefaultRoles.INVENTORY_MANAGER,
+      name: 'Inventory Manager',
+      description: 'Manages stock levels and warehouse operations.',
+    },
+    {
+      slug: DefaultRoles.ORDER_MANAGER,
+      name: 'Order Manager',
+      description: 'Manages customer orders and fulfillment.',
+    },
+    {
+      slug: DefaultRoles.FINANCE_MANAGER,
+      name: 'Finance Manager',
+      description: 'Manages financial reports and payment reconciliation.',
+    },
+    {
+      slug: DefaultRoles.SUPPORT_MANAGER,
+      name: 'Support Manager',
+      description: 'Handles customer support tickets and inquiries.',
+    },
+  ];
 
 // ─── Super Admin Account ─────────────────────────────────────────────────────
 
@@ -198,8 +366,8 @@ async function seed() {
   await AppDataSource.initialize();
 
   const permissionRepo = AppDataSource.getRepository(Permission);
-  const roleRepo       = AppDataSource.getRepository(Role);
-  const adminRepo      = AppDataSource.getRepository(AdminUser);
+  const roleRepo = AppDataSource.getRepository(Role);
+  const adminRepo = AppDataSource.getRepository(AdminUser);
 
   // 1. Upsert permissions
   console.log('📋 Seeding permissions...');
@@ -207,7 +375,11 @@ async function seed() {
   for (const def of PERMISSIONS) {
     let perm = await permissionRepo.findOne({ where: { slug: def.slug } });
     if (!perm) {
-      perm = permissionRepo.create({ name: def.name, slug: def.slug, module: def.module });
+      perm = permissionRepo.create({
+        name: def.name,
+        slug: def.slug,
+        module: def.module,
+      });
       perm = await permissionRepo.save(perm);
       console.log(`  ✅ Created permission: ${def.slug}`);
     } else {

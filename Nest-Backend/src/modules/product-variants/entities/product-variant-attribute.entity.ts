@@ -15,7 +15,9 @@ import { AttributeValue } from '../../attribute-values/entities/attribute-value.
 @Unique(['variantId', 'attributeId'])
 @Index('idx_product_variant_attributes_variant_id', ['variantId'])
 @Index('idx_product_variant_attributes_attribute_id', ['attributeId'])
-@Index('idx_product_variant_attributes_attribute_value_id', ['attributeValueId'])
+@Index('idx_product_variant_attributes_attribute_value_id', [
+  'attributeValueId',
+])
 export class ProductVariantAttribute {
   @PrimaryGeneratedColumn('uuid')
   id: string;

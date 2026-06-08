@@ -9,7 +9,10 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { AuthMessages } from '../../../common/constants/messages.constants';
 
 @Injectable()
-export class JwtCustomerStrategy extends PassportStrategy(Strategy, 'jwt-customer') {
+export class JwtCustomerStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-customer',
+) {
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(User)

@@ -26,7 +26,10 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { DefaultPermissions, DefaultRoles } from '../../common/constants/roles.constants';
+import {
+  DefaultPermissions,
+  DefaultRoles,
+} from '../../common/constants/roles.constants';
 
 @ApiTags('Admin — User Management')
 @ApiBearerAuth('JWT')

@@ -28,8 +28,12 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
         CONSTRAINT "UQ_users_mobile" UNIQUE ("mobile")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_users_email"  ON "users" ("email")`);
-    await queryRunner.query(`CREATE INDEX "IDX_users_mobile" ON "users" ("mobile")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_users_email"  ON "users" ("email")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_users_mobile" ON "users" ("mobile")`,
+    );
 
     // ─── user_sessions ───────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -47,7 +51,9 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
           REFERENCES "users" ("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_user_sessions_user_id" ON "user_sessions" ("user_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_user_sessions_user_id" ON "user_sessions" ("user_id")`,
+    );
 
     // ─── roles ───────────────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -62,7 +68,9 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
         CONSTRAINT "UQ_roles_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_roles_slug" ON "roles" ("slug")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_roles_slug" ON "roles" ("slug")`,
+    );
 
     // ─── permissions ─────────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -77,7 +85,9 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
         CONSTRAINT "UQ_permissions_slug" UNIQUE ("slug")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_permissions_slug" ON "permissions" ("slug")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_permissions_slug" ON "permissions" ("slug")`,
+    );
 
     // ─── role_permissions ────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -91,8 +101,12 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
           REFERENCES "permissions" ("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_role_permissions_role_id"       ON "role_permissions" ("role_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_role_permissions_permission_id" ON "role_permissions" ("permission_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_role_permissions_role_id"       ON "role_permissions" ("role_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_role_permissions_permission_id" ON "role_permissions" ("permission_id")`,
+    );
 
     // ─── admin_users ─────────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -109,7 +123,9 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
         CONSTRAINT "UQ_admin_users_email" UNIQUE ("email")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_admin_users_email" ON "admin_users" ("email")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_users_email" ON "admin_users" ("email")`,
+    );
 
     // ─── admin_roles ─────────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -123,8 +139,12 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
           REFERENCES "roles"     ("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_admin_roles_admin_id" ON "admin_roles" ("admin_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_admin_roles_role_id"  ON "admin_roles" ("role_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_roles_admin_id" ON "admin_roles" ("admin_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_roles_role_id"  ON "admin_roles" ("role_id")`,
+    );
 
     // ─── admin_sessions ───────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -142,7 +162,9 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
           REFERENCES "admin_users" ("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_admin_sessions_admin_id" ON "admin_sessions" ("admin_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_sessions_admin_id" ON "admin_sessions" ("admin_id")`,
+    );
 
     // ─── otp_verifications ────────────────────────────────────────────────────────
     await queryRunner.query(`
@@ -157,7 +179,9 @@ export class CreateFoundationTables1749200000000 implements MigrationInterface {
         CONSTRAINT "PK_otp_verifications" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_otp_email_type" ON "otp_verifications" ("email", "type")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_otp_email_type" ON "otp_verifications" ("email", "type")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
