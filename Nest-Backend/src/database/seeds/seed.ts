@@ -110,6 +110,11 @@ const PERMISSIONS: PermissionDef[] = [
     module: 'order',
   },
   {
+    slug: DefaultPermissions.ORDER_CANCEL,
+    name: 'Cancel Orders',
+    module: 'order',
+  },
+  {
     slug: DefaultPermissions.FINANCE_VIEW,
     name: 'View Finance',
     module: 'finance',
@@ -300,6 +305,7 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
   [DefaultRoles.ORDER_MANAGER]: [
     DefaultPermissions.ORDER_VIEW,
     DefaultPermissions.ORDER_UPDATE,
+    DefaultPermissions.ORDER_CANCEL,
     DefaultPermissions.USER_VIEW,
   ],
   [DefaultRoles.FINANCE_MANAGER]: [

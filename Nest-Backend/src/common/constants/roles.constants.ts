@@ -28,6 +28,7 @@ export enum DefaultPermissions {
   // Order
   ORDER_VIEW = 'order.view',
   ORDER_UPDATE = 'order.update',
+  ORDER_CANCEL = 'order.cancel',
   // Finance
   FINANCE_VIEW = 'finance.view',
   FINANCE_EXPORT = 'finance.export',

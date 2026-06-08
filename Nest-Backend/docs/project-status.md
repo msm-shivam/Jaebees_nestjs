@@ -501,9 +501,89 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - Wishlist (Layer 6)
 - Address Book (Layer 7)
 - Checkout (Layer 8)
-- Orders (Layer 9)
 - Payments
 - Reviews
 - Search / Analytics
+
+---
+
+## Layer 6 — Order Management (Complete)
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Orders | ✅ Complete | 2026-06-08 | 2026-06-08 |
+| Order Items | ✅ Complete | 2026-06-08 | 2026-06-08 |
+
+### Phase 6 Deliverables
+
+- [x] Order Entity (with User relation, order number, status, totals, notes, timestamps)
+- [x] OrderItem Entity (with Order relation, product snapshots, pricing)
+- [x] DTOs (CreateOrderDto, OrderListQueryDto, UpdateOrderStatusDto, CancelOrderDto, OrderResponseDto, OrderItemResponseDto)
+- [x] OrdersService (createOrder, getMyOrders, getMyOrder, getAllOrders, getOrder, updateStatus, cancelOrder, generateOrderNumber)
+- [x] OrdersController (customer: 3 endpoints)
+- [x] AdminOrdersController (admin: 4 endpoints)
+- [x] OrdersModule (with TypeOrm imports for Order, OrderItem, Cart, CartItem, ProductVariant, Inventory)
+- [x] Migration (orders, order_items tables + FKs + indexes)
+- [x] Swagger documentation (all endpoints documented with request/response examples)
+- [x] JWT integration (JwtAuthGuard for customer, AdminJwtGuard + PermissionsGuard for admin)
+- [x] Permission seeds (order.cancel permission + ORDER_MANAGER role mapping)
+- [x] Business rules (inventory deduction, order number generation, status machine, cancellation)
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| Order From Cart | Creates order from current cart contents, then clears cart |
+| Order Number | `ORD-YYYYMMDD-000001` format with daily sequence reset |
+| Product Snapshot | Stores productName, sku, unitPrice at order creation time |
+| Inventory Deduction | `availableQuantity -= quantity` on order create |
+| Inventory Restore | `availableQuantity += quantity` on order cancel |
+| Status Machine | PENDING → CONFIRMED → PROCESSING → SHIPPED → DELIVERED (or CANCELLED) |
+| Customer Cancel | Only PENDING or CONFIRMED orders (soft delete) |
+| Admin Cancel | Any status (soft delete) |
+| Order History | Customer can list their own orders with pagination/status filter/search |
+
+### API Endpoints
+
+#### Orders (Customer) — `/api/v1/orders`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /orders | Customer JWT | ✅ |
+| GET | /orders | Customer JWT | ✅ |
+| GET | /orders/:id | Customer JWT | ✅ |
+| POST | /orders/:id/cancel | Customer JWT | ✅ |
+
+#### Orders (Admin) — `/api/v1/admin/orders`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| GET | /admin/orders | Admin JWT + order.view | ✅ |
+| GET | /admin/orders/:id | Admin JWT + order.view | ✅ |
+| PATCH | /admin/orders/:id/status | Admin JWT + order.update | ✅ |
+| POST | /admin/orders/:id/cancel | Admin JWT + order.cancel | ✅ |
+
+### Database Tables (Layer 6)
+
+| Table | Status |
+|-------|--------|
+| orders | ✅ Entity + Migration |
+| order_items | ✅ Entity + Migration |
+
+### Migration Details
+
+**Migration:** `1749200600000-Phase6Orders.ts`
+
+**Tables Created:**
+- `orders` with columns: id, user_id, order_number, status, total_items, subtotal, tax_amount, shipping_amount, discount_amount, total_amount, notes, cancelled_at, cancel_reason, created_at, updated_at, deleted_at
+- `order_items` with columns: id, order_id, product_id, variant_id, product_name, sku, quantity, unit_price, total_price, created_at
+
+**Foreign Keys Added:**
+- `orders.user_id` → `users.id` (ON DELETE CASCADE)
+- `order_items.order_id` → `orders.id` (ON DELETE CASCADE)
+
+**Indexes Created:**
+- orders: user_id, order_number (unique), status, created_at
+- order_items: order_id, variant_id
 
 

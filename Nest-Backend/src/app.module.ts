@@ -17,6 +17,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { ProductVariantsModule } from './modules/product-variants/product-variants.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { CartModule } from './modules/cart/cart.module';
+import { OrdersModule } from './modules/orders/orders.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -40,6 +41,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     ProductVariantsModule,
     InventoryModule,
     CartModule,
+    OrdersModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
