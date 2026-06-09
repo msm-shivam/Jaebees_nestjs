@@ -10,9 +10,12 @@ import {
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../products/entities/product.entity';
+import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
 import { Order } from '../../orders/entities/order.entity';
 import { OrderItem } from '../../orders/entities/order-item.entity';
 import { ReviewImage } from './review-image.entity';
+import { ReviewHelpfulVote } from './review-helpful-vote.entity';
+import { ReviewReport } from './review-report.entity';
 import { ReviewStatus } from '../enums/review-status.enum';
 
 @Entity('reviews')
@@ -34,6 +37,13 @@ export class Review extends BaseEntity {
   @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
+  variantId: string | null;
+
+  @ManyToOne(() => ProductVariant, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'variant_id' })
+  variant: ProductVariant;
 
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
@@ -67,6 +77,9 @@ export class Review extends BaseEntity {
   @Column({ name: 'helpful_count', type: 'int', default: 0 })
   helpfulCount: number;
 
+  @Column({ name: 'admin_note', type: 'text', nullable: true })
+  adminNote: string;
+
   @Column({ name: 'approved_by', type: 'uuid', nullable: true })
   approvedBy: string;
 
@@ -78,4 +91,10 @@ export class Review extends BaseEntity {
 
   @OneToMany(() => ReviewImage, (img) => img.review, { cascade: true })
   images: ReviewImage[];
+
+  @OneToMany(() => ReviewHelpfulVote, (vote) => vote.review, { cascade: true })
+  helpfulVotes: ReviewHelpfulVote[];
+
+  @OneToMany(() => ReviewReport, (report) => report.review, { cascade: true })
+  reports: ReviewReport[];
 }

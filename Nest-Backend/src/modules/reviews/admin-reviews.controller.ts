@@ -4,11 +4,13 @@ import {
   Patch,
   Delete,
   Param,
+  Query,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
+import { ReviewAnalyticsService } from './review-analytics.service';
 import { AdminJwtGuard } from '../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
@@ -20,13 +22,23 @@ import type { Request } from 'express';
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller('admin/reviews')
 export class AdminReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly analyticsService: ReviewAnalyticsService,
+  ) {}
 
   @Get()
   @Permissions(DefaultPermissions.REVIEW_VIEW)
   @ApiOperation({ summary: 'List all reviews' })
   findAll() {
     return this.reviewsService.findAll();
+  }
+
+  @Get('analytics')
+  @Permissions(DefaultPermissions.REVIEW_VIEW)
+  @ApiOperation({ summary: 'Get review analytics' })
+  getAnalytics() {
+    return this.analyticsService.getAnalytics();
   }
 
   @Get(':id')
@@ -53,7 +65,7 @@ export class AdminReviewsController {
   }
 
   @Patch(':id/hide')
-  @Permissions(DefaultPermissions.REVIEW_APPROVE)
+  @Permissions(DefaultPermissions.REVIEW_MODERATE)
   @ApiOperation({ summary: 'Hide a review' })
   hide(@Param('id') id: string, @Req() req: Request) {
     const adminId: string = (req.user as Record<string, unknown>).id as string;

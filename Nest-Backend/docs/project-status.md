@@ -1131,6 +1131,118 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 
 ## Layer 11 — Wishlist & Saved Items Management (Complete)
 
+---
+
+## Layer 12 — Reviews, Ratings, Product Q&A & Customer Feedback (Complete)
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Product Reviews | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Product Ratings | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Review Images | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Review Moderation | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Review Helpful Votes | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Review Reports | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Product Questions | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Product Answers | ✅ Complete | 2026-06-09 | 2026-06-09 |
+| Customer Feedback Analytics | ✅ Complete | 2026-06-09 | 2026-06-09 |
+
+### Phase 12 Deliverables
+
+- [x] Review entity updated (variantId, adminNote)
+- [x] ReviewHelpfulVote entity (unique reviewId+userId)
+- [x] ReviewReport entity (reason enum: SPAM, OFFENSIVE, FAKE_REVIEW, OTHER)
+- [x] ProductQuestion entity (status: OPEN, ANSWERED, CLOSED)
+- [x] ProductAnswer entity (isAdminAnswer)
+- [x] Product entity updated (fiveStarCount through oneStarCount)
+- [x] Rating aggregation with star distribution
+- [x] Verified purchase validation
+- [x] Review moderation workflow (approve, reject, hide)
+- [x] Helpful vote tracking (vote/removeVote with helpfulCount increment/decrement)
+- [x] Abuse reporting system
+- [x] Product Q&A system
+- [x] Admin review management
+- [x] Admin Q&A management
+- [x] Review analytics (total, approved, pending, rejected, averageRating, distribution, mostReviewed, mostHelpful)
+- [x] 7-day edit window enforcement
+- [x] Swagger documentation (all endpoints have ApiOperation, ApiBearerAuth)
+- [x] RBAC integration (REVIEW_MODERATE, QUESTION_VIEW, QUESTION_ANSWER, QUESTION_DELETE)
+- [x] Migration Phase12ReviewsRatingsAndQA
+- [x] Seed updates (new permissions + role mappings)
+- [x] Zero TypeScript build errors
+
+### API Endpoints
+
+#### Reviews (Customer) — `/api/v1/reviews`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /reviews | Customer JWT | ✅ |
+| GET | /reviews/my | Customer JWT | ✅ |
+| GET | /reviews/product/:productId | Public | ✅ |
+| GET | /reviews/:id | Public | ✅ |
+| PATCH | /reviews/:id | Customer JWT | ✅ |
+| DELETE | /reviews/:id | Customer JWT | ✅ |
+| POST | /reviews/:id/helpful | Customer JWT | ✅ |
+| DELETE | /reviews/:id/helpful | Customer JWT | ✅ |
+| POST | /reviews/:id/report | Customer JWT | ✅ |
+
+#### Questions (Customer) — `/api/v1/questions`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /questions | Customer JWT | ✅ |
+| GET | /questions/product/:productId | Public | ✅ |
+| GET | /questions/:id | Public | ✅ |
+
+#### Reviews (Admin) — `/api/v1/admin/reviews`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| GET | /admin/reviews | Admin JWT + review.view | ✅ |
+| GET | /admin/reviews/analytics | Admin JWT + review.view | ✅ |
+| GET | /admin/reviews/:id | Admin JWT + review.view | ✅ |
+| PATCH | /admin/reviews/:id/approve | Admin JWT + review.approve | ✅ |
+| PATCH | /admin/reviews/:id/reject | Admin JWT + review.reject | ✅ |
+| PATCH | /admin/reviews/:id/hide | Admin JWT + review.moderate | ✅ |
+| DELETE | /admin/reviews/:id | Admin JWT + review.delete | ✅ |
+
+#### Questions (Admin) — `/api/v1/admin/questions`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| GET | /admin/questions | Admin JWT + question.view | ✅ |
+| GET | /admin/questions/:id | Admin JWT + question.view | ✅ |
+| POST | /admin/questions/:id/answer | Admin JWT + question.answer | ✅ |
+| PATCH | /admin/questions/:id/close | Admin JWT + question.answer | ✅ |
+| DELETE | /admin/questions/:id | Admin JWT + question.delete | ✅ |
+
+### Permissions Added
+
+| Permission | Slug |
+|------------|------|
+| Moderate Review | `review.moderate` |
+| View Question | `question.view` |
+| Answer Question | `question.answer` |
+| Delete Question | `question.delete` |
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| Verified Purchase | Only DELIVERED orders can be reviewed |
+| One Review Per Item | Unique constraint on orderItemId |
+| Rating 1-5 Only | @Min(1) @Max(5) validation |
+| 7-Day Edit Window | Can only edit own review within 7 days of creation |
+| Approval Required | Default PENDING status, only APPROVED shown publicly |
+| Rating Auto-Recalc | averageRating + star counts recalculated on every create/update/delete/approve/reject |
+| Helpful Vote Once | Unique (reviewId, userId) constraint; removing vote decrements count |
+| Report Reasons | SPAM, OFFENSIVE, FAKE_REVIEW, OTHER |
+| Question Status Flow | OPEN → ANSWERED (when admin answers) → CLOSED (admin can close) |
+| Admin Answers | Marked with isAdminAnswer = true |
+| Soft Delete Reviews | DeleteDateColumn on Review |
+| Variant Support | Review can optionally link to a variant (SET NULL on delete) |
+
 | Module | Status | Started | Completed |
 |--------|--------|---------|-----------|
 | Wishlist (Rebuild) | ✅ Complete | 2026-06-09 | 2026-06-09 |

@@ -59,6 +59,7 @@ export class ReviewsService {
     const review = this.reviewRepository.create({
       userId,
       productId: dto.productId,
+      variantId: dto.variantId ?? null,
       orderId: dto.orderId,
       orderItemId: dto.orderItemId,
       rating: dto.rating,
@@ -118,6 +119,12 @@ export class ReviewsService {
     if (review.status === ReviewStatus.APPROVED) {
       throw new BadRequestException('Cannot edit an approved review');
     }
+    const now = new Date().getTime();
+    const createdAt = new Date(review.createdAt).getTime();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    if (now - createdAt > sevenDays) {
+      throw new BadRequestException('Can only edit reviews within 7 days');
+    }
     Object.assign(review, dto);
     const saved = await this.reviewRepository.save(review);
     await this.recalculateProductRating(review.productId);
@@ -161,11 +168,17 @@ export class ReviewsService {
     return saved;
   }
 
-  private async recalculateProductRating(productId: string): Promise<void> {
+  async recalculateProductRating(productId: string): Promise<void> {
     const result = await this.reviewRepository
       .createQueryBuilder('review')
       .select('AVG(review.rating)', 'avg')
       .addSelect('COUNT(review.id)', 'count')
+      .addSelect('COUNT(CASE WHEN review.rating = 5 THEN 1 END)', 'fiveStar')
+      .addSelect('COUNT(CASE WHEN review.rating = 4 THEN 1 END)', 'fourStar')
+      .addSelect('COUNT(CASE WHEN review.rating = 3 THEN 1 END)', 'threeStar')
+      .addSelect('COUNT(CASE WHEN review.rating = 2 THEN 1 END)', 'twoStar')
+      .addSelect('COUNT(CASE WHEN review.rating = 1 THEN 1 END)', 'oneStar')
+      .addSelect('COUNT(CASE WHEN review.rating IS NOT NULL THEN 1 END)', 'totalRatings')
       .where('review.productId = :productId', { productId })
       .andWhere('review.status = :status', { status: ReviewStatus.APPROVED })
       .andWhere('review.deletedAt IS NULL')
@@ -173,11 +186,22 @@ export class ReviewsService {
 
     const avg = result?.avg ? parseFloat(parseFloat(result.avg).toFixed(2)) : 0;
     const count = result?.count ? parseInt(result.count, 10) : 0;
+    const totalRatings = result?.totalRatings ? parseInt(result.totalRatings, 10) : 0;
+    const fiveStar = result?.fiveStar ? parseInt(result.fiveStar, 10) : 0;
+    const fourStar = result?.fourStar ? parseInt(result.fourStar, 10) : 0;
+    const threeStar = result?.threeStar ? parseInt(result.threeStar, 10) : 0;
+    const twoStar = result?.twoStar ? parseInt(result.twoStar, 10) : 0;
+    const oneStar = result?.oneStar ? parseInt(result.oneStar, 10) : 0;
 
     await this.productRepository.update(productId, {
       averageRating: avg,
-      totalRatings: count,
+      totalRatings,
       totalReviews: count,
+      fiveStarCount: fiveStar,
+      fourStarCount: fourStar,
+      threeStarCount: threeStar,
+      twoStarCount: twoStar,
+      oneStarCount: oneStar,
     });
   }
 }

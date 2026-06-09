@@ -119,4 +119,9 @@ export enum DefaultPermissions {
   REVIEW_DELETE = 'review.delete',
   REVIEW_APPROVE = 'review.approve',
   REVIEW_REJECT = 'review.reject',
+  REVIEW_MODERATE = 'review.moderate',
+  // Question
+  QUESTION_VIEW = 'question.view',
+  QUESTION_ANSWER = 'question.answer',
+  QUESTION_DELETE = 'question.delete',
 }

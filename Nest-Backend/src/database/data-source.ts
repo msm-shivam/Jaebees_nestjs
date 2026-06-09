@@ -44,6 +44,10 @@ import { Wishlist } from '../modules/wishlist/entities/wishlist.entity';
 import { WishlistItem } from '../modules/wishlist/entities/wishlist-item.entity';
 import { Review } from '../modules/reviews/entities/review.entity';
 import { ReviewImage } from '../modules/reviews/entities/review-image.entity';
+import { ReviewHelpfulVote } from '../modules/reviews/entities/review-helpful-vote.entity';
+import { ReviewReport } from '../modules/reviews/entities/review-report.entity';
+import { ProductQuestion } from '../modules/questions/entities/product-question.entity';
+import { ProductAnswer } from '../modules/questions/entities/product-answer.entity';
 
 dotenv.config();
 
@@ -98,6 +102,10 @@ export const AppDataSource = new DataSource({
     WishlistItem,
     Review,
     ReviewImage,
+    ReviewHelpfulVote,
+    ReviewReport,
+    ProductQuestion,
+    ProductAnswer,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

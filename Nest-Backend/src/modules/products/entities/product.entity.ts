@@ -91,6 +91,21 @@ export class Product extends BaseEntity {
   @Column({ name: 'total_reviews', type: 'int', default: 0 })
   totalReviews: number;
 
+  @Column({ name: 'five_star_count', type: 'int', default: 0 })
+  fiveStarCount: number;
+
+  @Column({ name: 'four_star_count', type: 'int', default: 0 })
+  fourStarCount: number;
+
+  @Column({ name: 'three_star_count', type: 'int', default: 0 })
+  threeStarCount: number;
+
+  @Column({ name: 'two_star_count', type: 'int', default: 0 })
+  twoStarCount: number;
+
+  @Column({ name: 'one_star_count', type: 'int', default: 0 })
+  oneStarCount: number;
+
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
 

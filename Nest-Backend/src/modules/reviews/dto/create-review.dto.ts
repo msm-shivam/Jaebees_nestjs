@@ -1,17 +1,22 @@
-import { IsString, IsNumber, Min, Max, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsNumber, Min, Max, IsOptional, MaxLength, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateReviewDto {
   @ApiProperty()
-  @IsString()
+  @IsUUID()
   productId: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  variantId?: string;
+
   @ApiProperty()
-  @IsString()
+  @IsUUID()
   orderId: string;
 
   @ApiProperty()
-  @IsString()
+  @IsUUID()
   orderItemId: string;
 
   @ApiProperty({ minimum: 1, maximum: 5 })
