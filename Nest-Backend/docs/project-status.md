@@ -1010,37 +1010,37 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 | Update Promotion | `promotion.update` |
 | Delete Promotion | `promotion.delete` |
 
-### Layer 10 — Wishlist, Reviews & Ratings Management (In Progress)
+### Layer 10 — Wishlist, Reviews & Ratings Management (Complete)
 
 | Module | Status | Started | Completed |
 |--------|--------|---------|-----------|
-| Wishlist | 🔄 In Progress | 2026-06-08 | — |
-| Reviews & Ratings | 🔄 In Progress | 2026-06-08 | — |
-| Review Moderation | 🔄 In Progress | 2026-06-08 | — |
-| Review Images | 🔄 In Progress | 2026-06-08 | — |
+| Wishlist | ✅ Complete | 2026-06-08 | 2026-06-09 |
+| Reviews & Ratings | ✅ Complete | 2026-06-08 | 2026-06-09 |
+| Review Moderation | ✅ Complete | 2026-06-08 | 2026-06-09 |
+| Review Images | ✅ Complete | 2026-06-08 | 2026-06-09 |
 
 ### Phase 10 Deliverables
 
-- [ ] ReviewStatus Enum
-- [ ] Wishlist Entity
-- [ ] WishlistItem Entity
-- [ ] Review Entity
-- [ ] ReviewImage Entity
-- [ ] Product entity extended (average_rating, review_count)
-- [ ] DTOs (CreateReview, UpdateReview, WishlistResponse, ReviewResponse)
-- [ ] WishlistService (getOrCreate, add, remove, find)
-- [ ] ReviewsService (create, update, find, approve, reject, rating aggregation)
-- [ ] WishlistController (GET, POST, DELETE)
-- [ ] ReviewsController (customer: POST, GET, PATCH, DELETE)
-- [ ] AdminReviewsController (admin: GET, PATCH approve/reject, DELETE)
-- [ ] WishlistModule
-- [ ] ReviewsModule
-- [ ] Migration Phase10 (wishlists, wishlist_items, reviews, review_images + product columns)
-- [ ] Permissions (wishlist.view, review.*)
-- [ ] Role mappings (SUPPORT_MANAGER gets review.view)
-- [ ] Module registration in app.module.ts + data-source.ts
-- [ ] Swagger tags in main.ts
-- [ ] Zero TypeScript build errors
+- [x] ReviewStatus Enum
+- [x] Wishlist Entity
+- [x] WishlistItem Entity
+- [x] Review Entity
+- [x] ReviewImage Entity
+- [x] Product entity extended (average_rating, review_count)
+- [x] DTOs (CreateReview, UpdateReview, WishlistResponse, ReviewResponse)
+- [x] WishlistService (getOrCreate, add, remove, find)
+- [x] ReviewsService (create, update, find, approve, reject, rating aggregation)
+- [x] WishlistController (GET, POST, DELETE)
+- [x] ReviewsController (customer: POST, GET, PATCH, DELETE)
+- [x] AdminReviewsController (admin: GET, PATCH approve/reject, DELETE)
+- [x] WishlistModule
+- [x] ReviewsModule
+- [x] Migration Phase10 (wishlists, wishlist_items, reviews, review_images + product columns)
+- [x] Permissions (wishlist.view, review.*)
+- [x] Role mappings (SUPPORT_MANAGER gets review.view)
+- [x] Module registration in app.module.ts + data-source.ts
+- [x] Swagger tags in main.ts
+- [x] Zero TypeScript build errors
 
 ### API Endpoints
 
@@ -1048,29 +1048,29 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 
 | Method | Path | Auth | Status |
 |--------|------|------|--------|
-| GET | /wishlist | Customer JWT | 🔄 |
-| POST | /wishlist/products/:productId | Customer JWT | 🔄 |
-| DELETE | /wishlist/products/:productId | Customer JWT | 🔄 |
+| GET | /wishlist | Customer JWT | ✅ |
+| POST | /wishlist/products/:productId | Customer JWT | ✅ |
+| DELETE | /wishlist/products/:productId | Customer JWT | ✅ |
 
 #### Reviews (Customer) — `/api/v1/reviews`
 
 | Method | Path | Auth | Status |
 |--------|------|------|--------|
-| POST | /reviews | Customer JWT | 🔄 |
-| GET | /reviews/my | Customer JWT | 🔄 |
-| GET | /products/:productId/reviews | Public | 🔄 |
-| PATCH | /reviews/:id | Customer JWT | 🔄 |
-| DELETE | /reviews/:id | Customer JWT | 🔄 |
+| POST | /reviews | Customer JWT | ✅ |
+| GET | /reviews/my | Customer JWT | ✅ |
+| GET | /products/:productId/reviews | Public | ✅ |
+| PATCH | /reviews/:id | Customer JWT | ✅ |
+| DELETE | /reviews/:id | Customer JWT | ✅ |
 
 #### Reviews (Admin) — `/api/v1/admin/reviews`
 
 | Method | Path | Auth | Status |
 |--------|------|------|--------|
-| GET | /admin/reviews | Admin JWT + review.view | 🔄 |
-| GET | /admin/reviews/:id | Admin JWT + review.view | 🔄 |
-| PATCH | /admin/reviews/:id/approve | Admin JWT + review.approve | 🔄 |
-| PATCH | /admin/reviews/:id/reject | Admin JWT + review.reject | 🔄 |
-| DELETE | /admin/reviews/:id | Admin JWT + review.delete | 🔄 |
+| GET | /admin/reviews | Admin JWT + review.view | ✅ |
+| GET | /admin/reviews/:id | Admin JWT + review.view | ✅ |
+| PATCH | /admin/reviews/:id/approve | Admin JWT + review.approve | ✅ |
+| PATCH | /admin/reviews/:id/reject | Admin JWT + review.reject | ✅ |
+| DELETE | /admin/reviews/:id | Admin JWT + review.delete | ✅ |
 
 ### Permissions Added
 
@@ -1083,6 +1083,17 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 | Delete Review | `review.delete` |
 | Approve Review | `review.approve` |
 | Reject Review | `review.reject` |
+
+### Layer 10 Out of Scope
+
+- Wishlist sharing / public wishlists
+- Review voting (helpful/not helpful)
+- Review images upload endpoint (manual image URL entry for now)
+- Verified purchase badge auto-display
+- Review analytics / moderation queue dashboard
+- Review reply from seller
+- Photo/Video reviews with media upload
+- Average rating history tracking
 
 ---
 

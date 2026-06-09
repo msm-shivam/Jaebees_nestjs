@@ -1,0 +1,35 @@
+## Complete Bug & Issues Analysis
+
+After thoroughly analyzing the codebase against the documentation specs, here are all the bugs, issues, and discrepancies found:
+
+### 🐛 Bug 1: Missing `totalItems` Field in Order Entity
+**File:** `Nest-Backend/src/modules/orders/entities/order.entity.ts`  
+The `phase6.md` spec requires a `total_items` column on the `orders` table. The migration `1749200600000-Phase6Orders.ts` does NOT define this column either. The `Order` entity class has no `totalItems` property. This column only exists in the `carts` table.  
+- **Impact:** Orders won't track the total number of items ordered.  
+- **Fix needed:** Add `@Column({ name: 'total_items', type: 'int', default: 0 }) totalItems: number;` to the Order entity and add `total_items` column to the Phase 6 migration.
+
+### 🐛 Bug 2: Test Script is Truncated & Broken
+**File:** `test-apis.ps1` (only 99 lines, 3106 bytes)  
+- The file only contains Layer 1 (Auth, Users, Admin, RBAC) test code  
+- It stops abruptly at line 99 with an **unterminated string** - missing the closing `"`  
+- Layers 2 through 10 test code are completely missing  
+- **Impact:** Cannot run automated tests for the bulk of the application  
+- **Fix needed:** Complete the test script or regenerate from working Postman collection
+
+
+### 🔍 Issue 6: Layer 10 Status in project-status.md
+- `project-status.md` shows Layer 10 (Wishlist/Reviews) as **"In Progress"** with all checkboxes `[ ]`  
+- But the actual source code reveals ALL modules are **complete**:  
+  - `wishlist.module.ts`, `wishlist.service.ts`, `wishlist.controller.ts` - ✅ all implemented  
+  - `reviews.module.ts`, `reviews.service.ts`, `reviews.controller.ts`, `admin-reviews.controller.ts` - ✅ all implemented  
+  - Migration `1749201000000-Phase10WishlistReviewsAndRatings.ts` - ✅ created with all tables, indexes, FKs  
+  - `ReviewStatus` enum - ✅ defined  
+  - 7 review permissions (REVIEW_VIEW, REVIEW_CREATE, REVIEW_UPDATE, REVIEW_DELETE, REVIEW_APPROVE, REVIEW_REJECT, WISHLIST_VIEW) - ✅ all defined in `roles.constants.ts`  
+  - Seeds - ✅ all review/wishlist permissions included in seed data  
+  - **Fix needed:** Update `project-status.md` to mark Layer 10 as **Complete** with all checkboxes `[x]`
+
+### 🔍 Issue 7: Wishlist Controller Returns Raw Entity
+- `wishlist.controller.ts` returns the raw `Wishlist` entity from `getOrCreate()` instead of transforming through a DTO
+- Other controllers consistently use DTO response formatting via `plainToInstance`  
+- The response structure differs from other API endpoints (no `{ success, message, data }` envelope)
+
