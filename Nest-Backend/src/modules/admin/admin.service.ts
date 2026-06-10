@@ -100,6 +100,13 @@ export class AdminService {
     const admin = await this.findByIdOrFail(id);
     await this.adminSessionRepo.delete({ adminId: id });
     await this.adminRepo.remove(admin);
+   const existingAdmin = await this.adminRepo.findOneBy({
+      email: admin.email,
+      
+    });
+    if(existingAdmin) {
+      throw new BadRequestException(AdminMessages.DELETE_FAILED);
+    }
     return { message: 'Admin user deleted successfully.' };
   }
 

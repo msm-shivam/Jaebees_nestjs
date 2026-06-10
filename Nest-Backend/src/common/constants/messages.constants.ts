@@ -28,6 +28,7 @@ export const UserMessages = {
 export const AdminMessages = {
   ADMIN_NOT_FOUND: 'Admin user not found.',
   EMAIL_TAKEN: 'An admin account with this email already exists.',
+  DELETE_FAILED: 'Failed to delete admin user.',
 };
 
 export const RbacMessages = {
