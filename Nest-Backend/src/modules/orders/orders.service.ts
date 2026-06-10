@@ -8,6 +8,8 @@ import { Repository, ILike } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Order, OrderStatus } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
@@ -41,10 +43,13 @@ export class OrdersService {
     private readonly inventoryRepo: Repository<Inventory>,
     @InjectRepository(ProductVariant)
     private readonly variantRepo: Repository<ProductVariant>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly addressesService: AddressesService,
     private readonly warehousesService: WarehousesService,
     private readonly deliverySettingsService: DeliverySettingsService,
     private readonly shipmentsService: ShipmentsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createOrder(
@@ -178,6 +183,17 @@ export class OrdersService {
       where: { id: savedOrder.id },
       relations: { items: true },
     })) as Order;
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (user) {
+      await this.notificationsService.sendOrderConfirmation({
+        to: user.email,
+        userId: user.id,
+        orderNumber: savedOrder.orderNumber,
+        firstName: user.firstName,
+      });
+    }
+
     return {
       message: 'Order created successfully.',
       data: this.toResponse(result),

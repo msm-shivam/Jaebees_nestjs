@@ -470,6 +470,37 @@ const PERMISSIONS: PermissionDef[] = [
     name: 'Delete Question',
     module: 'question',
   },
+  // Notification
+  {
+    slug: DefaultPermissions.NOTIFICATION_VIEW,
+    name: 'View Notification Logs',
+    module: 'notification',
+  },
+  {
+    slug: DefaultPermissions.NOTIFICATION_MANAGE,
+    name: 'Manage Notifications',
+    module: 'notification',
+  },
+  {
+    slug: DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+    name: 'View Email Templates',
+    module: 'email_template',
+  },
+  {
+    slug: DefaultPermissions.EMAIL_TEMPLATE_CREATE,
+    name: 'Create Email Templates',
+    module: 'email_template',
+  },
+  {
+    slug: DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
+    name: 'Update Email Templates',
+    module: 'email_template',
+  },
+  {
+    slug: DefaultPermissions.EMAIL_TEMPLATE_DELETE,
+    name: 'Delete Email Templates',
+    module: 'email_template',
+  },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -519,6 +550,11 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.REVIEW_MODERATE,
         DefaultPermissions.QUESTION_VIEW,
         DefaultPermissions.QUESTION_ANSWER,
+        DefaultPermissions.NOTIFICATION_VIEW,
+        DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+        DefaultPermissions.EMAIL_TEMPLATE_CREATE,
+        DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
+        DefaultPermissions.EMAIL_TEMPLATE_DELETE,
       ],
   [DefaultRoles.INVENTORY_MANAGER]: [
     DefaultPermissions.INVENTORY_CREATE,
@@ -558,6 +594,9 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.ORDER_VIEW,
         DefaultPermissions.REVIEW_VIEW,
         DefaultPermissions.QUESTION_VIEW,
+        DefaultPermissions.NOTIFICATION_VIEW,
+        DefaultPermissions.NOTIFICATION_MANAGE,
+        DefaultPermissions.EMAIL_TEMPLATE_VIEW,
       ],
 };
 

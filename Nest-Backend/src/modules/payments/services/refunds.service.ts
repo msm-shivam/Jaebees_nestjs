@@ -9,8 +9,11 @@ import { Payment } from '../entities/payment.entity';
 import { PaymentRefund } from '../entities/payment-refund.entity';
 import { PaymentLog } from '../entities/payment-log.entity';
 import { PaymentStatus } from '../entities/payment-status.enum';
+import { Order } from '../../orders/entities/order.entity';
+import { User } from '../../users/entities/user.entity';
 import { StripeService } from './stripe.service';
 import { CreateRefundDto } from '../dto/create-refund.dto';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class RefundsService {
@@ -21,7 +24,12 @@ export class RefundsService {
     private readonly refundRepo: Repository<PaymentRefund>,
     @InjectRepository(PaymentLog)
     private readonly paymentLogRepo: Repository<PaymentLog>,
+    @InjectRepository(Order)
+    private readonly orderRepo: Repository<Order>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly stripeService: StripeService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createRefund(
@@ -93,6 +101,21 @@ export class RefundsService {
       `Refund of ${refundAmount} created. Reason: ${dto.reason ?? 'N/A'}`,
       performedBy,
     );
+
+    const order = await this.orderRepo.findOne({
+      where: { id: payment.orderId },
+      relations: { user: true },
+    });
+    if (order?.user) {
+      await this.notificationsService.sendRefundProcessed({
+        to: order.user.email,
+        userId: order.user.id,
+        firstName: order.user.firstName,
+        orderNumber: order.orderNumber,
+        amount: refundAmount,
+        reason: dto.reason ?? 'Customer request',
+      });
+    }
 
     return {
       message: 'Refund processed successfully.',

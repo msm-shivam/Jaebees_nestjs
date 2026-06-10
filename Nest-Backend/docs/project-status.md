@@ -1285,6 +1285,133 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 
 ---
 
+## Layer 13 — Email Notifications & Communication Center
+
+### Status: ✅ Complete
+
+### Deliverables
+
+- [x] Email infrastructure: nodemailer + handlebars (template rendering)
+- [x] Bull queue for async email processing (backed by Redis)
+- [x] Email template CRUD (DB-stored, admin managed)
+- [x] Notification preferences per user (order/payment/shipment/promotional/review toggles)
+- [x] Notification logs (status tracking, sent/failed/queued)
+- [x] Default email templates seeded (17 templates: welcome, verify, password, order, payment, shipment, wishlist, review)
+- [x] Customer endpoints: GET/PATCH notification preferences
+- [x] Admin endpoints: email template CRUD, notification logs, send test email
+- [x] New permissions: notification.view, notification.manage, email_template.*
+- [x] Seed updated (SUPER_ADMIN, PRODUCT_MANAGER, SUPPORT_MANAGER roles)
+- [x] Migration Phase13EmailNotifications (3 tables: email_templates, notification_preferences, notification_logs)
+- [x] Integration triggers wired into Auth, Orders, Payments, Refunds, Shipments
+- [x] Zero TypeScript build errors
+
+### Architecture
+
+```
+┌─────────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│ Existing Services   │────▶│ Notifications    │────▶│ EmailQueueService│
+│ (Auth/Orders/etc.)  │     │ Service          │     │ (Bull Producer)   │
+└─────────────────────┘     └──────────────────┘     └──────────────────┘
+                                                           │
+                                                    ┌──────┴──────┐
+                                                    │ Email       │
+                                                    │ Processor   │
+                                                    │ (Consumer)   │
+                                                    └──────┬──────┘
+                                                           │
+                                                    ┌──────┴──────┐
+                                                    │ EmailService │
+                                                    │ (nodemailer) │
+                                                    └─────────────┘
+```
+
+### New Entities (3 tables)
+
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| EmailTemplate | email_templates | name, code (unique), subject, body, isActive |
+| NotificationPreference | notification_preferences | userId (unique), orderEmails, paymentEmails, shipmentEmails, promotionalEmails, reviewEmails |
+| NotificationLog | notification_logs | userId (nullable), recipient, templateCode, subject, status, errorMessage, sentAt |
+
+### New Permissions
+
+| Permission | Slug | Assigned To |
+|------------|------|-------------|
+| View Notification Logs | `notification.view` | SUPER_ADMIN, PRODUCT_MANAGER, SUPPORT_MANAGER |
+| Manage Notifications | `notification.manage` | SUPER_ADMIN, SUPPORT_MANAGER |
+| View Email Templates | `email_template.view` | SUPER_ADMIN, PRODUCT_MANAGER, SUPPORT_MANAGER |
+| Create Email Templates | `email_template.create` | SUPER_ADMIN, PRODUCT_MANAGER |
+| Update Email Templates | `email_template.update` | SUPER_ADMIN, PRODUCT_MANAGER |
+| Delete Email Templates | `email_template.delete` | SUPER_ADMIN, PRODUCT_MANAGER |
+
+### API Endpoints
+
+#### Email Templates (Admin) — `/api/v1/admin/email-templates`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/email-templates | email_template.create | ✅ |
+| GET | /admin/email-templates | email_template.view | ✅ |
+| GET | /admin/email-templates/:id | email_template.view | ✅ |
+| PATCH | /admin/email-templates/:id | email_template.update | ✅ |
+| DELETE | /admin/email-templates/:id | email_template.delete | ✅ |
+
+#### Notifications (Admin) — `/api/v1/admin/notifications`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/notifications/logs | notification.view | ✅ |
+| GET | /admin/notifications/logs/:id | notification.view | ✅ |
+| POST | /admin/notifications/send-test | notification.manage | ✅ |
+
+#### Notification Preferences (Customer) — `/api/v1/notifications/preferences`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| GET | /notifications/preferences | Customer JWT | ✅ |
+| PATCH | /notifications/preferences | Customer JWT | ✅ |
+
+### Email Trigger Integration Points
+
+| Service | Method | Event | Email Sent |
+|---------|--------|-------|------------|
+| AuthService | register() | User registered | Welcome + Verify Email |
+| AuthService | resendOtp() | OTP resent | Verify Email / Password Reset |
+| AuthService | verifyEmail() | Email verified | Email Verified Confirmation |
+| AuthService | forgotPassword() | Forgot password | Password Reset OTP |
+| AuthService | resetPassword() | Password reset | Password Reset Confirmation |
+| OrdersService | createOrder() | Order placed | Order Confirmation |
+| PaymentsService | confirmPayment() | Payment success | Payment Success |
+| PaymentsService | confirmPayment() | Payment failed | Payment Failed |
+| PaymentsService | handleWebhook() | Webhook refund | Refund Processed |
+| PaymentsService | handleWebhook() | Webhook payment failed | Payment Failed |
+| RefundsService | createRefund() | Manual refund | Refund Processed |
+| ShipmentsService | createShipment() | Shipment created | Shipment Created |
+| ShipmentsService | updateStatus() | Out for delivery | Out for Delivery |
+| ShipmentsService | updateStatus() | Delivered | Order Delivered |
+
+### Seeded Email Templates (17)
+
+1. **welcome** — Welcome to Sports Store
+2. **verify_email** — Email Verification (with OTP)
+3. **password_reset** — Password Reset (with OTP)
+4. **password_reset_confirm** — Password Reset Confirmation
+5. **email_verified** — Email Verified Successfully
+6. **order_confirmation** — Order #{{orderNumber}} Confirmed
+7. **payment_success** — Payment Received for Order #{{orderNumber}}
+8. **payment_failed** — Payment Failed for Order #{{orderNumber}}
+9. **payment_processing** — Payment Processing for Order #{{orderNumber}}
+10. **refund_processed** — Refund Processed for Order #{{orderNumber}}
+11. **shipment_created** — Order #{{orderNumber}} Is Being Prepared
+12. **shipment_out_for_delivery** — Your Order #{{orderNumber}} Is Out for Delivery
+13. **order_delivered** — Order #{{orderNumber}} Delivered
+14. **shipment_status_update** — Shipment Update for Order #{{orderNumber}}
+15. **wishlist_back_in_stock** — Item Back in Stock
+16. **price_drop_alert** — Price Dropped on Your Wishlist Item
+17. **review_reminder** — How Was Your Purchase?
+
+---
+
 ## Layer 9 Out of Scope
 
 - Buy X Get Y cart adjustment logic (rule stored, checkout application pending)

@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Shipment } from './entities/shipment.entity';
 import { ShipmentTrackingLog } from './entities/shipment-tracking-log.entity';
 import { ShipmentStatus } from './entities/shipment-status.enum';
+import { Order } from '../orders/entities/order.entity';
+import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UpdateShipmentStatusDto } from './dto/update-shipment-status.dto';
 import { ShipmentQueryDto } from './dto/shipment-query.dto';
 import { paginate } from '../../common/utils/pagination.util';
@@ -16,6 +19,11 @@ export class ShipmentsService {
     private readonly shipmentRepo: Repository<Shipment>,
     @InjectRepository(ShipmentTrackingLog)
     private readonly logRepo: Repository<ShipmentTrackingLog>,
+    @InjectRepository(Order)
+    private readonly orderRepo: Repository<Order>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createShipment(orderId: string, warehouseId: string) {
@@ -35,6 +43,8 @@ export class ShipmentsService {
       'Shipment created',
       null,
     );
+
+    await this.sendShipmentNotification(orderId, 'created', trackingNumber);
 
     return saved;
   }
@@ -103,10 +113,61 @@ export class ShipmentsService {
 
     await this.shipmentRepo.save(shipment);
 
+    if (dto.status) {
+      await this.sendShipmentNotification(
+        shipment.orderId,
+        dto.status === ShipmentStatus.OUT_FOR_DELIVERY
+          ? 'out_for_delivery'
+          : dto.status === ShipmentStatus.DELIVERED
+            ? 'delivered'
+            : 'status_update',
+        shipment.trackingNumber,
+      );
+    }
+
     return {
       message: 'Shipment status updated successfully.',
       data: shipment,
     };
+  }
+
+  private async sendShipmentNotification(
+    orderId: string,
+    type: 'created' | 'out_for_delivery' | 'delivered' | 'status_update',
+    trackingNumber: string,
+  ) {
+    try {
+      const order = await this.orderRepo.findOne({
+        where: { id: orderId },
+        relations: { user: true },
+      });
+      if (!order?.user) return;
+
+      if (type === 'created') {
+        await this.notificationsService.sendShipmentCreated({
+          to: order.user.email,
+          userId: order.user.id,
+          firstName: order.user.firstName,
+          orderNumber: order.orderNumber,
+          trackingNumber,
+        });
+      } else if (type === 'out_for_delivery') {
+        await this.notificationsService.sendOutForDelivery({
+          to: order.user.email,
+          userId: order.user.id,
+          firstName: order.user.firstName,
+          orderNumber: order.orderNumber,
+          trackingNumber,
+        });
+      } else if (type === 'delivered') {
+        await this.notificationsService.sendDeliveryCompleted({
+          to: order.user.email,
+          userId: order.user.id,
+          firstName: order.user.firstName,
+          orderNumber: order.orderNumber,
+        });
+      }
+    } catch {}
   }
 
   private async createLog(

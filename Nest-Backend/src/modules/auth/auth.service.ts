@@ -33,6 +33,7 @@ import {
   JwtPayload,
   RefreshTokenPayload,
 } from './interfaces/jwt-payload.interface';
+import { NotificationsService } from '../notifications/notifications.service';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const dayjs = require('dayjs');
 
@@ -52,6 +53,7 @@ export class AuthService {
     private readonly otpRepo: Repository<OtpVerification>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // ─── Register ────────────────────────────────────────────────────────────────
@@ -81,7 +83,9 @@ export class AuthService {
     });
     await this.userRepo.save(user);
 
-    await this.createAndSaveOtp(user.email, OtpType.EMAIL_VERIFY);
+    const otp = await this.createAndSaveOtp(user.email, OtpType.EMAIL_VERIFY);
+    await this.notificationsService.sendWelcomeEmail(user.email, user.firstName);
+    await this.notificationsService.sendVerifyEmail(user.email, otp);
     return { message: AuthMessages.REGISTER_SUCCESS };
   }
 
@@ -112,16 +116,16 @@ export class AuthService {
       ipAddress,
       userAgent,
     );
+    await this.notificationsService.sendEmailVerified(user.email, user.firstName);
     return { message: AuthMessages.OTP_VERIFIED, data: tokens };
   }
 
   // ─── Resend OTP ───────────────────────────────────────────────────────────
   async resendOtp(dto: ResendOtpDto): Promise<{ message: string }> {
     const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findOne({ where: { email } });
 
     if (dto.type === OtpType.EMAIL_VERIFY) {
-      const user = await this.userRepo.findOne({ where: { email } });
-      // Always return the same message to prevent user enumeration
       if (!user) return { message: AuthMessages.OTP_SENT };
       if (user.isEmailVerified) {
         throw new BadRequestException(AuthMessages.EMAIL_ALREADY_VERIFIED);
@@ -129,11 +133,19 @@ export class AuthService {
     }
 
     if (dto.type === OtpType.FORGOT_PASSWORD) {
-      const user = await this.userRepo.findOne({ where: { email } });
       if (!user) return { message: AuthMessages.OTP_SENT };
     }
 
-    await this.createAndSaveOtp(email, dto.type);
+    const otp = await this.createAndSaveOtp(email, dto.type);
+
+    if (user) {
+      if (dto.type === OtpType.EMAIL_VERIFY) {
+        await this.notificationsService.sendVerifyEmail(email, otp);
+      } else if (dto.type === OtpType.FORGOT_PASSWORD) {
+        await this.notificationsService.sendPasswordResetEmail(email, otp);
+      }
+    }
+
     return { message: AuthMessages.OTP_SENT };
   }
 
@@ -222,7 +234,8 @@ export class AuthService {
     });
     if (!user) return { message: AuthMessages.OTP_SENT };
 
-    await this.createAndSaveOtp(user.email, OtpType.FORGOT_PASSWORD);
+    const otp = await this.createAndSaveOtp(user.email, OtpType.FORGOT_PASSWORD);
+    await this.notificationsService.sendPasswordResetEmail(user.email, otp);
     return { message: AuthMessages.OTP_SENT };
   }
 
@@ -243,6 +256,7 @@ export class AuthService {
     await this.userRepo.update(user.id, { passwordHash });
     await this.userSessionRepo.delete({ userId: user.id });
 
+    await this.notificationsService.sendPasswordResetConfirmation(user.email, user.firstName);
     return { message: AuthMessages.PASSWORD_RESET_SUCCESS };
   }
 
@@ -298,7 +312,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async createAndSaveOtp(email: string, type: OtpType): Promise<void> {
+  private async createAndSaveOtp(email: string, type: OtpType): Promise<string> {
     await this.otpRepo
       .createQueryBuilder()
       .update()
@@ -314,6 +328,7 @@ export class AuthService {
     const expiresAt: Date = dayjs().add(OTP_EXPIRY_MINUTES, 'minute').toDate();
     const otpRecord = this.otpRepo.create({ email, otp, type, expiresAt });
     await this.otpRepo.save(otpRecord);
+    return otp;
   }
 
   private async consumeOtp(

@@ -124,4 +124,11 @@ export enum DefaultPermissions {
   QUESTION_VIEW = 'question.view',
   QUESTION_ANSWER = 'question.answer',
   QUESTION_DELETE = 'question.delete',
+  // Notifications
+  NOTIFICATION_VIEW = 'notification.view',
+  NOTIFICATION_MANAGE = 'notification.manage',
+  EMAIL_TEMPLATE_VIEW = 'email_template.view',
+  EMAIL_TEMPLATE_CREATE = 'email_template.create',
+  EMAIL_TEMPLATE_UPDATE = 'email_template.update',
+  EMAIL_TEMPLATE_DELETE = 'email_template.delete',
 }

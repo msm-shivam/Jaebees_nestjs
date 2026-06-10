@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { User } from '../users/entities/user.entity';
 import { Cart } from '../cart/entities/cart.entity';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
@@ -23,6 +24,7 @@ import { ShipmentsModule } from '../shipments/shipments.module';
       CartItem,
       Inventory,
       ProductVariant,
+      User,
     ]),
     AddressesModule,
     WarehousesModule,

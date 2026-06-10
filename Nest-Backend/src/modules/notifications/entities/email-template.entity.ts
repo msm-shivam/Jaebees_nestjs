@@ -1,0 +1,44 @@
+import { Entity, Column, Index } from 'typeorm';
+import { BaseEntity } from '../../../shared/entities/base.entity';
+
+export enum EmailTemplateCode {
+  WELCOME = 'welcome',
+  VERIFY_EMAIL = 'verify_email',
+  PASSWORD_RESET = 'password_reset',
+  PASSWORD_RESET_CONFIRM = 'password_reset_confirm',
+  EMAIL_VERIFIED = 'email_verified',
+  ORDER_CONFIRMATION = 'order_confirmation',
+  PAYMENT_SUCCESS = 'payment_success',
+  PAYMENT_FAILED = 'payment_failed',
+  PAYMENT_PROCESSING = 'payment_processing',
+  REFUND_PROCESSED = 'refund_processed',
+  SHIPMENT_CREATED = 'shipment_created',
+  SHIPMENT_OUT_FOR_DELIVERY = 'shipment_out_for_delivery',
+  ORDER_DELIVERED = 'order_delivered',
+  SHIPMENT_STATUS_UPDATE = 'shipment_status_update',
+  WISHLIST_BACK_IN_STOCK = 'wishlist_back_in_stock',
+  PRICE_DROP_ALERT = 'price_drop_alert',
+  REVIEW_REMINDER = 'review_reminder',
+}
+
+@Entity('email_templates')
+@Index(['code'], { unique: true })
+export class EmailTemplate extends BaseEntity {
+  @Column({ length: 100 })
+  name: string;
+
+  @Column({ length: 100, unique: true })
+  code: string;
+
+  @Column({ length: 255 })
+  subject: string;
+
+  @Column({ type: 'text' })
+  body: string;
+
+  @Column({ name: 'is_active', default: true })
+  isActive: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+}

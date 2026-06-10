@@ -6,6 +6,7 @@ import { PaymentRefund } from './entities/payment-refund.entity';
 import { PaymentLog } from './entities/payment-log.entity';
 import { PaymentWebhook } from './entities/payment-webhook.entity';
 import { Order } from '../orders/entities/order.entity';
+import { User } from '../users/entities/user.entity';
 import { StripeService } from './services/stripe.service';
 import { PaymentsService } from './services/payments.service';
 import { RefundsService } from './services/refunds.service';
@@ -24,6 +25,7 @@ import { PaymentMethodsController } from './controllers/payment-methods.controll
       PaymentLog,
       PaymentWebhook,
       Order,
+      User,
     ]),
   ],
   controllers: [

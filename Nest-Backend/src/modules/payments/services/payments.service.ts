@@ -12,7 +12,9 @@ import { PaymentMethod } from '../entities/payment-method.entity';
 import { PaymentWebhook } from '../entities/payment-webhook.entity';
 import { PaymentStatus } from '../entities/payment-status.enum';
 import { Order } from '../../orders/entities/order.entity';
+import { User } from '../../users/entities/user.entity';
 import { StripeService } from './stripe.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { CreatePaymentIntentDto } from '../dto/create-payment-intent.dto';
 import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
 import { PaymentQueryDto } from '../dto/payment-query.dto';
@@ -31,7 +33,10 @@ export class PaymentsService {
     private readonly webhookRepo: Repository<PaymentWebhook>,
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly stripeService: StripeService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createPaymentIntent(dto: CreatePaymentIntentDto) {
@@ -118,6 +123,8 @@ export class PaymentsService {
         message: `Payment succeeded: ${intent.id}`,
         performedBy: 'system',
       });
+
+      await this.sendPaymentNotification(payment.orderId, 'success');
     } else if (intent.status === 'processing') {
       payment.status = PaymentStatus.PROCESSING;
       payment.gatewayStatus = intent.status;
@@ -134,6 +141,8 @@ export class PaymentsService {
         message: `Payment failed: ${intent.last_payment_error?.message ?? 'Card declined'}`,
         performedBy: 'system',
       });
+
+      await this.sendPaymentNotification(payment.orderId, 'failed');
     }
 
     return {
@@ -187,6 +196,7 @@ export class PaymentsService {
               message: `Payment failed via webhook: ${failedId}`,
               performedBy: 'system',
             });
+            await this.sendPaymentNotification(payment.orderId, 'failed');
           }
         }
         webhook.processed = true;
@@ -213,6 +223,7 @@ export class PaymentsService {
             }
             await this.paymentRepo.save(payment);
             await this.syncOrderPayment(payment.orderId);
+            await this.sendPaymentNotification(payment.orderId, 'refunded');
             await this.createLog(payment.id, 'REFUND_COMPLETED', {
               message: `Refund completed via webhook: ${piId}`,
               performedBy: 'system',
@@ -396,5 +407,44 @@ export class PaymentsService {
       performedBy: options?.performedBy ?? null,
     });
     return this.paymentLogRepo.save(log);
+  }
+
+  private async sendPaymentNotification(
+    orderId: string,
+    type: 'success' | 'failed' | 'refunded',
+  ) {
+    try {
+      const order = await this.orderRepo.findOne({
+        where: { id: orderId },
+        relations: { user: true },
+      });
+      if (!order?.user) return;
+
+      if (type === 'success') {
+        await this.notificationsService.sendPaymentSuccess({
+          to: order.user.email,
+          userId: order.user.id,
+          firstName: order.user.firstName,
+          orderNumber: order.orderNumber,
+          amount: Number(order.totalAmount),
+        });
+      } else if (type === 'failed') {
+        await this.notificationsService.sendPaymentFailed({
+          to: order.user.email,
+          userId: order.user.id,
+          firstName: order.user.firstName,
+          orderNumber: order.orderNumber,
+        });
+      } else if (type === 'refunded') {
+        await this.notificationsService.sendRefundProcessed({
+          to: order.user.email,
+          userId: order.user.id,
+          firstName: order.user.firstName,
+          orderNumber: order.orderNumber,
+          amount: Number(order.totalAmount),
+          reason: 'Webhook refund',
+        });
+      }
+    } catch {}
   }
 }
