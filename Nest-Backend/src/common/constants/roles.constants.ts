@@ -110,6 +110,11 @@ export enum DefaultPermissions {
   PROMOTION_VIEW = 'promotion.view',
   PROMOTION_UPDATE = 'promotion.update',
   PROMOTION_DELETE = 'promotion.delete',
+  // Campaign
+  CAMPAIGN_CREATE = 'campaign.create',
+  CAMPAIGN_VIEW = 'campaign.view',
+  CAMPAIGN_UPDATE = 'campaign.update',
+  CAMPAIGN_DELETE = 'campaign.delete',
   // Wishlist
   WISHLIST_VIEW = 'wishlist.view',
   // Review

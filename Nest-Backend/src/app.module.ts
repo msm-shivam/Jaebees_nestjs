@@ -23,7 +23,7 @@ import { AddressesModule } from './modules/addresses/addresses.module';
 import { WarehousesModule } from './modules/warehouses/warehouses.module';
 import { DeliverySettingsModule } from './modules/delivery-settings/delivery-settings.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
-import { PromotionsModule } from './modules/promotions/promotions.module';
+import { CouponsPromotionsModule } from './modules/coupons-promotions/coupons-promotions.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { QuestionsModule } from './modules/questions/questions.module';
@@ -58,7 +58,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     WarehousesModule,
     DeliverySettingsModule,
     ShipmentsModule,
-    PromotionsModule,
+    CouponsPromotionsModule,
     WishlistModule,
     ReviewsModule,
     QuestionsModule,

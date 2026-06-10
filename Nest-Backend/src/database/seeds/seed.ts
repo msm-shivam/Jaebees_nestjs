@@ -512,6 +512,27 @@ const PERMISSIONS: PermissionDef[] = [
     name: 'Manage Search Analytics',
     module: 'search',
   },
+  // Campaign
+  {
+    slug: DefaultPermissions.CAMPAIGN_CREATE,
+    name: 'Create Campaign',
+    module: 'campaign',
+  },
+  {
+    slug: DefaultPermissions.CAMPAIGN_VIEW,
+    name: 'View Campaign',
+    module: 'campaign',
+  },
+  {
+    slug: DefaultPermissions.CAMPAIGN_UPDATE,
+    name: 'Update Campaign',
+    module: 'campaign',
+  },
+  {
+    slug: DefaultPermissions.CAMPAIGN_DELETE,
+    name: 'Delete Campaign',
+    module: 'campaign',
+  },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -568,6 +589,10 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.EMAIL_TEMPLATE_DELETE,
         DefaultPermissions.SEARCH_ANALYTICS_VIEW,
         DefaultPermissions.SEARCH_ANALYTICS_MANAGE,
+        DefaultPermissions.CAMPAIGN_CREATE,
+        DefaultPermissions.CAMPAIGN_VIEW,
+        DefaultPermissions.CAMPAIGN_UPDATE,
+        DefaultPermissions.CAMPAIGN_DELETE,
       ],
   [DefaultRoles.INVENTORY_MANAGER]: [
     DefaultPermissions.INVENTORY_CREATE,
@@ -588,6 +613,7 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.DELIVERY_MANAGE,
     DefaultPermissions.COUPON_VIEW,
     DefaultPermissions.PROMOTION_VIEW,
+    DefaultPermissions.CAMPAIGN_VIEW,
     DefaultPermissions.USER_VIEW,
   ],
   [DefaultRoles.FINANCE_MANAGER]: [

@@ -36,10 +36,12 @@ import { Warehouse } from '../modules/warehouses/entities/warehouse.entity';
 import { DeliverySetting } from '../modules/delivery-settings/entities/delivery-setting.entity';
 import { Shipment } from '../modules/shipments/entities/shipment.entity';
 import { ShipmentTrackingLog } from '../modules/shipments/entities/shipment-tracking-log.entity';
-import { Coupon } from '../modules/promotions/entities/coupon.entity';
-import { Promotion } from '../modules/promotions/entities/promotion.entity';
-import { DiscountRule } from '../modules/promotions/entities/discount-rule.entity';
-import { CouponUsage } from '../modules/promotions/entities/coupon-usage.entity';
+import { Coupon } from '../modules/coupons-promotions/entities/coupon.entity';
+import { CouponUsage } from '../modules/coupons-promotions/entities/coupon-usage.entity';
+import { Promotion } from '../modules/coupons-promotions/entities/promotion.entity';
+import { PromotionProduct } from '../modules/coupons-promotions/entities/promotion-product.entity';
+import { PromotionCategory } from '../modules/coupons-promotions/entities/promotion-category.entity';
+import { Campaign } from '../modules/coupons-promotions/entities/campaign.entity';
 import { Wishlist } from '../modules/wishlist/entities/wishlist.entity';
 import { WishlistItem } from '../modules/wishlist/entities/wishlist-item.entity';
 import { Review } from '../modules/reviews/entities/review.entity';
@@ -95,9 +97,11 @@ export const AppDataSource = new DataSource({
     Shipment,
     ShipmentTrackingLog,
     Coupon,
-    Promotion,
-    DiscountRule,
     CouponUsage,
+    Promotion,
+    PromotionProduct,
+    PromotionCategory,
+    Campaign,
     Wishlist,
     WishlistItem,
     Review,

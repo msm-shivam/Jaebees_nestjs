@@ -1600,6 +1600,133 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 
 ---
 
+## Layer 15 — Coupons, Promotions, Discount Engine & Marketing Campaigns
 
+### Status: ✅ Complete
 
+### Module Build Log
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Coupon Module | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Promotion Module | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Campaign Module | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Discount Calculation Engine | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Coupon Validation Engine | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Marketing Analytics | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Admin Coupon Management | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Admin Promotion Management | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Admin Campaign Management | ✅ Done | 2026-06-10 | 2026-06-10 |
+| Migration Phase15CouponsPromotions | ✅ Done | 2026-06-10 | 2026-06-10 |
+
+### New Entities (6 tables)
+
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| Coupon | coupons | code (unique), type (PERCENTAGE/FIXED_AMOUNT/FREE_SHIPPING), value, startDate, endDate, maxUses, maxUsesPerUser, minimumOrderAmount, maximumDiscountAmount, firstOrderOnly, isStackable, usageCount |
+| CouponUsage | coupon_usages | couponId, userId, orderId, discountAmount |
+| Promotion | promotions | name, type (PRODUCT_DISCOUNT/CATEGORY_DISCOUNT/CART_DISCOUNT/BUY_X_GET_Y/FLASH_SALE), discountValue, startDate, endDate, priority, isStackable, autoApply |
+| PromotionProduct | promotion_products | promotionId, productId (join table) |
+| PromotionCategory | promotion_categories | promotionId, categoryId (join table) |
+| Campaign | campaigns | name, type (SUMMER_SALE/FESTIVAL_SALE/CLEARANCE/BLACK_FRIDAY/CUSTOM), bannerUrl, landingPageUrl, discountValue, startDate, endDate, priority |
+
+### API Endpoints
+
+#### Customer Coupons — `/api/v1/coupons`
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /coupons/validate | Customer JWT | ✅ |
+| POST | /coupons/apply | Customer JWT | ✅ |
+| DELETE | /coupons/remove | Customer JWT | ✅ |
+
+#### Customer Promotions — `/api/v1/promotions`
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| GET | /promotions | Public | ✅ |
+| GET | /promotions/active | Public | ✅ |
+| GET | /promotions/:id | Public | ✅ |
+
+#### Admin Coupons — `/api/v1/admin/coupons`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/coupons | coupon.create | ✅ |
+| GET | /admin/coupons | coupon.view | ✅ |
+| GET | /admin/coupons/:id | coupon.view | ✅ |
+| PATCH | /admin/coupons/:id | coupon.update | ✅ |
+| DELETE | /admin/coupons/:id | coupon.delete | ✅ |
+
+#### Admin Promotions — `/api/v1/admin/promotions`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/promotions | promotion.create | ✅ |
+| GET | /admin/promotions | promotion.view | ✅ |
+| GET | /admin/promotions/:id | promotion.view | ✅ |
+| PATCH | /admin/promotions/:id | promotion.update | ✅ |
+| DELETE | /admin/promotions/:id | promotion.delete | ✅ |
+
+#### Admin Campaigns — `/api/v1/admin/campaigns`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/campaigns | campaign.create | ✅ |
+| GET | /admin/campaigns | campaign.view | ✅ |
+| GET | /admin/campaigns/:id | campaign.view | ✅ |
+| PATCH | /admin/campaigns/:id | campaign.update | ✅ |
+| DELETE | /admin/campaigns/:id | campaign.delete | ✅ |
+
+#### Admin Analytics — `/api/v1/admin/analytics`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/analytics/coupons | coupon.view | ✅ |
+| GET | /admin/analytics/promotions | promotion.view | ✅ |
+| GET | /admin/analytics/campaigns | campaign.view | ✅ |
+
+### New Permissions
+
+| Permission | Slug | Assigned To |
+|------------|------|-------------|
+| View Campaigns | `campaign.view` | SUPER_ADMIN, PRODUCT_MANAGER, ORDER_MANAGER |
+| Create Campaign | `campaign.create` | SUPER_ADMIN, PRODUCT_MANAGER |
+| Update Campaign | `campaign.update` | SUPER_ADMIN, PRODUCT_MANAGER |
+| Delete Campaign | `campaign.delete` | SUPER_ADMIN, PRODUCT_MANAGER |
+
+### Key Business Rules
+
+| Rule | Description |
+|------|-------------|
+| Coupon Code Unique | Unique constraint at DB + service level |
+| Coupon Date Validation | Rejects if not yet active or expired |
+| Usage Limit | Global and per-user limits enforced |
+| Minimum Order | Rejects if order amount below minimum |
+| First Order Only | Rejects if user has existing orders |
+| Percentage Discount | `amount = orderAmount × value / 100`, capped by maximumDiscountAmount |
+| Fixed Amount Discount | `amount = min(value, orderAmount)` |
+| Free Shipping | Discount amount is 0 |
+| Promotion Priority | Higher priority promotions applied first |
+| Auto-Expire | Promotions and campaigns past endDate auto-deactivated |
+| Buy X Get Y | Supported via PromotionType |
+| Flash Sale | Highest priority promotion type |
+| Promotion Scheduling | Supports product-specific and category-specific discounts |
+| Campaign Scheduling | Automatic activation/deactivation |
+
+### Deliverables
+
+- [x] Coupon Entity + CouponUsage Entity
+- [x] Promotion Entity + PromotionProduct + PromotionCategory
+- [x] Campaign Entity
+- [x] CouponService, CouponUsageService, CouponValidationService
+- [x] PromotionService, CampaignService
+- [x] DiscountCalculationService
+- [x] AnalyticsService
+- [x] CouponController (admin), PromotionController (admin), CampaignController (admin)
+- [x] CustomerCouponController, CustomerPromotionController
+- [x] AnalyticsController
+- [x] CouponsPromotionsModule
+- [x] Migration Phase15CouponsPromotions (6 tables, 3 enums, indexes, FKs)
+- [x] Seed permissions (campaign.*)
+- [x] Role mappings (SUPER_ADMIN, PRODUCT_MANAGER, ORDER_MANAGER)
+- [x] app.module.ts wiring
+- [x] data-source.ts wiring
+- [x] Zero TypeScript build errors
+
+---
 
