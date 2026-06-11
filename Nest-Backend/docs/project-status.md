@@ -2303,4 +2303,152 @@ PROMOTIONAL, ABANDONED_CART, FLASH_SALE, SEASONAL, NEW_ARRIVAL, CUSTOM
 - [x] Migration executed successfully (25 migrations total)
 - [x] Seed executed successfully
 
+---
+
+## Layer 20 — Finance, Accounting, Settlements & Financial Reporting
+
+**Started:** 2026-06-11  
+**Completed:** 2026-06-11  
+**Status:** ✅ Complete
+
+### Module Build Log
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Finance Transaction Management | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Accounting Ledger System | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Customer Payment Accounting | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Refund Accounting | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Vendor Settlement Management | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Tax Calculation & Reporting | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Profit & Loss Reporting | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Financial Analytics Dashboard | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Migration Phase20FinanceAccounting | ✅ Done | 2026-06-11 | 2026-06-11 |
+
+### New Entities (6 tables + 2 counter tables)
+
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| FinancialTransaction | financial_transactions | transactionNumber (unique), type, amount, status, referenceType, referenceId, description |
+| LedgerEntry | ledger_entries | transactionId, accountCode, accountName, debitAmount, creditAmount, balanceAfter |
+| Settlement | settlements | settlementNumber (unique), supplierId, amount, status, settlementDate, dueDate |
+| TaxRecord | tax_records | orderId, taxableAmount, taxAmount, taxRate, taxType |
+| ExpenseRecord | expense_records | category, amount, expenseDate, description, vendorName, invoiceNumber |
+| FinancialAudit | financial_audits | actionType, entityType, entityId, performedBy, details |
+| FinanceCounter | finance_sequence_counters | Atomic counter for FIN-YYYY-000001 |
+| SettlementCounter | settlement_sequence_counters | Atomic counter for STL-YYYY-000001 |
+
+### API Endpoints
+
+#### Admin Finance — `/api/v1/admin/finance`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/finance/transactions | finance.view | ✅ |
+| GET | /admin/finance/transactions/:id | finance.view | ✅ |
+| POST | /admin/finance/transactions | finance.manage | ✅ |
+| GET | /admin/finance/ledger | finance.view | ✅ |
+| GET | /admin/finance/ledger/:accountCode | finance.view | ✅ |
+
+#### Admin Settlements — `/api/v1/admin/settlements`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/settlements | settlement.manage | ✅ |
+| GET | /admin/settlements | settlement.view | ✅ |
+| GET | /admin/settlements/:id | settlement.view | ✅ |
+| PATCH | /admin/settlements/:id | settlement.manage | ✅ |
+
+#### Admin Expenses — `/api/v1/admin/expenses`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/expenses | finance.manage | ✅ |
+| GET | /admin/expenses | finance.view | ✅ |
+| GET | /admin/expenses/:id | finance.view | ✅ |
+| PATCH | /admin/expenses/:id | finance.manage | ✅ |
+| DELETE | /admin/expenses/:id | finance.manage | ✅ |
+
+#### Admin Tax Reports — `/api/v1/admin/tax`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/tax/summary | finance.view | ✅ |
+| GET | /admin/tax/reports | finance.view | ✅ |
+
+#### Admin Financial Reports — `/api/v1/admin/financial-reports`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/financial-reports/profit-loss | finance.view | ✅ |
+| GET | /admin/financial-reports/revenue | finance.view | ✅ |
+| GET | /admin/financial-reports/expenses | finance.view | ✅ |
+| GET | /admin/financial-reports/settlements | finance.view | ✅ |
+| GET | /admin/financial-reports/dashboard | finance.view | ✅ |
+
+### New Permissions
+
+| Permission | Slug | Assigned To |
+|------------|------|-------------|
+| View Finance | finance.view | SUPER_ADMIN, FINANCE_MANAGER (existing) |
+| Manage Finance | finance.manage | SUPER_ADMIN, FINANCE_MANAGER |
+| View Settlements | settlement.view | SUPER_ADMIN, FINANCE_MANAGER |
+| Manage Settlements | settlement.manage | SUPER_ADMIN, FINANCE_MANAGER |
+
+### Transaction Types
+
+ORDER_PAYMENT, REFUND, COUPON_DISCOUNT, SHIPPING_CHARGE, TAX_COLLECTION, SUPPLIER_PAYMENT, EXPENSE, ADJUSTMENT
+
+### Settlement Status
+
+PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| Auto Transaction Number | FIN-YYYY-000001 format via atomic counter |
+| Auto Settlement Number | STL-YYYY-000001 format via atomic counter |
+| Double Entry Ledger | Every transaction generates debit and credit ledger entries via recordDoubleEntry |
+| Revenue Recording | Order payments create ORDER_PAYMENT transactions |
+| Refund Accounting | Refunds tracked as REFUND transaction type |
+| Tax Recording | Tax collected stored separately for reporting |
+| Settlement Tracking | Full lifecycle from PENDING → PROCESSING → COMPLETED |
+| Expense Management | Operational expenses with category, vendor, invoice tracking |
+| Financial Audit Trail | All finance actions logged in financial_audits |
+| Profit Calculation | Gross Revenue - Refunds - Expenses |
+| Revenue Reports | Daily aggregation |
+| Expense Reports | By category aggregation |
+| Tax Reports | Taxable sales and tax collected summaries |
+| Dashboard Metrics | Revenue, expenses, profit, refunds, pending settlements, tax collected |
+
+### Deliverables
+
+- [x] FinancialTransaction Entity
+- [x] LedgerEntry Entity
+- [x] Settlement Entity
+- [x] TaxRecord Entity
+- [x] ExpenseRecord Entity
+- [x] FinancialAudit Entity
+- [x] FinanceService (create, findAll, findOne, getRevenue, getTotalRefunds, generateTransactionNumber)
+- [x] LedgerService (createEntry, recordDoubleEntry, findByTransaction, findByAccount, findAll)
+- [x] SettlementService (CRUD + generateSettlementNumber)
+- [x] TaxService (recordTax, getSummary, getReports)
+- [x] ExpenseService (CRUD)
+- [x] FinancialReportService (getProfitLoss, getRevenueReport, getExpenseReport, getSettlementReport, getDashboard)
+- [x] AdminFinanceController (transactions list/view/create, ledger list/by account)
+- [x] AdminSettlementController (CRUD)
+- [x] AdminExpenseController (CRUD)
+- [x] AdminTaxController (summary, reports)
+- [x] AdminFinancialReportsController (profit-loss, revenue, expenses, settlements, dashboard)
+- [x] FinanceAccountingModule
+- [x] Migration Phase20FinanceAccounting (6 tables + 2 counter tables + 2 enums + indexes + FKs)
+- [x] Seed permissions (finance.manage, settlement.view, settlement.manage)
+- [x] Role mapping updates (FINANCE_MANAGER now has 5 finance + 2 settlement permissions)
+- [x] app.module.ts wiring
+- [x] data-source.ts wiring
+- [x] Zero TypeScript build errors
+- [x] Migration executed successfully (26 migrations total)
+- [x] Seed executed successfully
+
 

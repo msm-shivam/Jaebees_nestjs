@@ -33,6 +33,7 @@ import { InventoryPlusModule } from './modules/inventory-plus/inventory-plus.mod
 import { ReturnsModule } from './modules/returns/returns.module';
 import { SupportModule } from './modules/support/support.module';
 import { EmailNotificationsModule } from './modules/email-notifications/email-notifications.module';
+import { FinanceAccountingModule } from './modules/finance-accounting/finance-accounting.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -72,6 +73,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     ReturnsModule,
     SupportModule,
     EmailNotificationsModule,
+    FinanceAccountingModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

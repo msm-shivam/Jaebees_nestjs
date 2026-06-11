@@ -120,9 +120,24 @@ const PERMISSIONS: PermissionDef[] = [
     module: 'finance',
   },
   {
+    slug: DefaultPermissions.FINANCE_MANAGE,
+    name: 'Manage Finance',
+    module: 'finance',
+  },
+  {
     slug: DefaultPermissions.FINANCE_EXPORT,
     name: 'Export Finance',
     module: 'finance',
+  },
+  {
+    slug: DefaultPermissions.SETTLEMENT_VIEW,
+    name: 'View Settlements',
+    module: 'settlement',
+  },
+  {
+    slug: DefaultPermissions.SETTLEMENT_MANAGE,
+    name: 'Manage Settlements',
+    module: 'settlement',
   },
   { slug: DefaultPermissions.USER_VIEW, name: 'View Users', module: 'user' },
   {
@@ -752,7 +767,10 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
   ],
   [DefaultRoles.FINANCE_MANAGER]: [
     DefaultPermissions.FINANCE_VIEW,
+    DefaultPermissions.FINANCE_MANAGE,
     DefaultPermissions.FINANCE_EXPORT,
+    DefaultPermissions.SETTLEMENT_VIEW,
+    DefaultPermissions.SETTLEMENT_MANAGE,
     DefaultPermissions.ORDER_VIEW,
     DefaultPermissions.PAYMENT_VIEW,
     DefaultPermissions.PAYMENT_UPDATE,

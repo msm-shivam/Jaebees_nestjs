@@ -77,6 +77,12 @@ import { EmailTemplate } from '../modules/email-notifications/entities/email-tem
 import { EmailPreference } from '../modules/email-notifications/entities/email-preference.entity';
 import { EmailLog } from '../modules/email-notifications/entities/email-log.entity';
 import { EmailCampaign } from '../modules/email-notifications/entities/email-campaign.entity';
+import { FinancialTransaction } from '../modules/finance-accounting/entities/financial-transaction.entity';
+import { LedgerEntry } from '../modules/finance-accounting/entities/ledger-entry.entity';
+import { Settlement } from '../modules/finance-accounting/entities/settlement.entity';
+import { TaxRecord } from '../modules/finance-accounting/entities/tax-record.entity';
+import { ExpenseRecord } from '../modules/finance-accounting/entities/expense-record.entity';
+import { FinancialAudit } from '../modules/finance-accounting/entities/financial-audit.entity';
 
 dotenv.config();
 
@@ -164,6 +170,12 @@ export const AppDataSource = new DataSource({
     EmailPreference,
     EmailLog,
     EmailCampaign,
+    FinancialTransaction,
+    LedgerEntry,
+    Settlement,
+    TaxRecord,
+    ExpenseRecord,
+    FinancialAudit,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

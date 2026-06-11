@@ -33,7 +33,10 @@ export enum DefaultPermissions {
   ORDER_CANCEL = 'order.cancel',
   // Finance
   FINANCE_VIEW = 'finance.view',
+  FINANCE_MANAGE = 'finance.manage',
   FINANCE_EXPORT = 'finance.export',
+  SETTLEMENT_VIEW = 'settlement.view',
+  SETTLEMENT_MANAGE = 'settlement.manage',
   // Users
   USER_VIEW = 'user.view',
   USER_UPDATE = 'user.update',
