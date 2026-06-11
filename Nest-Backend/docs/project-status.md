@@ -1867,7 +1867,7 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - [x] app.module.ts wiring
 - [x] data-source.ts wiring
 - [x] Zero TypeScript build errors
-- [x] Migration executed successfully (21 migrations total)
+- [x] Migration executed successfully (22 migrations total)
 - [x] Seed executed successfully (7 roles, 80+ permissions)
 
 ### Phase 16 Part 2 Improvements (2026-06-11)
@@ -1881,4 +1881,120 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - [x] `inventory.view` and `inventory.adjust` permissions verified existing from Layer 4
 - [x] Migration Phase16Part2InventoryImprovements (2 counter tables + 2 inventory columns + index)
 - [x] Zero TypeScript build errors
+
+---
+
+## Layer 17 — Returns (RMA), Reverse Logistics & Refund Management
+
+### Status: ✅ Complete
+
+### Module Build Log
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Return Request Management (RMA) | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Return Approval Workflow | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Reverse Logistics Tracking | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Return Inventory Processing | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Refund Processing Integration | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Return Analytics | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Migration Phase17ReturnsAndRMA | ✅ Done | 2026-06-11 | 2026-06-11 |
+
+### New Entities (5 tables + 1 counter table)
+
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| ReturnRequest | return_requests | returnNumber (unique), orderId, userId, status (REQUESTED→COMPLETED), reason, totalRefundAmount, requestedAt |
+| ReturnItem | return_items | returnRequestId, orderItemId, quantity, condition (UNOPENED/OPENED/DAMAGED), refundAmount |
+| ReverseShipment | reverse_shipments | returnRequestId, courierName, trackingNumber, status (PENDING/DELIVERED) |
+| ReturnAudit | return_audits | returnRequestId, action, performedBy |
+| ReturnReasonMaster | return_reason_master | code (unique), title, isActive |
+| ReturnCounter | return_sequence_counters | Atomic counter for RMA number generation |
+
+### API Endpoints
+
+#### Customer Returns — `/api/v1/returns`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /returns | Customer JWT | ✅ |
+| GET | /returns/my | Customer JWT | ✅ |
+| GET | /returns/:id | Customer JWT | ✅ |
+| DELETE | /returns/:id | Customer JWT | ✅ |
+
+#### Admin Returns — `/api/v1/admin/returns`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/returns | return.view | ✅ |
+| GET | /admin/returns/:id | return.view | ✅ |
+| POST | /admin/returns/:id/approve | return.approve | ✅ |
+| POST | /admin/returns/:id/reject | return.reject | ✅ |
+| POST | /admin/returns/:id/schedule-pickup | return.approve | ✅ |
+| POST | /admin/returns/:id/received | return.receive | ✅ |
+| POST | /admin/returns/:id/refund | return.refund | ✅ |
+| POST | /admin/returns/:id/complete | return.approve | ✅ |
+
+#### Admin Return Analytics — `/api/v1/admin/return-analytics`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/return-analytics/summary | return.view | ✅ |
+| GET | /admin/return-analytics/reasons | return.view | ✅ |
+| GET | /admin/return-analytics/products | return.view | ✅ |
+| GET | /admin/return-analytics/refunds | return.view | ✅ |
+
+### New Permissions
+
+| Permission | Slug | Assigned To |
+|------------|------|-------------|
+| View Returns | return.view | SUPER_ADMIN, ORDER_MANAGER, FINANCE_MANAGER, SUPPORT_MANAGER, WAREHOUSE_MANAGER |
+| Approve Returns | return.approve | SUPER_ADMIN, ORDER_MANAGER |
+| Reject Returns | return.reject | SUPER_ADMIN, ORDER_MANAGER |
+| Receive Returns | return.receive | SUPER_ADMIN, ORDER_MANAGER, WAREHOUSE_MANAGER |
+| Refund Returns | return.refund | SUPER_ADMIN, FINANCE_MANAGER |
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| Login Required | Customer must be authenticated |
+| Order Ownership | Order must belong to logged-in customer |
+| Delivered Only | Only DELIVERED orders eligible |
+| 24 Hour Window | Return request allowed only within 24 hours after delivery |
+| One Active Return | One active return request per order |
+| Quantity Validation | Returned quantity cannot exceed purchased quantity |
+| Refund After Receive | Refund only processed after warehouse receives item |
+| Inventory Restock | Returned quantity added back to inventory |
+| Auto Return Number | RMA-YYYY-000001 format via atomic counter table |
+| Auto Audit Logging | Every status change creates a ReturnAudit entry |
+| Reverse Logistics Tracking | Shipment status auto-advances return status |
+| Email Notifications | Return requested, approved, rejected, refunded |
+| Soft Delete (Cancel) | Customer can cancel REQUESTED returns only |
+
+### Return Status Workflow
+
+```
+REQUESTED → APPROVED → PICKUP_SCHEDULED → IN_TRANSIT → RECEIVED → REFUNDED → COMPLETED
+```
+
+### Deliverables
+
+- [x] ReturnRequest Entity + ReturnItem Entity
+- [x] ReverseShipment Entity + ReturnAudit Entity + ReturnReasonMaster Entity
+- [x] ReturnService (create, approve, reject, schedulePickup, markReceived, processRefund, complete)
+- [x] ReverseLogisticsService (update shipment status, auto-advance return)
+- [x] ReturnAnalyticsService (summary, reasons, products, refunds)
+- [x] CustomerReturnController (create, my returns, view, cancel)
+- [x] AdminReturnController (list, approve, reject, schedule pickup, receive, refund, complete)
+- [x] AdminReturnAnalyticsController (summary, reasons, products, refunds)
+- [x] ReturnsModule
+- [x] Migration Phase17ReturnsAndRMA (5 tables + 1 counter table + 4 enums + indexes + FKs)
+- [x] Seed permissions (5 new: return.*)
+- [x] Role mappings (SUPER_ADMIN, ORDER_MANAGER, FINANCE_MANAGER, SUPPORT_MANAGER, WAREHOUSE_MANAGER)
+- [x] app.module.ts wiring
+- [x] data-source.ts wiring
+- [x] Zero TypeScript build errors
+- [x] Migration executed successfully (22 migrations total)
+- [x] Seed executed successfully
 

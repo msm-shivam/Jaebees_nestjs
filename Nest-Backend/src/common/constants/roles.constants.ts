@@ -155,4 +155,10 @@ export enum DefaultPermissions {
   INVENTORY_RECEIVE = 'inventory.receive',
   // Inventory Analytics
   INVENTORY_ANALYTICS_VIEW = 'inventory_analytics.view',
+  // Returns (RMA)
+  RETURN_VIEW = 'return.view',
+  RETURN_APPROVE = 'return.approve',
+  RETURN_REJECT = 'return.reject',
+  RETURN_RECEIVE = 'return.receive',
+  RETURN_REFUND = 'return.refund',
 }

@@ -1,0 +1,6 @@
+export enum ReverseShipmentStatus {
+  PENDING = 'PENDING',
+  PICKED_UP = 'PICKED_UP',
+  IN_TRANSIT = 'IN_TRANSIT',
+  DELIVERED = 'DELIVERED',
+}

@@ -592,6 +592,32 @@ const PERMISSIONS: PermissionDef[] = [
     name: 'View Inventory Analytics',
     module: 'inventory_analytics',
   },
+  // Returns (RMA)
+  {
+    slug: DefaultPermissions.RETURN_VIEW,
+    name: 'View Returns',
+    module: 'return',
+  },
+  {
+    slug: DefaultPermissions.RETURN_APPROVE,
+    name: 'Approve Returns',
+    module: 'return',
+  },
+  {
+    slug: DefaultPermissions.RETURN_REJECT,
+    name: 'Reject Returns',
+    module: 'return',
+  },
+  {
+    slug: DefaultPermissions.RETURN_RECEIVE,
+    name: 'Receive Returns',
+    module: 'return',
+  },
+  {
+    slug: DefaultPermissions.RETURN_REFUND,
+    name: 'Refund Returns',
+    module: 'return',
+  },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -689,6 +715,10 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.SUPPLIER_VIEW,
     DefaultPermissions.PURCHASE_ORDER_VIEW,
     DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
+    DefaultPermissions.RETURN_VIEW,
+    DefaultPermissions.RETURN_APPROVE,
+    DefaultPermissions.RETURN_REJECT,
+    DefaultPermissions.RETURN_RECEIVE,
   ],
   [DefaultRoles.FINANCE_MANAGER]: [
     DefaultPermissions.FINANCE_VIEW,
@@ -699,6 +729,8 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.REFUND_VIEW,
     DefaultPermissions.REFUND_CREATE,
     DefaultPermissions.REFUND_UPDATE,
+    DefaultPermissions.RETURN_VIEW,
+    DefaultPermissions.RETURN_REFUND,
   ],
   [DefaultRoles.SUPPORT_MANAGER]: [
     DefaultPermissions.SUPPORT_VIEW,
@@ -710,6 +742,7 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.NOTIFICATION_VIEW,
         DefaultPermissions.NOTIFICATION_MANAGE,
         DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+        DefaultPermissions.RETURN_VIEW,
       ],
   [DefaultRoles.WAREHOUSE_MANAGER]: [
     DefaultPermissions.INVENTORY_VIEW,
@@ -730,6 +763,8 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.PRODUCT_VIEW,
     DefaultPermissions.VARIANT_VIEW,
     DefaultPermissions.WAREHOUSE_VIEW,
+    DefaultPermissions.RETURN_VIEW,
+    DefaultPermissions.RETURN_RECEIVE,
   ],
 };
 

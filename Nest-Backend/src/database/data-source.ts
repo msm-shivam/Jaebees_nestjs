@@ -58,6 +58,11 @@ import { GoodsReceiptItem } from '../modules/inventory-plus/entities/goods-recei
 import { StockAdjustment } from '../modules/inventory-plus/entities/stock-adjustment.entity';
 import { StockAlert } from '../modules/inventory-plus/entities/stock-alert.entity';
 import { InventoryAudit } from '../modules/inventory-plus/entities/inventory-audit.entity';
+import { ReturnRequest } from '../modules/returns/entities/return-request.entity';
+import { ReturnItem } from '../modules/returns/entities/return-item.entity';
+import { ReverseShipment } from '../modules/returns/entities/reverse-shipment.entity';
+import { ReturnAudit } from '../modules/returns/entities/return-audit.entity';
+import { ReturnReasonMaster } from '../modules/returns/entities/return-reason-master.entity';
 
 dotenv.config();
 
@@ -126,6 +131,11 @@ export const AppDataSource = new DataSource({
     StockAdjustment,
     StockAlert,
     InventoryAudit,
+    ReturnRequest,
+    ReturnItem,
+    ReverseShipment,
+    ReturnAudit,
+    ReturnReasonMaster,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
