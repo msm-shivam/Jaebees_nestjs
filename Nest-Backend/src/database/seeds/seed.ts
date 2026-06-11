@@ -497,6 +497,11 @@ const PERMISSIONS: PermissionDef[] = [
     module: 'notification',
   },
   {
+    slug: DefaultPermissions.NOTIFICATION_SEND,
+    name: 'Send Notifications',
+    module: 'notification',
+  },
+  {
     slug: DefaultPermissions.NOTIFICATION_MANAGE,
     name: 'Manage Notifications',
     module: 'notification',
@@ -551,6 +556,11 @@ const PERMISSIONS: PermissionDef[] = [
   {
     slug: DefaultPermissions.CAMPAIGN_DELETE,
     name: 'Delete Campaign',
+    module: 'campaign',
+  },
+  {
+    slug: DefaultPermissions.CAMPAIGN_MANAGE,
+    name: 'Manage Campaigns',
     module: 'campaign',
   },
   // Supplier
@@ -771,6 +781,30 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.EMAIL_TEMPLATE_DELETE,
         DefaultPermissions.RETURN_VIEW,
       ],
+  [DefaultRoles.MARKETING_MANAGER]: [
+    DefaultPermissions.NOTIFICATION_VIEW,
+    DefaultPermissions.NOTIFICATION_SEND,
+    DefaultPermissions.NOTIFICATION_MANAGE,
+    DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+    DefaultPermissions.EMAIL_TEMPLATE_CREATE,
+    DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
+    DefaultPermissions.EMAIL_TEMPLATE_DELETE,
+    DefaultPermissions.CAMPAIGN_VIEW,
+    DefaultPermissions.CAMPAIGN_MANAGE,
+    DefaultPermissions.CAMPAIGN_CREATE,
+    DefaultPermissions.CAMPAIGN_UPDATE,
+    DefaultPermissions.CAMPAIGN_DELETE,
+    DefaultPermissions.COUPON_CREATE,
+    DefaultPermissions.COUPON_VIEW,
+    DefaultPermissions.COUPON_UPDATE,
+    DefaultPermissions.COUPON_DELETE,
+    DefaultPermissions.PROMOTION_VIEW,
+    DefaultPermissions.SEARCH_ANALYTICS_VIEW,
+    DefaultPermissions.SEARCH_ANALYTICS_MANAGE,
+    DefaultPermissions.PRODUCT_VIEW,
+    DefaultPermissions.REVIEW_VIEW,
+    DefaultPermissions.USER_VIEW,
+  ],
   [DefaultRoles.WAREHOUSE_MANAGER]: [
     DefaultPermissions.INVENTORY_VIEW,
     DefaultPermissions.INVENTORY_CREATE,
@@ -833,6 +867,11 @@ const ROLES: Array<{ slug: DefaultRoles; name: string; description: string }> =
       slug: DefaultRoles.WAREHOUSE_MANAGER,
       name: 'Warehouse Manager',
       description: 'Manages suppliers, purchase orders, goods receipt, and inventory operations.',
+    },
+    {
+      slug: DefaultRoles.MARKETING_MANAGER,
+      name: 'Marketing Manager',
+      description: 'Manages email campaigns, templates, notifications, and promotions.',
     },
   ];
 

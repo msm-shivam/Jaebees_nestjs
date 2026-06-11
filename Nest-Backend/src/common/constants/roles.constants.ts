@@ -6,6 +6,7 @@ export enum DefaultRoles {
   FINANCE_MANAGER = 'finance_manager',
   SUPPORT_MANAGER = 'support_manager',
   WAREHOUSE_MANAGER = 'warehouse_manager',
+  MARKETING_MANAGER = 'marketing_manager',
 }
 
 export enum DefaultPermissions {
@@ -120,6 +121,7 @@ export enum DefaultPermissions {
   CAMPAIGN_VIEW = 'campaign.view',
   CAMPAIGN_UPDATE = 'campaign.update',
   CAMPAIGN_DELETE = 'campaign.delete',
+  CAMPAIGN_MANAGE = 'campaign.manage',
   // Wishlist
   WISHLIST_VIEW = 'wishlist.view',
   // Review
@@ -139,6 +141,7 @@ export enum DefaultPermissions {
   SEARCH_ANALYTICS_MANAGE = 'search_analytics.manage',
   // Notifications
   NOTIFICATION_VIEW = 'notification.view',
+  NOTIFICATION_SEND = 'notification.send',
   NOTIFICATION_MANAGE = 'notification.manage',
   EMAIL_TEMPLATE_VIEW = 'email_template.view',
   EMAIL_TEMPLATE_CREATE = 'email_template.create',
