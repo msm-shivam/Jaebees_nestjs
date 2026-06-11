@@ -1730,3 +1730,155 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 
 ---
 
+## Layer 16 — Inventory Intelligence, Stock Alerts, Purchase Orders & Supplier Management
+
+### Status: ✅ Complete
+
+### Module Build Log
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Supplier Management | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Purchase Order Management | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Goods Receipt (GRN) | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Stock Adjustments | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Stock Alerts | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Inventory Audits | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Inventory Analytics | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Migration Phase16InventoryManagement | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Migration Phase16Part2InventoryImprovements | ✅ Done | 2026-06-11 | 2026-06-11 |
+
+### New Entities (8 tables)
+
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| Supplier | suppliers | code (unique), name, contactPerson, email, phone, address, isActive, paymentTerms, leadTimeDays, deletedAt (soft delete) |
+| PurchaseOrder | purchase_orders | poNumber (unique), supplierId, status (DRAFT/APPROVED/PARTIALLY_RECEIVED/RECEIVED/CLOSED/CANCELLED), totalAmount, expectedDate, notes |
+| PurchaseOrderItem | purchase_order_items | purchaseOrderId, variantId, quantity, receivedQuantity, costPrice, lineTotal |
+| GoodsReceipt | goods_receipts | receiptNumber (unique), purchaseOrderId, receivedBy, notes |
+| GoodsReceiptItem | goods_receipt_items | receiptId, variantId, quantityReceived |
+| StockAdjustment | stock_adjustments | variantId, previousQuantity, newQuantity, reason |
+| StockAlert | stock_alerts | variantId, alertType (LOW_STOCK/OUT_OF_STOCK), thresholdQuantity, currentQuantity, isResolved, triggeredAt, resolvedAt |
+| InventoryAudit | inventory_audits | variantId, actionType (STOCK_IN/STOCK_OUT/ADJUSTMENT/RESERVATION/RELEASE/GOODS_RECEIPT/MANUAL_ADJUST), beforeQuantity, afterQuantity, referenceType, referenceId |
+| POCounter | po_sequence_counters | year (PK), last_number (atomic counter for PO number generation) |
+| GRNCounter | grn_sequence_counters | locked (PK, single row), last_number (atomic counter for GRN number generation) |
+
+### API Endpoints
+
+#### Admin Suppliers — `/api/v1/admin/suppliers`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/suppliers | supplier.create | ✅ |
+| GET | /admin/suppliers | supplier.view | ✅ |
+| GET | /admin/suppliers/:id | supplier.view | ✅ |
+| PATCH | /admin/suppliers/:id | supplier.update | ✅ |
+| DELETE | /admin/suppliers/:id | supplier.delete | ✅ |
+
+#### Admin Purchase Orders — `/api/v1/admin/purchase-orders`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/purchase-orders | purchase_order.create | ✅ |
+| GET | /admin/purchase-orders | purchase_order.view | ✅ |
+| GET | /admin/purchase-orders/:id | purchase_order.view | ✅ |
+| PATCH | /admin/purchase-orders/:id | purchase_order.update | ✅ |
+| POST | /admin/purchase-orders/:id/approve | purchase_order.approve | ✅ |
+| POST | /admin/purchase-orders/:id/cancel | purchase_order.cancel | ✅ |
+
+#### Admin Goods Receipts — `/api/v1/admin/goods-receipts`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| POST | /admin/goods-receipts | inventory.receive | ✅ |
+| GET | /admin/goods-receipts | inventory.view | ✅ |
+| GET | /admin/goods-receipts/:id | inventory.view | ✅ |
+
+#### Admin Inventory Plus — `/api/v1/admin/inventory-plus`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/inventory-plus | inventory.view | ✅ |
+| GET | /admin/inventory-plus/low-stock | inventory.view | ✅ |
+| GET | /admin/inventory-plus/out-of-stock | inventory.view | ✅ |
+| GET | /admin/inventory-plus/alerts | inventory.view | ✅ |
+| GET | /admin/inventory-plus/movements | inventory.view | ✅ |
+| POST | /admin/inventory-plus/adjust | inventory.adjust | ✅ |
+
+#### Admin Inventory Analytics — `/api/v1/admin/inventory-analytics`
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/inventory-analytics/summary | inventory_analytics.view | ✅ |
+| GET | /admin/inventory-analytics/top-selling | inventory_analytics.view | ✅ |
+| GET | /admin/inventory-analytics/slow-moving | inventory_analytics.view | ✅ |
+| GET | /admin/inventory-analytics/stock-value | inventory_analytics.view | ✅ |
+| GET | /admin/inventory-analytics/alerts | inventory_analytics.view | ✅ |
+
+### New Permissions
+
+| Permission | Slug | Assigned To |
+|------------|------|-------------|
+| Create Supplier | `supplier.create` | SUPER_ADMIN, WAREHOUSE_MANAGER, INVENTORY_MANAGER |
+| View Supplier | `supplier.view` | SUPER_ADMIN, PRODUCT_MANAGER, WAREHOUSE_MANAGER, INVENTORY_MANAGER, ORDER_MANAGER |
+| Update Supplier | `supplier.update` | SUPER_ADMIN, WAREHOUSE_MANAGER, INVENTORY_MANAGER |
+| Delete Supplier | `supplier.delete` | SUPER_ADMIN, WAREHOUSE_MANAGER |
+| Create Purchase Order | `purchase_order.create` | SUPER_ADMIN, WAREHOUSE_MANAGER, INVENTORY_MANAGER |
+| View Purchase Order | `purchase_order.view` | SUPER_ADMIN, PRODUCT_MANAGER, WAREHOUSE_MANAGER, INVENTORY_MANAGER, ORDER_MANAGER |
+| Update Purchase Order | `purchase_order.update` | SUPER_ADMIN, WAREHOUSE_MANAGER, INVENTORY_MANAGER |
+| Approve Purchase Order | `purchase_order.approve` | SUPER_ADMIN, WAREHOUSE_MANAGER |
+| Cancel Purchase Order | `purchase_order.cancel` | SUPER_ADMIN, WAREHOUSE_MANAGER |
+| Receive Inventory | `inventory.receive` | SUPER_ADMIN, WAREHOUSE_MANAGER, INVENTORY_MANAGER, ORDER_MANAGER |
+| View Inventory Analytics | `inventory_analytics.view` | SUPER_ADMIN, PRODUCT_MANAGER, WAREHOUSE_MANAGER, INVENTORY_MANAGER, ORDER_MANAGER |
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| PO Auto-Numbering | Format PO-YYYY-000001 via atomic counter table (po_sequence_counters) — race-condition safe, survives deletes |
+| GRN Auto-Numbering | Sequential GRN number via atomic counter table (grn_sequence_counters) |
+| PO Status Flow | DRAFT → APPROVED → PARTIALLY_RECEIVED → RECEIVED → CLOSED (or CANCELLED from any) |
+| Approval Guard | Only DRAFT POs can be approved |
+| Cancel Guard | Cannot cancel already CLOSED/CANCELLED POs |
+| Over-Receiving Blocked | cumulative receivedQuantity + current receipt ≤ ordered quantity |
+| Auto Inventory Update | Goods receipt updates inventory.availableQuantity |
+| Auto PO Status | PARTIALLY_RECEIVED or RECEIVED based on fulfillment |
+| Auto Audit Logging | Every movement recorded in inventory_audits |
+| Reorder Point | reorderPoint and reorderQuantity on Inventory entity (default 10/50) |
+| Low-Stock Detection | findLowStock returns items where 0 < availableQuantity ≤ lowStockThreshold (was incorrectly ≤ 0) |
+| Low-Stock Alerts | Created when quantity drops below reorderPoint (fallback lowStockThreshold) |
+| Auto Alert Resolution | Stock replenished above active threshold auto-resolves alert |
+| Reservation Tracking | availableQuantity = quantity - reservedQuantity maintained across all flows |
+| Supplier Code Unique | Enforced at DB + service level |
+| Soft Delete Supplier | DeletedAt column with softRemove |
+| Manual Stock Adjust | Creates StockAdjustment + InventoryAudit + updates inventory |
+| Analytics | Summary, top-selling (30d), slow-moving (no sales 30d), stock value, alert stats |
+
+### Deliverables
+
+- [x] Supplier Entity (soft delete) + DTOs + Service + Controller
+- [x] PurchaseOrder Entity + PurchaseOrderItem Entity + DTOs + Service + Controller (with approve/cancel)
+- [x] GoodsReceipt Entity + GoodsReceiptItem Entity + DTOs + Service + Controller
+- [x] StockAdjustment Entity + StockAlert Entity + InventoryAudit Entity
+- [x] InventoryPlusService (list, low-stock, out-of-stock, alerts, movements, adjust)
+- [x] InventoryAnalyticsService (summary, top-selling, slow-moving, stock-value, alert-stats)
+- [x] AdminSupplierController, AdminPurchaseOrderController, AdminGoodsReceiptController
+- [x] AdminInventoryController, AdminInventoryAnalyticsController
+- [x] InventoryPlusModule
+- [x] Migration Phase16InventoryManagement (8 tables, 2 enums, indexes, FKs)
+- [x] Seed permissions (11 new: supplier.*, purchase_order.*, inventory.receive, inventory_analytics.view)
+- [x] New role: WAREHOUSE_MANAGER with full inventory/Po/supplier permissions
+- [x] Role mappings (SUPER_ADMIN, PRODUCT_MANAGER, INVENTORY_MANAGER, ORDER_MANAGER, WAREHOUSE_MANAGER)
+- [x] app.module.ts wiring
+- [x] data-source.ts wiring
+- [x] Zero TypeScript build errors
+- [x] Migration executed successfully (21 migrations total)
+- [x] Seed executed successfully (7 roles, 80+ permissions)
+
+### Phase 16 Part 2 Improvements (2026-06-11)
+
+- [x] Atomic PO number generation via `po_sequence_counters` table — replaces `COUNT+1` (race-condition safe, survives deletes)
+- [x] Atomic GRN number generation via `grn_sequence_counters` table
+- [x] `reorderPoint` (default 10) and `reorderQuantity` (default 50) added to Inventory entity
+- [x] `findLowStock` fixed to use `availableQuantity ≤ lowStockThreshold AND availableQuantity > 0` (was `≤ 0`)
+- [x] Stock alert/resolve logic prioritizes `reorderPoint` over `lowStockThreshold`
+- [x] Reservation tracking verified correct across goods-receipt and adjust-stock flows
+- [x] `inventory.view` and `inventory.adjust` permissions verified existing from Layer 4
+- [x] Migration Phase16Part2InventoryImprovements (2 counter tables + 2 inventory columns + index)
+- [x] Zero TypeScript build errors
+

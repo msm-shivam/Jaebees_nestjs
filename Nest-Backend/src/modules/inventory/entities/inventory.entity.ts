@@ -37,6 +37,12 @@ export class Inventory {
   @Column({ name: 'low_stock_threshold', type: 'int', default: 5 })
   lowStockThreshold: number;
 
+  @Column({ name: 'reorder_point', type: 'int', default: 10 })
+  reorderPoint: number;
+
+  @Column({ name: 'reorder_quantity', type: 'int', default: 50 })
+  reorderQuantity: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;
 

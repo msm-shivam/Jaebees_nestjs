@@ -5,6 +5,7 @@ export enum DefaultRoles {
   ORDER_MANAGER = 'order_manager',
   FINANCE_MANAGER = 'finance_manager',
   SUPPORT_MANAGER = 'support_manager',
+  WAREHOUSE_MANAGER = 'warehouse_manager',
 }
 
 export enum DefaultPermissions {
@@ -139,4 +140,19 @@ export enum DefaultPermissions {
   EMAIL_TEMPLATE_CREATE = 'email_template.create',
   EMAIL_TEMPLATE_UPDATE = 'email_template.update',
   EMAIL_TEMPLATE_DELETE = 'email_template.delete',
+  // Supplier
+  SUPPLIER_CREATE = 'supplier.create',
+  SUPPLIER_VIEW = 'supplier.view',
+  SUPPLIER_UPDATE = 'supplier.update',
+  SUPPLIER_DELETE = 'supplier.delete',
+  // Purchase Order
+  PURCHASE_ORDER_CREATE = 'purchase_order.create',
+  PURCHASE_ORDER_VIEW = 'purchase_order.view',
+  PURCHASE_ORDER_UPDATE = 'purchase_order.update',
+  PURCHASE_ORDER_APPROVE = 'purchase_order.approve',
+  PURCHASE_ORDER_CANCEL = 'purchase_order.cancel',
+  // Inventory Receive
+  INVENTORY_RECEIVE = 'inventory.receive',
+  // Inventory Analytics
+  INVENTORY_ANALYTICS_VIEW = 'inventory_analytics.view',
 }

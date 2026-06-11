@@ -533,6 +533,65 @@ const PERMISSIONS: PermissionDef[] = [
     name: 'Delete Campaign',
     module: 'campaign',
   },
+  // Supplier
+  {
+    slug: DefaultPermissions.SUPPLIER_CREATE,
+    name: 'Create Supplier',
+    module: 'supplier',
+  },
+  {
+    slug: DefaultPermissions.SUPPLIER_VIEW,
+    name: 'View Supplier',
+    module: 'supplier',
+  },
+  {
+    slug: DefaultPermissions.SUPPLIER_UPDATE,
+    name: 'Update Supplier',
+    module: 'supplier',
+  },
+  {
+    slug: DefaultPermissions.SUPPLIER_DELETE,
+    name: 'Delete Supplier',
+    module: 'supplier',
+  },
+  // Purchase Order
+  {
+    slug: DefaultPermissions.PURCHASE_ORDER_CREATE,
+    name: 'Create Purchase Order',
+    module: 'purchase_order',
+  },
+  {
+    slug: DefaultPermissions.PURCHASE_ORDER_VIEW,
+    name: 'View Purchase Order',
+    module: 'purchase_order',
+  },
+  {
+    slug: DefaultPermissions.PURCHASE_ORDER_UPDATE,
+    name: 'Update Purchase Order',
+    module: 'purchase_order',
+  },
+  {
+    slug: DefaultPermissions.PURCHASE_ORDER_APPROVE,
+    name: 'Approve Purchase Order',
+    module: 'purchase_order',
+  },
+  {
+    slug: DefaultPermissions.PURCHASE_ORDER_CANCEL,
+    name: 'Cancel Purchase Order',
+    module: 'purchase_order',
+  },
+  // Inventory Receive
+  {
+    slug: DefaultPermissions.INVENTORY_RECEIVE,
+    name: 'Receive Inventory',
+    module: 'inventory',
+  },
+  // Inventory Analytics
+  {
+    slug: DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
+    name: 'View Inventory Analytics',
+    module: 'inventory_analytics',
+  },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -593,12 +652,22 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.CAMPAIGN_VIEW,
         DefaultPermissions.CAMPAIGN_UPDATE,
         DefaultPermissions.CAMPAIGN_DELETE,
+        DefaultPermissions.SUPPLIER_VIEW,
+        DefaultPermissions.PURCHASE_ORDER_VIEW,
+        DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
       ],
   [DefaultRoles.INVENTORY_MANAGER]: [
     DefaultPermissions.INVENTORY_CREATE,
     DefaultPermissions.INVENTORY_VIEW,
     DefaultPermissions.INVENTORY_UPDATE,
     DefaultPermissions.INVENTORY_ADJUST,
+    DefaultPermissions.INVENTORY_RECEIVE,
+    DefaultPermissions.SUPPLIER_VIEW,
+    DefaultPermissions.SUPPLIER_CREATE,
+    DefaultPermissions.SUPPLIER_UPDATE,
+    DefaultPermissions.PURCHASE_ORDER_VIEW,
+    DefaultPermissions.PURCHASE_ORDER_CREATE,
+    DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
     DefaultPermissions.PRODUCT_VIEW,
     DefaultPermissions.VARIANT_VIEW,
   ],
@@ -615,6 +684,11 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.PROMOTION_VIEW,
     DefaultPermissions.CAMPAIGN_VIEW,
     DefaultPermissions.USER_VIEW,
+    DefaultPermissions.INVENTORY_VIEW,
+    DefaultPermissions.INVENTORY_RECEIVE,
+    DefaultPermissions.SUPPLIER_VIEW,
+    DefaultPermissions.PURCHASE_ORDER_VIEW,
+    DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
   ],
   [DefaultRoles.FINANCE_MANAGER]: [
     DefaultPermissions.FINANCE_VIEW,
@@ -637,6 +711,26 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.NOTIFICATION_MANAGE,
         DefaultPermissions.EMAIL_TEMPLATE_VIEW,
       ],
+  [DefaultRoles.WAREHOUSE_MANAGER]: [
+    DefaultPermissions.INVENTORY_VIEW,
+    DefaultPermissions.INVENTORY_CREATE,
+    DefaultPermissions.INVENTORY_UPDATE,
+    DefaultPermissions.INVENTORY_ADJUST,
+    DefaultPermissions.INVENTORY_RECEIVE,
+    DefaultPermissions.SUPPLIER_CREATE,
+    DefaultPermissions.SUPPLIER_VIEW,
+    DefaultPermissions.SUPPLIER_UPDATE,
+    DefaultPermissions.SUPPLIER_DELETE,
+    DefaultPermissions.PURCHASE_ORDER_CREATE,
+    DefaultPermissions.PURCHASE_ORDER_VIEW,
+    DefaultPermissions.PURCHASE_ORDER_UPDATE,
+    DefaultPermissions.PURCHASE_ORDER_APPROVE,
+    DefaultPermissions.PURCHASE_ORDER_CANCEL,
+    DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
+    DefaultPermissions.PRODUCT_VIEW,
+    DefaultPermissions.VARIANT_VIEW,
+    DefaultPermissions.WAREHOUSE_VIEW,
+  ],
 };
 
 // ─── Role Definitions ────────────────────────────────────────────────────────
@@ -672,6 +766,11 @@ const ROLES: Array<{ slug: DefaultRoles; name: string; description: string }> =
       slug: DefaultRoles.SUPPORT_MANAGER,
       name: 'Support Manager',
       description: 'Handles customer support tickets and inquiries.',
+    },
+    {
+      slug: DefaultRoles.WAREHOUSE_MANAGER,
+      name: 'Warehouse Manager',
+      description: 'Manages suppliers, purchase orders, goods receipt, and inventory operations.',
     },
   ];
 

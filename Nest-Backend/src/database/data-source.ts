@@ -50,6 +50,14 @@ import { ReviewHelpfulVote } from '../modules/reviews/entities/review-helpful-vo
 import { ReviewReport } from '../modules/reviews/entities/review-report.entity';
 import { ProductQuestion } from '../modules/questions/entities/product-question.entity';
 import { ProductAnswer } from '../modules/questions/entities/product-answer.entity';
+import { Supplier } from '../modules/inventory-plus/entities/supplier.entity';
+import { PurchaseOrder } from '../modules/inventory-plus/entities/purchase-order.entity';
+import { PurchaseOrderItem } from '../modules/inventory-plus/entities/purchase-order-item.entity';
+import { GoodsReceipt } from '../modules/inventory-plus/entities/goods-receipt.entity';
+import { GoodsReceiptItem } from '../modules/inventory-plus/entities/goods-receipt-item.entity';
+import { StockAdjustment } from '../modules/inventory-plus/entities/stock-adjustment.entity';
+import { StockAlert } from '../modules/inventory-plus/entities/stock-alert.entity';
+import { InventoryAudit } from '../modules/inventory-plus/entities/inventory-audit.entity';
 
 dotenv.config();
 
@@ -110,6 +118,14 @@ export const AppDataSource = new DataSource({
     ReviewReport,
     ProductQuestion,
     ProductAnswer,
+    Supplier,
+    PurchaseOrder,
+    PurchaseOrderItem,
+    GoodsReceipt,
+    GoodsReceiptItem,
+    StockAdjustment,
+    StockAlert,
+    InventoryAudit,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

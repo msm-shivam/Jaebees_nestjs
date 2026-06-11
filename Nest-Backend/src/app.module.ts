@@ -29,6 +29,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SearchModule } from './modules/search/search.module';
+import { InventoryPlusModule } from './modules/inventory-plus/inventory-plus.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -64,6 +65,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     QuestionsModule,
     NotificationsModule,
     SearchModule,
+    InventoryPlusModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
