@@ -63,6 +63,15 @@ import { ReturnItem } from '../modules/returns/entities/return-item.entity';
 import { ReverseShipment } from '../modules/returns/entities/reverse-shipment.entity';
 import { ReturnAudit } from '../modules/returns/entities/return-audit.entity';
 import { ReturnReasonMaster } from '../modules/returns/entities/return-reason-master.entity';
+import { SupportTicket } from '../modules/support/entities/support-ticket.entity';
+import { TicketMessage } from '../modules/support/entities/ticket-message.entity';
+import { TicketAssignment } from '../modules/support/entities/ticket-assignment.entity';
+import { TicketNote } from '../modules/support/entities/ticket-note.entity';
+import { TicketSlaLog } from '../modules/support/entities/ticket-sla-log.entity';
+import { TicketAttachment } from '../modules/support/entities/ticket-attachment.entity';
+import { TicketAudit } from '../modules/support/entities/ticket-audit.entity';
+import { TicketRating } from '../modules/support/entities/ticket-rating.entity';
+import { TicketTag } from '../modules/support/entities/ticket-tag.entity';
 
 dotenv.config();
 
@@ -136,6 +145,15 @@ export const AppDataSource = new DataSource({
     ReverseShipment,
     ReturnAudit,
     ReturnReasonMaster,
+    SupportTicket,
+    TicketMessage,
+    TicketAssignment,
+    TicketNote,
+    TicketSlaLog,
+    TicketAttachment,
+    TicketAudit,
+    TicketRating,
+    TicketTag,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

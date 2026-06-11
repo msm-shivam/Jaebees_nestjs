@@ -47,6 +47,10 @@ export enum DefaultPermissions {
   // Support
   SUPPORT_VIEW = 'support.view',
   SUPPORT_UPDATE = 'support.update',
+  SUPPORT_ASSIGN = 'support.assign',
+  SUPPORT_REPLY = 'support.reply',
+  SUPPORT_RESOLVE = 'support.resolve',
+  SUPPORT_NOTE = 'support.note',
   // Address
   ADDRESS_CREATE = 'address.create',
   ADDRESS_VIEW = 'address.view',

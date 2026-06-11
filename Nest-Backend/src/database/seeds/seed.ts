@@ -170,6 +170,26 @@ const PERMISSIONS: PermissionDef[] = [
     name: 'Update Support',
     module: 'support',
   },
+  {
+    slug: DefaultPermissions.SUPPORT_ASSIGN,
+    name: 'Assign Support Tickets',
+    module: 'support',
+  },
+  {
+    slug: DefaultPermissions.SUPPORT_REPLY,
+    name: 'Reply To Support Tickets',
+    module: 'support',
+  },
+  {
+    slug: DefaultPermissions.SUPPORT_RESOLVE,
+    name: 'Resolve Support Tickets',
+    module: 'support',
+  },
+  {
+    slug: DefaultPermissions.SUPPORT_NOTE,
+    name: 'Add Internal Notes',
+    module: 'support',
+  },
   // Address
   {
     slug: DefaultPermissions.ADDRESS_CREATE,
@@ -735,6 +755,10 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
   [DefaultRoles.SUPPORT_MANAGER]: [
     DefaultPermissions.SUPPORT_VIEW,
     DefaultPermissions.SUPPORT_UPDATE,
+    DefaultPermissions.SUPPORT_ASSIGN,
+    DefaultPermissions.SUPPORT_REPLY,
+    DefaultPermissions.SUPPORT_RESOLVE,
+    DefaultPermissions.SUPPORT_NOTE,
     DefaultPermissions.USER_VIEW,
     DefaultPermissions.ORDER_VIEW,
         DefaultPermissions.REVIEW_VIEW,
@@ -742,6 +766,9 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
         DefaultPermissions.NOTIFICATION_VIEW,
         DefaultPermissions.NOTIFICATION_MANAGE,
         DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+        DefaultPermissions.EMAIL_TEMPLATE_CREATE,
+        DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
+        DefaultPermissions.EMAIL_TEMPLATE_DELETE,
         DefaultPermissions.RETURN_VIEW,
       ],
   [DefaultRoles.WAREHOUSE_MANAGER]: [

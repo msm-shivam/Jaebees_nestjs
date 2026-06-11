@@ -1867,7 +1867,7 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - [x] app.module.ts wiring
 - [x] data-source.ts wiring
 - [x] Zero TypeScript build errors
-- [x] Migration executed successfully (22 migrations total)
+- [x] Migration executed successfully (23 migrations total)
 - [x] Seed executed successfully (7 roles, 80+ permissions)
 
 ### Phase 16 Part 2 Improvements (2026-06-11)
@@ -1996,5 +1996,161 @@ REQUESTED → APPROVED → PICKUP_SCHEDULED → IN_TRANSIT → RECEIVED → REFU
 - [x] data-source.ts wiring
 - [x] Zero TypeScript build errors
 - [x] Migration executed successfully (22 migrations total)
+- [x] Seed executed successfully
+
+---
+
+## Layer 18 — Customer Support, Helpdesk, Ticketing & Complaint Management
+
+### Status: ✅ Complete
+
+### Module Build Log
+
+| Module | Status | Started | Completed |
+|--------|--------|---------|-----------|
+| Support Ticket Management | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Ticket Assignment Engine | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Ticket Status Workflow | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Customer Reply System | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Internal Notes System | ✅ Done | 2026-06-11 | 2026-06-11 |
+| SLA Monitoring | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Support Analytics | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Migration Phase18SupportDesk | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Migration Phase18Part2SupportEnhancements (attachments, audits, ratings, tags) | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Ticket Attachments | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Ticket Audit History | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Ticket Rating System | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Ticket Tags | ✅ Done | 2026-06-11 | 2026-06-11 |
+| Admin Filters (assignedTo, customer, date range) | ✅ Done | 2026-06-11 | 2026-06-11 |
+
+### New Entities (9 tables + 1 counter table)
+
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| SupportTicket | support_tickets | ticketNumber (unique), customerId, orderId (nullable), subject, category, priority, status, assignedTo, firstResponseAt, resolvedAt |
+| TicketMessage | ticket_messages | ticketId, senderId, senderType (CUSTOMER/ADMIN), message |
+| TicketAssignment | ticket_assignments | ticketId, assignedTo, assignedBy |
+| TicketNote | ticket_notes | ticketId, note, createdBy |
+| TicketSlaLog | ticket_sla_logs | ticketId, firstResponseAt, resolvedAt, responseMinutes, resolutionMinutes |
+| TicketCounter | ticket_sequence_counters | Atomic counter for ticket number generation |
+| TicketAttachment | ticket_attachments | ticketId, fileUrl, fileName, uploadedBy |
+| TicketAudit | ticket_audits | ticketId, action, previousStatus, newStatus, previousPriority, newPriority, previousAssignee, newAssignee, performedBy, notes |
+| TicketRating | ticket_ratings | ticketId (unique), rating (1-5), comment |
+| TicketTag | ticket_tags | ticketId, tag (unique per ticket) |
+
+### API Endpoints
+
+#### Customer Support — `/api/v1/support`
+
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| POST | /support | Customer JWT | ✅ |
+| GET | /support/my | Customer JWT | ✅ |
+| GET | /support/:id | Customer JWT | ✅ |
+| POST | /support/:id/reply | Customer JWT | ✅ |
+| POST | /support/:id/close | Customer JWT | ✅ |
+| POST | /support/:id/reopen | Customer JWT | ✅ |
+| POST | /support/:id/rate | Customer JWT | ✅ |
+| GET | /support/:id/attachments | Customer JWT | ✅ |
+| GET | /support/:id/audit | Customer JWT | ✅ |
+
+#### Admin Support — `/api/v1/admin/support`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/support | support.view | ✅ |
+| GET | /admin/support/:id | support.view | ✅ |
+| POST | /admin/support/:id/assign | support.assign | ✅ |
+| POST | /admin/support/:id/reply | support.reply | ✅ |
+| POST | /admin/support/:id/resolve | support.resolve | ✅ |
+| POST | /admin/support/:id/reopen | support.resolve | ✅ |
+| POST | /admin/support/:id/note | support.note | ✅ |
+| POST | /admin/support/:id/attachments | support.reply | ✅ |
+| GET | /admin/support/:id/attachments | support.view | ✅ |
+| GET | /admin/support/:id/audit | support.view | ✅ |
+| POST | /admin/support/:id/tags | support.assign | ✅ |
+| DELETE | /admin/support/:id/tags/:tagId | support.assign | ✅ |
+| GET | /admin/support/:id/tags | support.view | ✅ |
+
+#### Admin Support Analytics — `/api/v1/admin/support-analytics`
+
+| Method | Path | Permission | Status |
+|--------|------|------------|--------|
+| GET | /admin/support-analytics/summary | support.view | ✅ |
+| GET | /admin/support-analytics/categories | support.view | ✅ |
+| GET | /admin/support-analytics/agents | support.view | ✅ |
+| GET | /admin/support-analytics/sla | support.view | ✅ |
+
+### New Permissions
+
+| Permission | Slug | Assigned To |
+|------------|------|-------------|
+| View Support Tickets | support.view | SUPER_ADMIN, SUPPORT_MANAGER |
+| Assign Support Tickets | support.assign | SUPER_ADMIN, SUPPORT_MANAGER |
+| Reply To Tickets | support.reply | SUPER_ADMIN, SUPPORT_MANAGER |
+| Resolve Tickets | support.resolve | SUPER_ADMIN, SUPPORT_MANAGER |
+| Add Internal Notes | support.note | SUPER_ADMIN, SUPPORT_MANAGER |
+
+### Ticket Categories
+
+ORDER_ISSUE, PAYMENT_ISSUE, SHIPPING_ISSUE, RETURN_ISSUE, REFUND_ISSUE, PRODUCT_ISSUE, ACCOUNT_ISSUE, OTHER
+
+### Ticket Priorities
+
+LOW (24h response / 72h resolution), MEDIUM (12h / 48h), HIGH (4h / 24h), URGENT (1h / 8h)
+
+### Ticket Status Workflow
+
+```
+OPEN → ASSIGNED → IN_PROGRESS → RESOLVED → CLOSED
+RESOLVED → REOPENED → IN_PROGRESS (reopen path)
+```
+
+### Business Rules Implemented
+
+| Rule | Description |
+|------|-------------|
+| Login Required | Customer must be authenticated |
+| Ticket Ownership | Customer can only access own tickets |
+| Auto Ticket Number | Format TKT-YYYY-000001 via atomic counter table |
+| Order Linking | Optional order reference for order-related complaints |
+| Reply Tracking | Every customer/admin reply stored separately |
+| Internal Notes | Admin only, hidden from customer |
+| Assignment History | Full assignment tracking via ticket_assignments |
+| SLA Tracking | First response and resolution timestamps tracked |
+| Auto Audit Logs | Every admin reply auto-sets firstResponseAt |
+| Close Ticket | Customer can close RESOLVED tickets |
+| Reopen Ticket | Customer or admin can reopen resolved tickets |
+| Email Notifications | Ticket created, admin reply notification |
+| SLA Targets | Priority-based response/resolution targets |
+| Ticket Attachments | Files linked to tickets via URL |
+| Audit Trail | Auto-logged on assign, resolve, reopen, status change |
+| Ticket Rating | Customer can rate resolved/closed tickets (1-5) one-time |
+| Ticket Tags | Free-text tags per ticket, unique per ticket |
+| Admin Filters | Filter by assignedTo, customer search, date range |
+
+### Deliverables
+
+- [x] SupportTicket Entity + TicketMessage Entity
+- [x] TicketAssignment Entity + TicketNote Entity + TicketSlaLog Entity
+- [x] TicketAttachment Entity + TicketAudit Entity + TicketRating Entity + TicketTag Entity
+- [x] SupportService (create, findMy, findOne, reply, close, findAll, assign, adminReply, resolve, reopen, addNote, + attachments, audit, rating, tags)
+- [x] TicketAssignmentService (byAdmin, history)
+- [x] SlaMonitoringService (getSlaStatus, checkCompliance, getTargets)
+- [x] SupportAnalyticsService (summary, categories, agentPerformance, slaSummary)
+- [x] CustomerSupportController (create, my, view, reply, close, reopen, rate, attachments, audit)
+- [x] AdminSupportController (list, view, assign, reply, resolve, reopen, note, attachments, audit, tags)
+- [x] AdminSupportAnalyticsController (summary, categories, agents, sla)
+- [x] SupportModule
+- [x] Migration Phase18SupportDesk (5 tables + 1 counter table + 4 enums + indexes + FKs)
+- [x] Migration Phase18Part2SupportEnhancements (4 new tables + enum + indexes + FKs)
+- [x] Seed permissions (4 new: support.assign, support.reply, support.resolve, support.note)
+- [x] Role mappings (SUPER_ADMIN, SUPPORT_MANAGER)
+- [x] Email notification integration (ticket_created, ticket_reply)
+- [x] RateTicketDto + AddTagDto + updated TicketQueryDto
+- [x] app.module.ts wiring
+- [x] data-source.ts wiring (9 support entities total)
+- [x] Zero TypeScript build errors
+- [x] Migration executed successfully (24 migrations total)
 - [x] Seed executed successfully
 
