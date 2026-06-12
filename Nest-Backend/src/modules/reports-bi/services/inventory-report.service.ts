@@ -8,26 +8,28 @@ export class InventoryReportService {
   async getReport(_dateFrom?: string, _dateTo?: string) {
     const qb = this.dataSource.createQueryBuilder()
       .select([
-        'COALESCE(SUM(i.quantity * i.unit_cost), 0) as "totalStockValue"',
+        'COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, 0)), 0) as "totalStockValue"',
         'COUNT(CASE WHEN i.quantity <= i.low_stock_threshold AND i.quantity > 0 THEN 1 END)::int as "lowStockItems"',
         'COUNT(CASE WHEN i.quantity = 0 THEN 1 END)::int as "outOfStockItems"',
         'COUNT(*)::int as "totalInventoryItems"',
       ])
-      .from('inventory', 'i');
+      .from('inventories', 'i')
+      .leftJoin('product_variants', 'pv', 'pv.id = i.variant_id');
 
     const summary = await qb.getRawOne();
 
     const lowStock = await this.dataSource.createQueryBuilder()
       .select([
         'i.id as "inventoryId"',
-        'i.product_id as "productId"',
+        'pv.product_id as "productId"',
         'p.name as "productName"',
         'i.quantity as "currentStock"',
         'i.low_stock_threshold as "threshold"',
-        'i.unit_cost as "unitCost"',
+        'COALESCE(pv.cost_price, 0) as "unitCost"',
       ])
-      .from('inventory', 'i')
-      .leftJoin('products', 'p', 'p.id = i.product_id')
+      .from('inventories', 'i')
+      .leftJoin('product_variants', 'pv', 'pv.id = i.variant_id')
+      .leftJoin('products', 'p', 'p.id = pv.product_id')
       .where('i.quantity <= i.low_stock_threshold')
       .orderBy('i.quantity', 'ASC')
       .limit(50)

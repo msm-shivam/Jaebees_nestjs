@@ -28,12 +28,12 @@ export class DashboardService {
       this.dataSource.query(`SELECT COUNT(*)::int as "total", COALESCE(SUM(total_amount),0) as "revenue" FROM "orders" WHERE status NOT IN ('CANCELLED')`),
       this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "users"`),
       this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "products" WHERE is_active = true`),
-      this.dataSource.query(`SELECT COALESCE(SUM(refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "return_requests" WHERE status = 'PENDING'`),
+      this.dataSource.query(`SELECT COALESCE(SUM(total_refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "return_requests" WHERE status = 'REQUESTED'`),
       this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "support_tickets" WHERE status = 'OPEN'`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventory" WHERE quantity <= low_stock_threshold AND quantity > 0`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity <= low_stock_threshold AND quantity > 0`),
       this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "coupons" WHERE is_active = true`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "email_campaigns" WHERE status = 'ACTIVE'`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "email_campaigns" WHERE status = 'SENDING'`),
     ]);
 
     const metrics = {
@@ -56,7 +56,7 @@ export class DashboardService {
   async getFinance() {
     const [revenue, refunds, expenses, tax, settlements] = await Promise.all([
       this.dataSource.query(`SELECT COALESCE(SUM(total_amount),0) as "gross" FROM "orders" WHERE status NOT IN ('CANCELLED')`),
-      this.dataSource.query(`SELECT COALESCE(SUM(refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`),
+      this.dataSource.query(`SELECT COALESCE(SUM(total_refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`),
       this.dataSource.query(`SELECT COALESCE(SUM(amount),0) as "total" FROM "expense_records"`),
       this.dataSource.query(`SELECT COALESCE(SUM(tax_amount),0) as "total" FROM "tax_records"`),
       this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "settlements" WHERE status = 'PENDING'`),
@@ -84,11 +84,11 @@ export class DashboardService {
 
   async getInventory() {
     const [stockValue, lowStock, outOfStock, purchaseOrders, goodsReceipts] = await Promise.all([
-      this.dataSource.query(`SELECT COALESCE(SUM(quantity * unit_cost),0) as "total" FROM "inventory"`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventory" WHERE quantity <= low_stock_threshold AND quantity > 0`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventory" WHERE quantity = 0`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status IN ('PENDING','APPROVED')`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "goods_receipts" WHERE status = 'PENDING'`),
+      this.dataSource.query(`SELECT COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, 0)), 0) as "total" FROM "inventories" i LEFT JOIN "product_variants" pv ON pv.id = i.variant_id`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity <= low_stock_threshold AND quantity > 0`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity = 0`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status IN ('APPROVED','PARTIALLY_RECEIVED')`),
+      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status = 'APPROVED'`),
     ]);
 
     const metrics = {
@@ -140,7 +140,7 @@ export class DashboardService {
       this.dataSource.query(`
         SELECT
           COUNT(*)::int as "total",
-          COUNT(CASE WHEN status = 'ACTIVE' THEN 1 END)::int as "active",
+          COUNT(CASE WHEN status = 'SENDING' THEN 1 END)::int as "active",
           COALESCE(SUM(opens_count), 0)::int as "opens",
           COALESCE(SUM(clicks_count), 0)::int as "clicks"
         FROM "email_campaigns"

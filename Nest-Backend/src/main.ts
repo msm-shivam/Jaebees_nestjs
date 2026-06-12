@@ -101,6 +101,21 @@ async function bootstrap() {
     .addTag('Wishlist', 'Customer product wishlist management')
     .addTag('Reviews', 'Customer product reviews and ratings')
     .addTag('Admin — Reviews', 'Admin review moderation (approve/reject)')
+    // Layer 21 — Reports, Dashboards & Business Intelligence
+    .addTag('Admin — Reports', 'Business intelligence reports (sales, revenue, products, inventory, returns, support, marketing)')
+    .addTag('Admin — Saved Reports', 'Saved report configurations for quick access')
+    .addTag('Admin — Dashboards', 'Aggregated dashboard metrics with snapshot persistence')
+    // Layer 22 — Audit, Security & Compliance
+    .addTag('Admin — Audit Logs', 'System-wide audit trail for entity changes')
+    .addTag('Admin — Security', 'Security events, login activities, and active sessions')
+    .addTag('Admin — Privacy', 'Privacy request management (data access, deletion)')
+    .addTag('Customer — Privacy', 'Customer privacy requests and consent management')
+    // Layer 23 — Settings & CMS
+    .addTag('Admin — Settings', 'System-wide key-value configuration')
+    .addTag('Admin — CMS Pages', 'CMS page management (about, privacy, terms, etc.)')
+    .addTag('Admin — Homepage', 'Homepage section management with sort order')
+    .addTag('Admin — Contact Settings', 'Contact information configuration')
+    .addTag('Public — Content', 'Publicly accessible CMS pages, homepage sections, and contact info')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

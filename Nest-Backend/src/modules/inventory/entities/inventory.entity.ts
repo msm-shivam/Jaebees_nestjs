@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
 import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
@@ -23,6 +24,7 @@ export class Inventory {
   @ManyToOne(() => ProductVariant, (variant) => variant.inventories, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'variant_id' })
   variant: ProductVariant;
 
   @Column({ type: 'int', default: 0 })

@@ -24,7 +24,7 @@ export class MarketingReportService {
       this.dataSource.query(`
         SELECT
           COUNT(*)::int as "totalCampaigns",
-          COUNT(CASE WHEN c.status = 'ACTIVE' THEN 1 END)::int as "activeCampaigns",
+          COUNT(CASE WHEN c.status = 'SENDING' THEN 1 END)::int as "activeCampaigns",
           COALESCE(SUM(c.opens_count), 0)::int as "totalOpens",
           COALESCE(SUM(c.clicks_count), 0)::int as "totalClicks",
           CASE WHEN COALESCE(SUM(c.opens_count), 0) > 0

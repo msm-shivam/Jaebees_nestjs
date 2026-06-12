@@ -10,8 +10,8 @@ export class ReturnReportService {
       .select([
         'COUNT(*)::int as "totalReturns"',
         `COUNT(CASE WHEN r.status = 'COMPLETED' OR r.status = 'REFUNDED' THEN 1 END)::int as "completedReturns"`,
-        `COUNT(CASE WHEN r.status = 'PENDING' THEN 1 END)::int as "pendingReturns"`,
-        'COALESCE(SUM(r.refund_amount), 0) as "totalRefunded"',
+        `COUNT(CASE WHEN r.status = 'REQUESTED' THEN 1 END)::int as "pendingReturns"`,
+        'COALESCE(SUM(r.total_refund_amount), 0) as "totalRefunded"',
         `CASE WHEN COUNT(*) > 0 THEN ROUND(COUNT(CASE WHEN r.status IN ('COMPLETED','REFUNDED') THEN 1 END)::decimal / COUNT(*) * 100, 2) ELSE 0 END as "returnRate"`,
       ])
       .from('return_requests', 'r');
@@ -25,7 +25,7 @@ export class ReturnReportService {
       .select([
         'r.reason as "reason"',
         'COUNT(*)::int as "count"',
-        'COALESCE(SUM(r.refund_amount), 0) as "totalRefunded"',
+        'COALESCE(SUM(r.total_refund_amount), 0) as "totalRefunded"',
       ])
       .from('return_requests', 'r');
 

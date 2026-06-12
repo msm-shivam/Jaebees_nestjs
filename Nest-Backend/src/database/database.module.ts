@@ -17,6 +17,86 @@ import { AttributeValue } from '../modules/attribute-values/entities/attribute-v
 import { ProductTag } from '../modules/product-tags/entities/product-tag.entity';
 import { ProductTagMapping } from '../modules/product-tags/entities/product-tag-mapping.entity';
 import { ProductCollection } from '../modules/collections/entities/product-collection.entity';
+import { Product } from '../modules/products/entities/product.entity';
+import { ProductImage } from '../modules/products/entities/product-image.entity';
+import { ProductVariant } from '../modules/product-variants/entities/product-variant.entity';
+import { ProductVariantAttribute } from '../modules/product-variants/entities/product-variant-attribute.entity';
+import { Inventory } from '../modules/inventory/entities/inventory.entity';
+import { Cart } from '../modules/cart/entities/cart.entity';
+import { CartItem } from '../modules/cart/entities/cart-item.entity';
+import { Order } from '../modules/orders/entities/order.entity';
+import { OrderItem } from '../modules/orders/entities/order-item.entity';
+import { PaymentMethod } from '../modules/payments/entities/payment-method.entity';
+import { Payment } from '../modules/payments/entities/payment.entity';
+import { PaymentRefund } from '../modules/payments/entities/payment-refund.entity';
+import { PaymentLog } from '../modules/payments/entities/payment-log.entity';
+import { PaymentWebhook } from '../modules/payments/entities/payment-webhook.entity';
+import { Address } from '../modules/addresses/entities/address.entity';
+import { Warehouse } from '../modules/warehouses/entities/warehouse.entity';
+import { DeliverySetting } from '../modules/delivery-settings/entities/delivery-setting.entity';
+import { Shipment } from '../modules/shipments/entities/shipment.entity';
+import { ShipmentTrackingLog } from '../modules/shipments/entities/shipment-tracking-log.entity';
+import { Coupon } from '../modules/coupons-promotions/entities/coupon.entity';
+import { CouponUsage } from '../modules/coupons-promotions/entities/coupon-usage.entity';
+import { Promotion } from '../modules/coupons-promotions/entities/promotion.entity';
+import { PromotionProduct } from '../modules/coupons-promotions/entities/promotion-product.entity';
+import { PromotionCategory } from '../modules/coupons-promotions/entities/promotion-category.entity';
+import { Campaign } from '../modules/coupons-promotions/entities/campaign.entity';
+import { Wishlist } from '../modules/wishlist/entities/wishlist.entity';
+import { WishlistItem } from '../modules/wishlist/entities/wishlist-item.entity';
+import { Review } from '../modules/reviews/entities/review.entity';
+import { ReviewImage } from '../modules/reviews/entities/review-image.entity';
+import { ReviewHelpfulVote } from '../modules/reviews/entities/review-helpful-vote.entity';
+import { ReviewReport } from '../modules/reviews/entities/review-report.entity';
+import { ProductQuestion } from '../modules/questions/entities/product-question.entity';
+import { ProductAnswer } from '../modules/questions/entities/product-answer.entity';
+import { Supplier } from '../modules/inventory-plus/entities/supplier.entity';
+import { PurchaseOrder } from '../modules/inventory-plus/entities/purchase-order.entity';
+import { PurchaseOrderItem } from '../modules/inventory-plus/entities/purchase-order-item.entity';
+import { GoodsReceipt } from '../modules/inventory-plus/entities/goods-receipt.entity';
+import { GoodsReceiptItem } from '../modules/inventory-plus/entities/goods-receipt-item.entity';
+import { StockAdjustment } from '../modules/inventory-plus/entities/stock-adjustment.entity';
+import { StockAlert } from '../modules/inventory-plus/entities/stock-alert.entity';
+import { InventoryAudit } from '../modules/inventory-plus/entities/inventory-audit.entity';
+import { ReturnRequest } from '../modules/returns/entities/return-request.entity';
+import { ReturnItem } from '../modules/returns/entities/return-item.entity';
+import { ReverseShipment } from '../modules/returns/entities/reverse-shipment.entity';
+import { ReturnAudit } from '../modules/returns/entities/return-audit.entity';
+import { ReturnReasonMaster } from '../modules/returns/entities/return-reason-master.entity';
+import { SupportTicket } from '../modules/support/entities/support-ticket.entity';
+import { TicketMessage } from '../modules/support/entities/ticket-message.entity';
+import { TicketAssignment } from '../modules/support/entities/ticket-assignment.entity';
+import { TicketNote } from '../modules/support/entities/ticket-note.entity';
+import { TicketSlaLog } from '../modules/support/entities/ticket-sla-log.entity';
+import { TicketAttachment } from '../modules/support/entities/ticket-attachment.entity';
+import { TicketAudit } from '../modules/support/entities/ticket-audit.entity';
+import { TicketRating } from '../modules/support/entities/ticket-rating.entity';
+import { TicketTag } from '../modules/support/entities/ticket-tag.entity';
+import { EmailNotification } from '../modules/email-notifications/entities/email-notification.entity';
+import { EmailTemplate } from '../modules/email-notifications/entities/email-template.entity';
+import { EmailPreference } from '../modules/email-notifications/entities/email-preference.entity';
+import { EmailLog } from '../modules/email-notifications/entities/email-log.entity';
+import { EmailCampaign } from '../modules/email-notifications/entities/email-campaign.entity';
+import { FinancialTransaction } from '../modules/finance-accounting/entities/financial-transaction.entity';
+import { LedgerEntry } from '../modules/finance-accounting/entities/ledger-entry.entity';
+import { Settlement } from '../modules/finance-accounting/entities/settlement.entity';
+import { TaxRecord } from '../modules/finance-accounting/entities/tax-record.entity';
+import { ExpenseRecord } from '../modules/finance-accounting/entities/expense-record.entity';
+import { FinancialAudit } from '../modules/finance-accounting/entities/financial-audit.entity';
+import { DashboardSnapshot } from '../modules/reports-bi/entities/dashboard-snapshot.entity';
+import { ReportExecutionLog } from '../modules/reports-bi/entities/report-execution-log.entity';
+import { SavedReport } from '../modules/reports-bi/entities/saved-report.entity';
+import { AuditLog } from '../modules/security-compliance/entities/audit-log.entity';
+import { LoginActivity } from '../modules/security-compliance/entities/login-activity.entity';
+import { SecuritySession } from '../modules/security-compliance/entities/security-session.entity';
+import { SecurityEvent } from '../modules/security-compliance/entities/security-event.entity';
+import { PrivacyRequest } from '../modules/security-compliance/entities/privacy-request.entity';
+import { ConsentRecord } from '../modules/security-compliance/entities/consent-record.entity';
+import { SystemSetting } from '../modules/system-settings-cms/entities/system-setting.entity';
+import { CmsPage } from '../modules/system-settings-cms/entities/cms-page.entity';
+import { HomepageSection } from '../modules/system-settings-cms/entities/homepage-section.entity';
+import { ContactSetting } from '../modules/system-settings-cms/entities/contact-setting.entity';
+import { SiteConfiguration } from '../modules/system-settings-cms/entities/site-configuration.entity';
 
 @Module({
   imports: [
@@ -50,6 +130,86 @@ import { ProductCollection } from '../modules/collections/entities/product-colle
             ProductTag,
             ProductTagMapping,
             ProductCollection,
+            Product,
+            ProductImage,
+            ProductVariant,
+            ProductVariantAttribute,
+            Inventory,
+            Cart,
+            CartItem,
+            Order,
+            OrderItem,
+            PaymentMethod,
+            Payment,
+            PaymentRefund,
+            PaymentLog,
+            PaymentWebhook,
+            Address,
+            Warehouse,
+            DeliverySetting,
+            Shipment,
+            ShipmentTrackingLog,
+            Coupon,
+            CouponUsage,
+            Promotion,
+            PromotionProduct,
+            PromotionCategory,
+            Campaign,
+            Wishlist,
+            WishlistItem,
+            Review,
+            ReviewImage,
+            ReviewHelpfulVote,
+            ReviewReport,
+            ProductQuestion,
+            ProductAnswer,
+            Supplier,
+            PurchaseOrder,
+            PurchaseOrderItem,
+            GoodsReceipt,
+            GoodsReceiptItem,
+            StockAdjustment,
+            StockAlert,
+            InventoryAudit,
+            ReturnRequest,
+            ReturnItem,
+            ReverseShipment,
+            ReturnAudit,
+            ReturnReasonMaster,
+            SupportTicket,
+            TicketMessage,
+            TicketAssignment,
+            TicketNote,
+            TicketSlaLog,
+            TicketAttachment,
+            TicketAudit,
+            TicketRating,
+            TicketTag,
+            EmailNotification,
+            EmailTemplate,
+            EmailPreference,
+            EmailLog,
+            EmailCampaign,
+            FinancialTransaction,
+            LedgerEntry,
+            Settlement,
+            TaxRecord,
+            ExpenseRecord,
+            FinancialAudit,
+            DashboardSnapshot,
+            ReportExecutionLog,
+            SavedReport,
+            AuditLog,
+            LoginActivity,
+            SecuritySession,
+            SecurityEvent,
+            PrivacyRequest,
+            ConsentRecord,
+            SystemSetting,
+            CmsPage,
+            HomepageSection,
+            ContactSetting,
+            SiteConfiguration,
           ],
           migrations: ['dist/database/migrations/*.js'],
           synchronize: false,
