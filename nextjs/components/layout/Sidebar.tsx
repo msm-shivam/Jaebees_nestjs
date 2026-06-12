@@ -9,7 +9,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { SIDEBAR_ITEMS, MenuItem } from '@/constants/navigation';
 import { ChevronDown, Award } from 'lucide-react';
 
-export function Sidebar() {
+const Sidebar = React.memo(function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, setSidebarOpen, setSidebarCollapsed } = useLayout();
   const { hasPermission, role, user } = usePermissions();
@@ -29,6 +29,7 @@ export function Sidebar() {
     if (sidebarCollapsed) {
       setSidebarCollapsed(false);
     }
+    hideTooltip()
     setOpenSubmenus((prev) => {
       if (prev[title]) return {};
       return { [title]: true };
@@ -48,12 +49,13 @@ export function Sidebar() {
       className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-zinc-200 bg-zinc-950 text-zinc-100 dark:border-zinc-800 ${
         sidebarCollapsed ? 'w-16' : 'w-64'
       } lg:static lg:h-full`}
-      style={{ transition: 'width 0.3s ease' }}
+      style={{ transition: 'width 0.2s ease' }}
     >
       {/* Brand Header */}
       <div className="flex h-16 shrink-0 items-center justify-center border-b border-zinc-800 bg-zinc-900 px-4">
         <Link
           href="/dashboard"
+         
           onMouseEnter={(e) => sidebarCollapsed && showTooltip(e, 'SPORTS PANEL')}
           onMouseLeave={hideTooltip}
           className="relative flex items-center justify-center gap-2 font-bold tracking-wider"
@@ -62,7 +64,7 @@ export function Sidebar() {
             <Award size={18} />
           </div>
           <span
-            className={`overflow-hidden whitespace-nowrap text-md font-extrabold tracking-tight bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent transition-all duration-300 ${
+            className={`overflow-hidden whitespace-nowrap text-md font-extrabold tracking-tight bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent transition-[max-width,opacity] duration-200 ${
               sidebarCollapsed ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100'
             }`}
           >
@@ -110,7 +112,7 @@ export function Sidebar() {
                       >
                         {Icon && <Icon size={20} className={`shrink-0 ${isActive ? 'text-orange-400' : 'text-zinc-400'}`} />}
                         <span
-                          className={`overflow-hidden whitespace-nowrap transition-all duration-300 max-w-40 opacity-100`}
+                          className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 max-w-40 opacity-100`}
                         >
                           {item.title}
                         </span>
@@ -166,7 +168,7 @@ export function Sidebar() {
                 >
                   {Icon && <Icon size={20} className={`shrink-0 ${isActive ? 'text-orange-400' : 'text-zinc-400'}`} />}
                   <span
-                    className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+                    className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ${
                       sidebarCollapsed ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100'
                     }`}
                   >
@@ -181,7 +183,7 @@ export function Sidebar() {
 
       {/* User Details Sidebar Footer */}
       {mounted && user && (
-        <div className={`border-t border-zinc-800 bg-zinc-900/50 overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'}`}>
+        <div className={`border-t border-zinc-800 bg-zinc-900/50 overflow-hidden transition-[max-height,opacity] duration-200 ${sidebarCollapsed ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'}`}>
           <div className="flex items-center gap-3 p-4">
             {user.avatarUrl ? (
               <img src={user.avatarUrl} alt={user.name} className="h-9 w-9 shrink-0 rounded-full border border-zinc-700" />
@@ -190,7 +192,7 @@ export function Sidebar() {
                 {user.name.charAt(0)}
               </div>
             )}
-            <div className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'max-w-0 opacity-0' : 'max-w-32 opacity-100'}`}>
+            <div className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ${sidebarCollapsed ? 'max-w-0 opacity-0' : 'max-w-32 opacity-100'}`}>
               <p className="truncate text-xs font-bold text-zinc-200">{user.name}</p>
               <p className="truncate text-[10px] text-zinc-500">{role}</p>
             </div>
@@ -213,6 +215,7 @@ export function Sidebar() {
       )}
     </aside>
   );
-}
+});
 
+export { Sidebar };
 export default Sidebar;
