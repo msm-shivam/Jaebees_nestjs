@@ -12,6 +12,7 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { AssignPermissionsDto } from './dto/assign-permissions.dto';
 import { RbacMessages } from '../../common/constants/messages.constants';
+import { DefaultRoles } from '../../common/constants/roles.constants';
 
 @Injectable()
 export class RbacService {
@@ -128,7 +129,19 @@ export class RbacService {
       slug: dto.slug,
       module: dto.module,
     });
-    return this.permissionRepo.save(permission);
+    const saved = await this.permissionRepo.save(permission);
+
+    // Auto-assign new permission to SUPER_ADMIN role
+    const superAdminRole = await this.roleRepo.findOne({
+      where: { slug: DefaultRoles.SUPER_ADMIN },
+      relations: { permissions: true },
+    });
+    if (superAdminRole) {
+      superAdminRole.permissions.push(saved);
+      await this.roleRepo.save(superAdminRole);
+    }
+
+    return saved;
   }
 
   async findAllPermissions(): Promise<Permission[]> {

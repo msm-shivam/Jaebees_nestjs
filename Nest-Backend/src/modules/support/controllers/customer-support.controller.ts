@@ -6,10 +6,10 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../common/decorators/current-user.decorator';
 import { SupportService } from '../services/support.service';
-import type { CreateTicketDto } from '../dto/create-ticket.dto';
-import type { ReplyTicketDto } from '../dto/reply-ticket.dto';
-import type { TicketQueryDto } from '../dto/ticket-query.dto';
-import type { RateTicketDto } from '../dto/rate-ticket.dto';
+import { CreateTicketDto } from '../dto/create-ticket.dto';
+import { ReplyTicketDto } from '../dto/reply-ticket.dto';
+import { TicketQueryDto } from '../dto/ticket-query.dto';
+import { RateTicketDto } from '../dto/rate-ticket.dto';
 
 @ApiTags('Customer — Support')
 @ApiBearerAuth('JWT')

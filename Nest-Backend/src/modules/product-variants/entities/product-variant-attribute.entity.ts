@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   ManyToOne,
+  JoinColumn,
   Index,
   Unique,
 } from 'typeorm';
@@ -28,6 +29,7 @@ export class ProductVariantAttribute {
   @ManyToOne(() => ProductVariant, (variant) => variant.attributes, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'variant_id' })
   variant: ProductVariant;
 
   @Column({ name: 'attribute_id', type: 'uuid' })
@@ -36,6 +38,7 @@ export class ProductVariantAttribute {
   @ManyToOne(() => Attribute, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'attribute_id' })
   attribute: Attribute;
 
   @Column({ name: 'attribute_value_id', type: 'uuid' })
@@ -44,6 +47,7 @@ export class ProductVariantAttribute {
   @ManyToOne(() => AttributeValue, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'attribute_value_id' })
   attributeValue: AttributeValue;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })

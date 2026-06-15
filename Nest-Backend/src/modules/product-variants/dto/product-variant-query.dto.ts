@@ -1,3 +1,4 @@
+import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
@@ -12,12 +13,14 @@ import { VariantStatus } from '../entities/product-variant.entity';
 export class ProductVariantQueryDto {
   @ApiPropertyOptional({ example: 1, default: 1 })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20, default: 20 })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   limit?: number = 20;
@@ -28,11 +31,13 @@ export class ProductVariantQueryDto {
   })
   @IsOptional()
   @IsUUID()
+  @Transform(({ value }) => value || undefined)
   productId?: string;
 
   @ApiPropertyOptional({ enum: VariantStatus, example: VariantStatus.ACTIVE })
   @IsOptional()
   @IsEnum(VariantStatus)
+  @Transform(({ value }) => value || undefined)
   status?: VariantStatus;
 
   @ApiPropertyOptional({
@@ -41,6 +46,7 @@ export class ProductVariantQueryDto {
   })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => value || undefined)
   search?: string;
 
   @ApiPropertyOptional({

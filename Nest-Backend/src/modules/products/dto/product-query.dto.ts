@@ -1,3 +1,4 @@
+import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
@@ -13,12 +14,14 @@ import { ProductStatus } from '../entities/product.entity';
 export class ProductQueryDto {
   @ApiPropertyOptional({ example: 1, default: 1 })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20, default: 20 })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   limit?: number = 20;
@@ -29,11 +32,13 @@ export class ProductQueryDto {
   })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => value || undefined)
   search?: string;
 
   @ApiPropertyOptional({ enum: ProductStatus, example: ProductStatus.ACTIVE })
   @IsOptional()
   @IsEnum(ProductStatus)
+  @Transform(({ value }) => value || undefined)
   status?: ProductStatus;
 
   @ApiPropertyOptional({
@@ -42,6 +47,7 @@ export class ProductQueryDto {
   })
   @IsOptional()
   @IsUUID()
+  @Transform(({ value }) => value || undefined)
   brandId?: string;
 
   @ApiPropertyOptional({
@@ -50,6 +56,7 @@ export class ProductQueryDto {
   })
   @IsOptional()
   @IsUUID()
+  @Transform(({ value }) => value || undefined)
   categoryId?: string;
 
   @ApiPropertyOptional({
@@ -58,6 +65,7 @@ export class ProductQueryDto {
   })
   @IsOptional()
   @IsUUID()
+  @Transform(({ value }) => value || undefined)
   subCategoryId?: string;
 
   @ApiPropertyOptional({
@@ -66,11 +74,15 @@ export class ProductQueryDto {
   })
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => value || undefined)
+  @Type(() => Boolean)
   isFeatured?: boolean;
 
   @ApiPropertyOptional({ example: true, description: 'Filter active products' })
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => value || undefined)
+  @Type(() => Boolean)
   isActive?: boolean;
 
   @ApiPropertyOptional({
@@ -82,7 +94,7 @@ export class ProductQueryDto {
   sortBy?: string = 'name';
 
   @ApiPropertyOptional({
-    example: 'ASC',
+    example: 'DESC',
     description: 'Sort order: ASC or DESC',
   })
   @IsOptional()

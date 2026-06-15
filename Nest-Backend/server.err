@@ -1,0 +1,27 @@
+[31m[Nest] 20496  - [39m15/06/2026, 12:14:48 pm [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31mDB Error: column Order__Order_items.updated_at does not exist[39m
+QueryFailedError: column Order__Order_items.updated_at does not exist
+    at PostgresQueryRunner.query (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\driver\postgres\PostgresQueryRunner.js:231:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async SelectQueryBuilder.loadRawResults (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:2301:25)
+    at async SelectQueryBuilder.getRawMany (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:728:29)
+    at async SelectQueryBuilder.executeEntitiesAndRawResults (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:2081:26)
+    at async SelectQueryBuilder.getManyAndCount (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:932:36)
+    at async OrdersService.getAllOrders (C:\Users\pc\Desktop\Sports\Nest-Backend\dist\modules\orders\orders.service.js:197:32)
+[31m[Nest] 20496  - [39m15/06/2026, 12:17:47 pm [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31mDB Error: column Payment__Payment_refunds.updated_at does not exist[39m
+QueryFailedError: column Payment__Payment_refunds.updated_at does not exist
+    at PostgresQueryRunner.query (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\driver\postgres\PostgresQueryRunner.js:231:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async SelectQueryBuilder.loadRawResults (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:2301:25)
+    at async SelectQueryBuilder.getRawMany (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:728:29)
+    at async SelectQueryBuilder.executeEntitiesAndRawResults (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:2081:26)
+    at async SelectQueryBuilder.getManyAndCount (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:932:36)
+    at async PaymentsService.getAllPayments (C:\Users\pc\Desktop\Sports\Nest-Backend\dist\modules\payments\services\payments.service.js:236:31)
+[31m[Nest] 20496  - [39m15/06/2026, 12:21:33 pm [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31mDB Error: column Order__Order_items.updated_at does not exist[39m
+QueryFailedError: column Order__Order_items.updated_at does not exist
+    at PostgresQueryRunner.query (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\driver\postgres\PostgresQueryRunner.js:231:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async SelectQueryBuilder.loadRawResults (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:2301:25)
+    at async SelectQueryBuilder.getRawMany (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:728:29)
+    at async SelectQueryBuilder.executeEntitiesAndRawResults (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:2081:26)
+    at async SelectQueryBuilder.getManyAndCount (C:\Users\pc\Desktop\Sports\Nest-Backend\node_modules\typeorm\query-builder\SelectQueryBuilder.js:932:36)
+    at async OrdersService.getAllOrders (C:\Users\pc\Desktop\Sports\Nest-Backend\dist\modules\orders\orders.service.js:197:32)

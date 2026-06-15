@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  JoinColumn,
   OneToMany,
   Index,
 } from 'typeorm';
@@ -35,6 +36,7 @@ export class ProductVariant {
   @ManyToOne(() => Product, (product) => product.variants, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
   @Column({ type: 'varchar', length: 150, unique: true })

@@ -1013,9 +1013,11 @@ async function seed() {
       console.log(`  ⏭  Updating permissions for: ${def.slug}`);
     }
 
-    const permsForRole = ROLE_PERMISSIONS[def.slug]
-      .map((slug) => permissionMap.get(slug))
-      .filter((p): p is Permission => !!p);
+    const permsForRole = def.slug === DefaultRoles.SUPER_ADMIN
+      ? [...permissionMap.values()]
+      : ROLE_PERMISSIONS[def.slug]
+          .map((slug) => permissionMap.get(slug))
+          .filter((p): p is Permission => !!p);
 
     role.permissions = permsForRole;
     role = await roleRepo.save(role);

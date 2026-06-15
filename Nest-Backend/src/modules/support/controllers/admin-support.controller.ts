@@ -9,11 +9,12 @@ import { DefaultPermissions } from '../../../common/constants/roles.constants';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../common/decorators/current-user.decorator';
 import { SupportService } from '../services/support.service';
-import type { TicketQueryDto } from '../dto/ticket-query.dto';
-import type { ReplyTicketDto } from '../dto/reply-ticket.dto';
-import type { AssignTicketDto } from '../dto/assign-ticket.dto';
-import type { AddNoteDto } from '../dto/add-note.dto';
-import type { AddTagDto } from '../dto/add-tag.dto';
+import { TicketQueryDto } from '../dto/ticket-query.dto';
+import { ReplyTicketDto } from '../dto/reply-ticket.dto';
+import { AssignTicketDto } from '../dto/assign-ticket.dto';
+import { AddNoteDto } from '../dto/add-note.dto';
+import { AddTagDto } from '../dto/add-tag.dto';
+import { AppValidationPipe } from '../../../common/pipes/validation.pipe';
 
 @ApiTags('Admin — Support')
 @ApiBearerAuth('JWT')
@@ -24,7 +25,7 @@ export class AdminSupportController {
 
   @Get()
   @Permissions(DefaultPermissions.SUPPORT_VIEW)
-  async findAll(@Query() query: TicketQueryDto) {
+  async findAll(@Query(AppValidationPipe) query: TicketQueryDto) {
     return this.supportService.findAll(query);
   }
 
@@ -39,7 +40,7 @@ export class AdminSupportController {
   async assign(
     @CurrentUser() admin: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AssignTicketDto,
+    @Body(AppValidationPipe) dto: AssignTicketDto,
   ) {
     return this.supportService.assign(id, admin.sub, dto);
   }
@@ -49,7 +50,7 @@ export class AdminSupportController {
   async reply(
     @CurrentUser() admin: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ReplyTicketDto,
+    @Body(AppValidationPipe) dto: ReplyTicketDto,
   ) {
     return this.supportService.adminReply(id, admin.sub, dto);
   }
@@ -71,7 +72,7 @@ export class AdminSupportController {
   async addNote(
     @CurrentUser() admin: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AddNoteDto,
+    @Body(AppValidationPipe) dto: AddNoteDto,
   ) {
     return this.supportService.addNote(id, admin.sub, dto.note);
   }
@@ -103,7 +104,7 @@ export class AdminSupportController {
   @Permissions(DefaultPermissions.SUPPORT_ASSIGN)
   async addTag(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AddTagDto,
+    @Body(AppValidationPipe) dto: AddTagDto,
   ) {
     return this.supportService.addTag(id, dto.tag);
   }

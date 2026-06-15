@@ -14,7 +14,7 @@ export default function TransactionsPage() {
   const limit = parseInt(getQueryParam('limit', '10'), 10);
   const search = getQueryParam('search');
 
-  const { data, isLoading } = usePaginatedQuery<any>('transactions', '/admin/finance', { page, limit, search });
+  const { data, isLoading } = usePaginatedQuery<any>('transactions', '/admin/finance/transactions', { page, limit, search });
   const transactions = data?.data?.items || [];
   const total = data?.data?.total || 0;
 

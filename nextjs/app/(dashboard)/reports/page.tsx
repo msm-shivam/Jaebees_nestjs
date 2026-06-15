@@ -15,7 +15,7 @@ export default function ReportsPage() {
     setGenerating(true);
     setGenerated(false);
     try {
-      const { data } = await apiClient.get('/admin/reports', { params: { type: reportType } });
+      const { data } = await apiClient.get(`/admin/reports/${reportType}`);
       if (data?.data?.url) {
         setReportUrl(data.data.url);
       }
@@ -62,9 +62,13 @@ export default function ReportsPage() {
               className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 dark:border-zinc-800 dark:bg-zinc-950"
             >
               <option value="sales">Sales & Revenue</option>
-              <option value="inventory">Inventory Valuation</option>
+              <option value="revenue">Revenue</option>
+              <option value="products">Products</option>
               <option value="customers">Customer Cohorts</option>
+              <option value="inventory">Inventory Valuation</option>
+              <option value="returns">Returns</option>
               <option value="support">Support Response SLA</option>
+              <option value="marketing">Marketing</option>
             </select>
           </div>
 

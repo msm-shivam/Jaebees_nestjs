@@ -19,7 +19,7 @@ export default function FinancePage({
   const search = (resolvedSearchParams.search as string) || '';
   const [, startTransition] = useTransition();
 
-  const { data: financeRes } = usePaginatedQuery<Transaction>('finance', '/admin/finance', { limit: 5, page: 1 });
+  const { data: financeRes } = usePaginatedQuery<Transaction>('finance', '/admin/finance/transactions', { limit: 5, page: 1 });
   const txns = financeRes?.data?.items || [];
   const totalTransactions = financeRes?.data?.total || 0;
 
