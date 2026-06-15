@@ -6,9 +6,7 @@ import {
   TableForeignKey,
 } from 'typeorm';
 
-export class Phase14SearchAndDiscovery1749201500000
-  implements MigrationInterface
-{
+export class Phase14SearchAndDiscovery1749201500000 implements MigrationInterface {
   name = 'Phase14SearchAndDiscovery1749201500000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -29,7 +27,12 @@ export class Phase14SearchAndDiscovery1749201500000
           { name: 'results_count', type: 'int', default: 0 },
           { name: 'clicked_product_id', type: 'uuid', isNullable: true },
           { name: 'converted_order_id', type: 'uuid', isNullable: true },
-          { name: 'ip_address', type: 'varchar', length: '45', isNullable: true },
+          {
+            name: 'ip_address',
+            type: 'varchar',
+            length: '45',
+            isNullable: true,
+          },
           { name: 'created_at', type: 'timestamptz', default: 'now()' },
           { name: 'updated_at', type: 'timestamptz', default: 'now()' },
         ],

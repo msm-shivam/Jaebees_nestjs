@@ -1,5 +1,11 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
 } from 'typeorm';
 import { PurchaseOrder } from './purchase-order.entity';
 
@@ -29,7 +35,13 @@ export class PurchaseOrderItem {
   @Column({ name: 'cost_price', type: 'decimal', precision: 12, scale: 2 })
   costPrice: number;
 
-  @Column({ name: 'line_total', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'line_total',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   lineTotal: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })

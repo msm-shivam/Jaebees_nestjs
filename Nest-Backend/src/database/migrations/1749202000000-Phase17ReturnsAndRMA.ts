@@ -13,7 +13,9 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
         CONSTRAINT "CK_return_sequence_counters_locked" CHECK (locked = 1)
       )
     `);
-    await queryRunner.query(`INSERT INTO return_sequence_counters (locked, last_number) VALUES (1, 0)`);
+    await queryRunner.query(
+      `INSERT INTO return_sequence_counters (locked, last_number) VALUES (1, 0)`,
+    );
 
     // Create return_requests table
     await queryRunner.query(`
@@ -56,13 +58,27 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
         CONSTRAINT "PK_return_requests" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_return_requests_return_number" ON "return_requests" ("return_number")`);
-    await queryRunner.query(`CREATE INDEX "idx_return_requests_order_id" ON "return_requests" ("order_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_return_requests_user_id" ON "return_requests" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_return_requests_status" ON "return_requests" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_return_requests_requested_at" ON "return_requests" ("requested_at")`);
-    await queryRunner.query(`ALTER TABLE "return_requests" ADD CONSTRAINT "FK_return_requests_order_id" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE`);
-    await queryRunner.query(`ALTER TABLE "return_requests" ADD CONSTRAINT "FK_return_requests_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_return_requests_return_number" ON "return_requests" ("return_number")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_requests_order_id" ON "return_requests" ("order_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_requests_user_id" ON "return_requests" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_requests_status" ON "return_requests" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_requests_requested_at" ON "return_requests" ("requested_at")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "return_requests" ADD CONSTRAINT "FK_return_requests_order_id" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "return_requests" ADD CONSTRAINT "FK_return_requests_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE`,
+    );
 
     // Create return_items table
     await queryRunner.query(`
@@ -79,10 +95,18 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
         CONSTRAINT "PK_return_items" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_return_items_return_request_id" ON "return_items" ("return_request_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_return_items_order_item_id" ON "return_items" ("order_item_id")`);
-    await queryRunner.query(`ALTER TABLE "return_items" ADD CONSTRAINT "FK_return_items_return_request_id" FOREIGN KEY ("return_request_id") REFERENCES "return_requests"("id") ON DELETE CASCADE`);
-    await queryRunner.query(`ALTER TABLE "return_items" ADD CONSTRAINT "FK_return_items_order_item_id" FOREIGN KEY ("order_item_id") REFERENCES "order_items"("id") ON DELETE CASCADE`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_items_return_request_id" ON "return_items" ("return_request_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_items_order_item_id" ON "return_items" ("order_item_id")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "return_items" ADD CONSTRAINT "FK_return_items_return_request_id" FOREIGN KEY ("return_request_id") REFERENCES "return_requests"("id") ON DELETE CASCADE`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "return_items" ADD CONSTRAINT "FK_return_items_order_item_id" FOREIGN KEY ("order_item_id") REFERENCES "order_items"("id") ON DELETE CASCADE`,
+    );
 
     // Create reverse_shipments table
     await queryRunner.query(`
@@ -99,9 +123,15 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
         CONSTRAINT "PK_reverse_shipments" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_reverse_shipments_return_request_id" ON "reverse_shipments" ("return_request_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_reverse_shipments_tracking_number" ON "reverse_shipments" ("tracking_number")`);
-    await queryRunner.query(`ALTER TABLE "reverse_shipments" ADD CONSTRAINT "FK_reverse_shipments_return_request_id" FOREIGN KEY ("return_request_id") REFERENCES "return_requests"("id") ON DELETE CASCADE`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_reverse_shipments_return_request_id" ON "reverse_shipments" ("return_request_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_reverse_shipments_tracking_number" ON "reverse_shipments" ("tracking_number")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reverse_shipments" ADD CONSTRAINT "FK_reverse_shipments_return_request_id" FOREIGN KEY ("return_request_id") REFERENCES "return_requests"("id") ON DELETE CASCADE`,
+    );
 
     // Create return_audits table
     await queryRunner.query(`
@@ -116,9 +146,15 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
         CONSTRAINT "PK_return_audits" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_return_audits_return_request_id" ON "return_audits" ("return_request_id")`);
-    await queryRunner.query(`ALTER TABLE "return_audits" ADD CONSTRAINT "FK_return_audits_return_request_id" FOREIGN KEY ("return_request_id") REFERENCES "return_requests"("id") ON DELETE CASCADE`);
-    await queryRunner.query(`ALTER TABLE "return_audits" ADD CONSTRAINT "FK_return_audits_performed_by" FOREIGN KEY ("performed_by") REFERENCES "admin_users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_return_audits_return_request_id" ON "return_audits" ("return_request_id")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "return_audits" ADD CONSTRAINT "FK_return_audits_return_request_id" FOREIGN KEY ("return_request_id") REFERENCES "return_requests"("id") ON DELETE CASCADE`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "return_audits" ADD CONSTRAINT "FK_return_audits_performed_by" FOREIGN KEY ("performed_by") REFERENCES "admin_users"("id") ON DELETE SET NULL`,
+    );
 
     // Create return_reason_master table
     await queryRunner.query(`
@@ -132,7 +168,9 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
         CONSTRAINT "PK_return_reason_master" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_return_reason_master_code" ON "return_reason_master" ("code")`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_return_reason_master_code" ON "return_reason_master" ("code")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -141,10 +179,18 @@ export class Phase17ReturnsAndRMA1749202000000 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "reverse_shipments"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "return_items"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "return_requests"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."reverse_shipment_status_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."return_item_condition_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."return_reason_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."return_request_status_enum"`);
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."reverse_shipment_status_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."return_item_condition_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."return_reason_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."return_request_status_enum"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "return_sequence_counters"`);
   }
 }

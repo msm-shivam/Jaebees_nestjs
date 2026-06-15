@@ -28,9 +28,19 @@ export class ReturnItem extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   reason: string;
 
-  @Column({ type: 'enum', enum: ReturnItemCondition, default: ReturnItemCondition.UNOPENED })
+  @Column({
+    type: 'enum',
+    enum: ReturnItemCondition,
+    default: ReturnItemCondition.UNOPENED,
+  })
   condition: ReturnItemCondition;
 
-  @Column({ name: 'refund_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'refund_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   refundAmount: number;
 }

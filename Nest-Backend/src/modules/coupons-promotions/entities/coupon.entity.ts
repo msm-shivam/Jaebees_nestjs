@@ -1,5 +1,10 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { CouponType } from '../enums/coupon-type.enum';
 
@@ -31,10 +36,22 @@ export class Coupon {
   @Column({ name: 'max_uses_per_user', type: 'int', nullable: true })
   maxUsesPerUser: number;
 
-  @Column({ name: 'minimum_order_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({
+    name: 'minimum_order_amount',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
   minimumOrderAmount: number;
 
-  @Column({ name: 'maximum_discount_amount', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'maximum_discount_amount',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   maximumDiscountAmount: number;
 
   @Column({ name: 'first_order_only', default: false })

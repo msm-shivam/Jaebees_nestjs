@@ -9,7 +9,9 @@ export class ProductAnswer extends BaseEntity {
   @Column({ name: 'question_id', type: 'uuid' })
   questionId: string;
 
-  @ManyToOne(() => ProductQuestion, (question) => question.answers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ProductQuestion, (question) => question.answers, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'question_id' })
   question: ProductQuestion;
 

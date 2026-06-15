@@ -47,7 +47,9 @@ export class Phase19EmailNotifications1749202300000 implements MigrationInterfac
         CONSTRAINT "UQ_email_notification_templates_code" UNIQUE ("code")
       )
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_email_notification_templates_code" ON "email_notification_templates" ("code")`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_email_notification_templates_code" ON "email_notification_templates" ("code")`,
+    );
 
     // email_preferences
     await queryRunner.query(`
@@ -66,8 +68,12 @@ export class Phase19EmailNotifications1749202300000 implements MigrationInterfac
         CONSTRAINT "UQ_email_preferences_user_id" UNIQUE ("user_id")
       )
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_email_preferences_user_id" ON "email_preferences" ("user_id")`);
-    await queryRunner.query(`ALTER TABLE "email_preferences" ADD CONSTRAINT "FK_email_preferences_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_email_preferences_user_id" ON "email_preferences" ("user_id")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "email_preferences" ADD CONSTRAINT "FK_email_preferences_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE`,
+    );
 
     // email_notifications
     await queryRunner.query(`
@@ -88,11 +94,21 @@ export class Phase19EmailNotifications1749202300000 implements MigrationInterfac
         CONSTRAINT "PK_email_notifications" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_email_notifications_user_id" ON "email_notifications" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_email_notifications_status" ON "email_notifications" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_email_notifications_created_at" ON "email_notifications" ("created_at")`);
-    await queryRunner.query(`ALTER TABLE "email_notifications" ADD CONSTRAINT "FK_email_notifications_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`);
-    await queryRunner.query(`ALTER TABLE "email_notifications" ADD CONSTRAINT "FK_email_notifications_template_id" FOREIGN KEY ("template_id") REFERENCES "email_notification_templates"("id") ON DELETE SET NULL`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_notifications_user_id" ON "email_notifications" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_notifications_status" ON "email_notifications" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_notifications_created_at" ON "email_notifications" ("created_at")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "email_notifications" ADD CONSTRAINT "FK_email_notifications_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "email_notifications" ADD CONSTRAINT "FK_email_notifications_template_id" FOREIGN KEY ("template_id") REFERENCES "email_notification_templates"("id") ON DELETE SET NULL`,
+    );
 
     // email_logs
     await queryRunner.query(`
@@ -111,9 +127,15 @@ export class Phase19EmailNotifications1749202300000 implements MigrationInterfac
         CONSTRAINT "PK_email_logs" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_email_logs_notification_id" ON "email_logs" ("notification_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_email_logs_created_at" ON "email_logs" ("created_at")`);
-    await queryRunner.query(`ALTER TABLE "email_logs" ADD CONSTRAINT "FK_email_logs_notification_id" FOREIGN KEY ("notification_id") REFERENCES "email_notifications"("id") ON DELETE SET NULL`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_logs_notification_id" ON "email_logs" ("notification_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_logs_created_at" ON "email_logs" ("created_at")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "email_logs" ADD CONSTRAINT "FK_email_logs_notification_id" FOREIGN KEY ("notification_id") REFERENCES "email_notifications"("id") ON DELETE SET NULL`,
+    );
 
     // email_campaigns
     await queryRunner.query(`
@@ -138,9 +160,15 @@ export class Phase19EmailNotifications1749202300000 implements MigrationInterfac
         CONSTRAINT "PK_email_campaigns" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_email_campaigns_status" ON "email_campaigns" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_email_campaigns_scheduled_at" ON "email_campaigns" ("scheduled_at")`);
-    await queryRunner.query(`CREATE INDEX "idx_email_campaigns_created_at" ON "email_campaigns" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_campaigns_status" ON "email_campaigns" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_campaigns_scheduled_at" ON "email_campaigns" ("scheduled_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_email_campaigns_created_at" ON "email_campaigns" ("created_at")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -149,28 +177,40 @@ export class Phase19EmailNotifications1749202300000 implements MigrationInterfac
     await queryRunner.query(`DROP INDEX "idx_email_campaigns_status"`);
     await queryRunner.query(`DROP TABLE "email_campaigns"`);
 
-    await queryRunner.query(`ALTER TABLE "email_logs" DROP CONSTRAINT "FK_email_logs_notification_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "email_logs" DROP CONSTRAINT "FK_email_logs_notification_id"`,
+    );
     await queryRunner.query(`DROP INDEX "idx_email_logs_created_at"`);
     await queryRunner.query(`DROP INDEX "idx_email_logs_notification_id"`);
     await queryRunner.query(`DROP TABLE "email_logs"`);
 
-    await queryRunner.query(`ALTER TABLE "email_notifications" DROP CONSTRAINT "FK_email_notifications_template_id"`);
-    await queryRunner.query(`ALTER TABLE "email_notifications" DROP CONSTRAINT "FK_email_notifications_user_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "email_notifications" DROP CONSTRAINT "FK_email_notifications_template_id"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "email_notifications" DROP CONSTRAINT "FK_email_notifications_user_id"`,
+    );
     await queryRunner.query(`DROP INDEX "idx_email_notifications_created_at"`);
     await queryRunner.query(`DROP INDEX "idx_email_notifications_status"`);
     await queryRunner.query(`DROP INDEX "idx_email_notifications_user_id"`);
     await queryRunner.query(`DROP TABLE "email_notifications"`);
 
-    await queryRunner.query(`ALTER TABLE "email_preferences" DROP CONSTRAINT "FK_email_preferences_user_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "email_preferences" DROP CONSTRAINT "FK_email_preferences_user_id"`,
+    );
     await queryRunner.query(`DROP INDEX "idx_email_preferences_user_id"`);
     await queryRunner.query(`DROP TABLE "email_preferences"`);
 
-    await queryRunner.query(`DROP INDEX "idx_email_notification_templates_code"`);
+    await queryRunner.query(
+      `DROP INDEX "idx_email_notification_templates_code"`,
+    );
     await queryRunner.query(`DROP TABLE "email_notification_templates"`);
 
     await queryRunner.query(`DROP TYPE "public"."campaign_type_enum"`);
     await queryRunner.query(`DROP TYPE "public"."campaign_status_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."transactional_email_type_enum"`);
+    await queryRunner.query(
+      `DROP TYPE "public"."transactional_email_type_enum"`,
+    );
     await queryRunner.query(`DROP TYPE "public"."notification_status_enum"`);
   }
 }

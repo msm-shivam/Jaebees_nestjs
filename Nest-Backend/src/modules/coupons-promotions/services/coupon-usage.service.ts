@@ -10,7 +10,12 @@ export class CouponUsageService {
     private readonly usageRepository: Repository<CouponUsage>,
   ) {}
 
-  async recordUsage(couponId: string, userId: string, orderId: string, discountAmount: number): Promise<CouponUsage> {
+  async recordUsage(
+    couponId: string,
+    userId: string,
+    orderId: string,
+    discountAmount: number,
+  ): Promise<CouponUsage> {
     const usage = this.usageRepository.create({
       couponId,
       userId,

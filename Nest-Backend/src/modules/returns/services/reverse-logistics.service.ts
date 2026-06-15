@@ -18,7 +18,10 @@ export class ReverseLogisticsService {
   ) {}
 
   async findByReturnId(returnId: string) {
-    return this.shipmentRepo.find({ where: { returnRequestId: returnId }, order: { createdAt: 'DESC' } });
+    return this.shipmentRepo.find({
+      where: { returnRequestId: returnId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async updateStatus(
@@ -27,12 +30,15 @@ export class ReverseLogisticsService {
     adminId: string,
     trackingNumber?: string,
   ) {
-    const shipment = await this.shipmentRepo.findOne({ where: { returnRequestId: returnId } });
+    const shipment = await this.shipmentRepo.findOne({
+      where: { returnRequestId: returnId },
+    });
     if (!shipment) throw new NotFoundException('Shipment not found');
 
     shipment.status = status;
     if (trackingNumber) shipment.trackingNumber = trackingNumber;
-    if (status === ReverseShipmentStatus.DELIVERED) shipment.deliveredDate = new Date();
+    if (status === ReverseShipmentStatus.DELIVERED)
+      shipment.deliveredDate = new Date();
     await this.shipmentRepo.save(shipment);
 
     if (status === ReverseShipmentStatus.IN_TRANSIT) {

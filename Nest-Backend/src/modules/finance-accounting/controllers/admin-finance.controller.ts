@@ -1,5 +1,12 @@
 import {
-  Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
@@ -30,7 +37,13 @@ export class AdminFinanceController {
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    return this.financeService.findAll({ page, limit, type: type as any, dateFrom, dateTo });
+    return this.financeService.findAll({
+      page,
+      limit,
+      type: type as any,
+      dateFrom,
+      dateTo,
+    });
   }
 
   @Get('transactions/:id')
@@ -47,7 +60,11 @@ export class AdminFinanceController {
 
   @Get('ledger')
   @Permissions(DefaultPermissions.FINANCE_VIEW)
-  async findAllLedger(@Query() query: DateRangeDto, @Query('page') page?: number, @Query('limit') limit?: number) {
+  async findAllLedger(
+    @Query() query: DateRangeDto,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
     return this.ledgerService.findAll({ ...query, page, limit });
   }
 
@@ -59,6 +76,10 @@ export class AdminFinanceController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.ledgerService.findByAccount(accountCode, { ...query, page, limit });
+    return this.ledgerService.findByAccount(accountCode, {
+      ...query,
+      page,
+      limit,
+    });
   }
 }

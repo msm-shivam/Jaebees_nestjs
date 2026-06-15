@@ -1,5 +1,12 @@
 import {
-  Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
@@ -35,7 +42,10 @@ export class AdminReturnController {
 
   @Post(':id/approve')
   @Permissions(DefaultPermissions.RETURN_APPROVE)
-  async approve(@CurrentUser() admin: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async approve(
+    @CurrentUser() admin: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.returnService.approve(id, admin.sub);
   }
 
@@ -61,7 +71,10 @@ export class AdminReturnController {
 
   @Post(':id/received')
   @Permissions(DefaultPermissions.RETURN_RECEIVE)
-  async markReceived(@CurrentUser() admin: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async markReceived(
+    @CurrentUser() admin: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.returnService.markReceived(id, admin.sub);
   }
 
@@ -77,7 +90,10 @@ export class AdminReturnController {
 
   @Post(':id/complete')
   @Permissions(DefaultPermissions.RETURN_APPROVE)
-  async complete(@CurrentUser() admin: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async complete(
+    @CurrentUser() admin: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.returnService.complete(id, admin.sub);
   }
 }

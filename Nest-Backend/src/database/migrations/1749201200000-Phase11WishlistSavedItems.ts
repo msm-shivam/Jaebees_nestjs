@@ -5,9 +5,7 @@ import {
   TableIndex,
 } from 'typeorm';
 
-export class Phase11WishlistSavedItems1749201200000
-  implements MigrationInterface
-{
+export class Phase11WishlistSavedItems1749201200000 implements MigrationInterface {
   name = 'Phase11WishlistSavedItems1749201200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

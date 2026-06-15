@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Supplier } from '../entities/supplier.entity';
@@ -14,7 +18,9 @@ export class SupplierService {
   ) {}
 
   async create(dto: CreateSupplierDto): Promise<Supplier> {
-    const existing = await this.supplierRepository.findOne({ where: { code: dto.code } });
+    const existing = await this.supplierRepository.findOne({
+      where: { code: dto.code },
+    });
     if (existing) {
       throw new ConflictException(`Supplier code "${dto.code}" already exists`);
     }
@@ -22,7 +28,9 @@ export class SupplierService {
     return this.supplierRepository.save(supplier);
   }
 
-  async findAll(query: SupplierQueryDto): Promise<{ items: Supplier[]; total: number }> {
+  async findAll(
+    query: SupplierQueryDto,
+  ): Promise<{ items: Supplier[]; total: number }> {
     const { search, isActive, page = 1, limit = 20 } = query;
     const where: any = {};
     if (search) {
@@ -51,9 +59,13 @@ export class SupplierService {
   async update(id: string, dto: UpdateSupplierDto): Promise<Supplier> {
     await this.findById(id);
     if (dto.code) {
-      const existing = await this.supplierRepository.findOne({ where: { code: dto.code } });
+      const existing = await this.supplierRepository.findOne({
+        where: { code: dto.code },
+      });
       if (existing && existing.id !== id) {
-        throw new ConflictException(`Supplier code "${dto.code}" already exists`);
+        throw new ConflictException(
+          `Supplier code "${dto.code}" already exists`,
+        );
       }
     }
     await this.supplierRepository.update(id, dto);

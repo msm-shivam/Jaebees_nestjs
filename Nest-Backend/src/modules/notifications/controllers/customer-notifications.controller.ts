@@ -9,9 +9,7 @@ import { UpdateNotificationPreferenceDto } from '../dto/update-notification-pref
 @UseGuards(JwtAuthGuard)
 @Controller('notifications/preferences')
 export class CustomerNotificationsController {
-  constructor(
-    private readonly prefService: NotificationPreferenceService,
-  ) {}
+  constructor(private readonly prefService: NotificationPreferenceService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get my notification preferences' })

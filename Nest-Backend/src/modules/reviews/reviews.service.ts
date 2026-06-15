@@ -43,7 +43,11 @@ export class ReviewsService {
     }
 
     const orderItem = await this.orderItemRepository.findOne({
-      where: { id: dto.orderItemId, orderId: dto.orderId, productId: dto.productId },
+      where: {
+        id: dto.orderItemId,
+        orderId: dto.orderId,
+        productId: dto.productId,
+      },
     });
     if (!orderItem) {
       throw new NotFoundException('Order item not found in this order');
@@ -53,7 +57,9 @@ export class ReviewsService {
       where: { orderItemId: dto.orderItemId },
     });
     if (existing) {
-      throw new BadRequestException('Review already exists for this order item');
+      throw new BadRequestException(
+        'Review already exists for this order item',
+      );
     }
 
     const review = this.reviewRepository.create({
@@ -178,7 +184,10 @@ export class ReviewsService {
       .addSelect('COUNT(CASE WHEN review.rating = 3 THEN 1 END)', 'threeStar')
       .addSelect('COUNT(CASE WHEN review.rating = 2 THEN 1 END)', 'twoStar')
       .addSelect('COUNT(CASE WHEN review.rating = 1 THEN 1 END)', 'oneStar')
-      .addSelect('COUNT(CASE WHEN review.rating IS NOT NULL THEN 1 END)', 'totalRatings')
+      .addSelect(
+        'COUNT(CASE WHEN review.rating IS NOT NULL THEN 1 END)',
+        'totalRatings',
+      )
       .where('review.productId = :productId', { productId })
       .andWhere('review.status = :status', { status: ReviewStatus.APPROVED })
       .andWhere('review.deletedAt IS NULL')
@@ -186,7 +195,9 @@ export class ReviewsService {
 
     const avg = result?.avg ? parseFloat(parseFloat(result.avg).toFixed(2)) : 0;
     const count = result?.count ? parseInt(result.count, 10) : 0;
-    const totalRatings = result?.totalRatings ? parseInt(result.totalRatings, 10) : 0;
+    const totalRatings = result?.totalRatings
+      ? parseInt(result.totalRatings, 10)
+      : 0;
     const fiveStar = result?.fiveStar ? parseInt(result.fiveStar, 10) : 0;
     const fourStar = result?.fourStar ? parseInt(result.fourStar, 10) : 0;
     const threeStar = result?.threeStar ? parseInt(result.threeStar, 10) : 0;

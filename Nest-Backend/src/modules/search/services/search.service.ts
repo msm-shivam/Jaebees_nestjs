@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, In, MoreThan, SelectQueryBuilder } from 'typeorm';
 import { Product, ProductStatus } from '../../products/entities/product.entity';
-import { ProductVariant, VariantStatus } from '../../product-variants/entities/product-variant.entity';
+import {
+  ProductVariant,
+  VariantStatus,
+} from '../../product-variants/entities/product-variant.entity';
 import { Inventory } from '../../inventory/entities/inventory.entity';
 import { ProductCollection } from '../../collections/entities/product-collection.entity';
 import { ProductVariantAttribute } from '../../product-variants/entities/product-variant-attribute.entity';
@@ -12,7 +15,11 @@ import { Collection } from '../../collections/entities/collection.entity';
 import { SubCategory } from '../../sub-categories/entities/sub-category.entity';
 import { Attribute } from '../../attributes/entities/attribute.entity';
 import { AttributeValue } from '../../attribute-values/entities/attribute-value.entity';
-import { SearchQueryDto, SortOption, AvailabilityOption } from '../dto/search-query.dto';
+import {
+  SearchQueryDto,
+  SortOption,
+  AvailabilityOption,
+} from '../dto/search-query.dto';
 import { SearchLog } from '../entities/search-log.entity';
 import { SearchAnalyticsService } from './search-analytics.service';
 import { paginate } from '../../../common/utils/pagination.util';
@@ -45,11 +52,7 @@ export class SearchService {
     private readonly searchAnalyticsService: SearchAnalyticsService,
   ) {}
 
-  async search(
-    query: SearchQueryDto,
-    userId?: string,
-    ipAddress?: string,
-  ) {
+  async search(query: SearchQueryDto, userId?: string, ipAddress?: string) {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
@@ -61,7 +64,12 @@ export class SearchService {
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.subCategory', 'subCategory')
       .leftJoinAndSelect('p.images', 'images')
-      .leftJoinAndMapMany('p.variants', 'p.variants', 'v', 'v.deleted_at IS NULL')
+      .leftJoinAndMapMany(
+        'p.variants',
+        'p.variants',
+        'v',
+        'v.deleted_at IS NULL',
+      )
       .leftJoin('v.inventories', 'inv')
       .leftJoin('product_collections', 'pc', 'pc.product_id = p.id')
       .leftJoin('collections', 'col', 'col.id = pc.collection_id')
@@ -80,7 +88,9 @@ export class SearchService {
 
     // Category filter
     if (query.categoryIds?.length) {
-      qb.andWhere('p.category_id IN (:...categoryIds)', { categoryIds: query.categoryIds });
+      qb.andWhere('p.category_id IN (:...categoryIds)', {
+        categoryIds: query.categoryIds,
+      });
     }
 
     // Brand filter
@@ -90,7 +100,9 @@ export class SearchService {
 
     // Collection filter
     if (query.collectionIds?.length) {
-      qb.andWhere('pc.collection_id IN (:...collectionIds)', { collectionIds: query.collectionIds });
+      qb.andWhere('pc.collection_id IN (:...collectionIds)', {
+        collectionIds: query.collectionIds,
+      });
     }
 
     // Price range filter (via variants)
@@ -109,10 +121,14 @@ export class SearchService {
 
     // Rating filter (min/max)
     if (query.minRating !== undefined) {
-      qb.andWhere('p.average_rating >= :minRating', { minRating: query.minRating });
+      qb.andWhere('p.average_rating >= :minRating', {
+        minRating: query.minRating,
+      });
     }
     if (query.maxRating !== undefined) {
-      qb.andWhere('p.average_rating <= :maxRating', { maxRating: query.maxRating });
+      qb.andWhere('p.average_rating <= :maxRating', {
+        maxRating: query.maxRating,
+      });
     }
 
     // Discount filter (min/max)
@@ -148,7 +164,9 @@ export class SearchService {
     if (query.isNewArrival === true) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      qb.andWhere('p.created_at >= :newArrivalDate', { newArrivalDate: thirtyDaysAgo });
+      qb.andWhere('p.created_at >= :newArrivalDate', {
+        newArrivalDate: thirtyDaysAgo,
+      });
     }
 
     // Best seller filter (total_reviews > 0 ordered by total_reviews — filter out low performers)
@@ -158,7 +176,9 @@ export class SearchService {
 
     // On sale filter (any variant has compare_at_price > price)
     if (query.onSale === true) {
-      qb.andWhere('v.compare_at_price IS NOT NULL AND v.compare_at_price > v.price');
+      qb.andWhere(
+        'v.compare_at_price IS NOT NULL AND v.compare_at_price > v.price',
+      );
     }
 
     // Dynamic attribute filters
@@ -209,31 +229,42 @@ export class SearchService {
 
     // Price buckets (facets: 0-500, 500-1000, 1000-2000, 2000+)
     if (query.priceBuckets?.length) {
-      const bucketConditions = query.priceBuckets.map((bucket) => {
-        const match = bucket.match(/^(\d+)-(\d+)\+?$/);
-        if (match) {
-          return { min: parseFloat(match[1]), max: parseFloat(match[2]) };
-        }
-        const matchOpen = bucket.match(/^(\d+)\+$/);
-        if (matchOpen) {
-          return { min: parseFloat(matchOpen[1]), max: Infinity };
-        }
-        const matchRange = bucket.match(/^(\d+)-(\d+)$/);
-        if (matchRange) {
-          return { min: parseFloat(matchRange[1]), max: parseFloat(matchRange[2]) };
-        }
-        return null;
-      }).filter(Boolean) as { min: number; max: number }[];
+      const bucketConditions = query.priceBuckets
+        .map((bucket) => {
+          const match = bucket.match(/^(\d+)-(\d+)\+?$/);
+          if (match) {
+            return { min: parseFloat(match[1]), max: parseFloat(match[2]) };
+          }
+          const matchOpen = bucket.match(/^(\d+)\+$/);
+          if (matchOpen) {
+            return { min: parseFloat(matchOpen[1]), max: Infinity };
+          }
+          const matchRange = bucket.match(/^(\d+)-(\d+)$/);
+          if (matchRange) {
+            return {
+              min: parseFloat(matchRange[1]),
+              max: parseFloat(matchRange[2]),
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as { min: number; max: number }[];
 
       if (bucketConditions.length > 0) {
-        const bucketSql = bucketConditions.map((_, i) =>
-          `(v.price >= :bucketMin${i} AND v.price <= :bucketMax${i})`,
-        ).join(' OR ');
-        const bucketParams = bucketConditions.reduce((acc, b, i) => {
-          acc[`bucketMin${i}`] = b.min;
-          acc[`bucketMax${i}`] = b.max;
-          return acc;
-        }, {} as Record<string, number>);
+        const bucketSql = bucketConditions
+          .map(
+            (_, i) =>
+              `(v.price >= :bucketMin${i} AND v.price <= :bucketMax${i})`,
+          )
+          .join(' OR ');
+        const bucketParams = bucketConditions.reduce(
+          (acc, b, i) => {
+            acc[`bucketMin${i}`] = b.min;
+            acc[`bucketMax${i}`] = b.max;
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
         qb.andWhere(`(${bucketSql})`, bucketParams);
       }
     }
@@ -245,10 +276,14 @@ export class SearchService {
           qb.andWhere('inv.available_quantity > 0');
           break;
         case AvailabilityOption.OUT_OF_STOCK:
-          qb.andWhere('(inv.available_quantity IS NULL OR inv.available_quantity <= 0)');
+          qb.andWhere(
+            '(inv.available_quantity IS NULL OR inv.available_quantity <= 0)',
+          );
           break;
         case AvailabilityOption.PREORDER:
-          qb.andWhere('v.status = :preorderStatus', { preorderStatus: 'PREORDER' });
+          qb.andWhere('v.status = :preorderStatus', {
+            preorderStatus: 'PREORDER',
+          });
           break;
       }
     }
@@ -263,10 +298,14 @@ export class SearchService {
 
     // Created date range filter
     if (query.createdAfter) {
-      qb.andWhere('p.created_at >= :createdAfter', { createdAfter: new Date(query.createdAfter) });
+      qb.andWhere('p.created_at >= :createdAfter', {
+        createdAfter: new Date(query.createdAfter),
+      });
     }
     if (query.createdBefore) {
-      qb.andWhere('p.created_at <= :createdBefore', { createdBefore: new Date(query.createdBefore) });
+      qb.andWhere('p.created_at <= :createdBefore', {
+        createdBefore: new Date(query.createdBefore),
+      });
     }
 
     // Sorting
@@ -315,7 +354,9 @@ export class SearchService {
 
     // Get IDs only for pagination, then fetch full entities
     const rawIds = await qb.getRawMany();
-    const ids = rawIds.map((r: any) => r.p_id || r.p_id || r.product_id || r.id).filter(Boolean);
+    const ids = rawIds
+      .map((r: any) => r.p_id || r.p_id || r.product_id || r.id)
+      .filter(Boolean);
 
     let items: any[] = [];
     if (ids.length > 0) {
@@ -325,7 +366,12 @@ export class SearchService {
         .leftJoinAndSelect('p.category', 'category')
         .leftJoinAndSelect('p.subCategory', 'subCategory')
         .leftJoinAndSelect('p.images', 'images')
-        .leftJoinAndMapMany('p.variants', 'p.variants', 'v', 'v.deleted_at IS NULL')
+        .leftJoinAndMapMany(
+          'p.variants',
+          'p.variants',
+          'v',
+          'v.deleted_at IS NULL',
+        )
         .leftJoin('v.inventories', 'inv')
         .where('p.id IN (:...ids)', { ids })
         .andWhere('p.deleted_at IS NULL')
@@ -379,6 +425,11 @@ export class SearchService {
         .map((v) => ({ id: v.id, value: v.value, slug: v.slug })),
     }));
 
-    return { categories, brands, collections, attributes: filterableAttributes };
+    return {
+      categories,
+      brands,
+      collections,
+      attributes: filterableAttributes,
+    };
   }
 }

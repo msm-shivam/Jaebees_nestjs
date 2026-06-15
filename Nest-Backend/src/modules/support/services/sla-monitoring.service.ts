@@ -34,16 +34,20 @@ export class SlaMonitoringService {
     responseCompliant: boolean | null;
     resolutionCompliant: boolean | null;
   }> {
-    const sla = await this.slaLogRepo.findOne({ where: { ticketId: ticket.id } });
+    const sla = await this.slaLogRepo.findOne({
+      where: { ticketId: ticket.id },
+    });
     if (!sla) return { responseCompliant: null, resolutionCompliant: null };
 
     const targets = this.slaTargets[ticket.priority];
-    const responseCompliant = sla.responseMinutes != null
-      ? sla.responseMinutes <= targets.responseHours * 60
-      : null;
-    const resolutionCompliant = sla.resolutionMinutes != null
-      ? sla.resolutionMinutes <= targets.resolutionHours * 60
-      : null;
+    const responseCompliant =
+      sla.responseMinutes != null
+        ? sla.responseMinutes <= targets.responseHours * 60
+        : null;
+    const resolutionCompliant =
+      sla.resolutionMinutes != null
+        ? sla.resolutionMinutes <= targets.resolutionHours * 60
+        : null;
 
     return { responseCompliant, resolutionCompliant };
   }

@@ -56,9 +56,12 @@ export class SupportService {
 
   async create(customerId: string, dto: CreateTicketDto) {
     if (dto.orderId) {
-      const order = await this.orderRepo.findOne({ where: { id: dto.orderId } });
+      const order = await this.orderRepo.findOne({
+        where: { id: dto.orderId },
+      });
       if (!order) throw new NotFoundException('Order not found');
-      if (order.userId !== customerId) throw new ForbiddenException('Order does not belong to you');
+      if (order.userId !== customerId)
+        throw new ForbiddenException('Order does not belong to you');
     }
 
     const ticketNumber = await this.generateTicketNumber();
@@ -99,18 +102,24 @@ export class SupportService {
   }
 
   async findMyTickets(customerId: string, query: TicketQueryDto) {
-    const qb = this.ticketRepo.createQueryBuilder('t')
+    const qb = this.ticketRepo
+      .createQueryBuilder('t')
       .leftJoinAndSelect('t.messages', 'messages')
       .where('t.customer_id = :customerId', { customerId });
 
-    if (query.status) qb.andWhere('t.status = :status', { status: query.status });
-    if (query.category) qb.andWhere('t.category = :category', { category: query.category });
+    if (query.status)
+      qb.andWhere('t.status = :status', { status: query.status });
+    if (query.category)
+      qb.andWhere('t.category = :category', { category: query.category });
 
     qb.orderBy('t.createdAt', 'DESC');
 
     const page = query.page || 1;
     const limit = query.limit || 10;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return { data, total, page, limit };
   }
@@ -129,14 +138,17 @@ export class SupportService {
       },
     });
     if (!ticket) throw new NotFoundException('Ticket not found');
-    if (customerId && ticket.customerId !== customerId) throw new ForbiddenException('Access denied');
+    if (customerId && ticket.customerId !== customerId)
+      throw new ForbiddenException('Access denied');
     return ticket;
   }
 
   async reply(customerId: string, ticketId: string, dto: ReplyTicketDto) {
     const ticket = await this.findOne(ticketId, customerId);
-    if (ticket.status === TicketStatus.CLOSED) throw new BadRequestException('Ticket is closed');
-    if (ticket.status === TicketStatus.RESOLVED) throw new BadRequestException('Ticket is resolved, please reopen');
+    if (ticket.status === TicketStatus.CLOSED)
+      throw new BadRequestException('Ticket is closed');
+    if (ticket.status === TicketStatus.RESOLVED)
+      throw new BadRequestException('Ticket is resolved, please reopen');
 
     const msg = this.messageRepo.create({
       ticketId,
@@ -146,7 +158,10 @@ export class SupportService {
     });
     await this.messageRepo.save(msg);
 
-    if (ticket.status === TicketStatus.REOPENED || ticket.status === TicketStatus.OPEN) {
+    if (
+      ticket.status === TicketStatus.REOPENED ||
+      ticket.status === TicketStatus.OPEN
+    ) {
       ticket.status = TicketStatus.IN_PROGRESS;
       await this.ticketRepo.save(ticket);
     }
@@ -157,7 +172,9 @@ export class SupportService {
   async close(customerId: string, ticketId: string) {
     const ticket = await this.findOne(ticketId, customerId);
     if (ticket.status !== TicketStatus.RESOLVED) {
-      throw new BadRequestException('Only resolved tickets can be closed by customer');
+      throw new BadRequestException(
+        'Only resolved tickets can be closed by customer',
+      );
     }
     ticket.status = TicketStatus.CLOSED;
     await this.ticketRepo.save(ticket);
@@ -165,46 +182,64 @@ export class SupportService {
   }
 
   async findAll(query: TicketQueryDto) {
-    const qb = this.ticketRepo.createQueryBuilder('t')
+    const qb = this.ticketRepo
+      .createQueryBuilder('t')
       .leftJoinAndSelect('t.messages', 'messages')
       .leftJoinAndSelect('t.customer', 'customer')
       .leftJoinAndSelect('t.assignedAdmin', 'assignedAdmin');
 
-    if (query.status) qb.andWhere('t.status = :status', { status: query.status });
-    if (query.category) qb.andWhere('t.category = :category', { category: query.category });
-    if (query.priority) qb.andWhere('t.priority = :priority', { priority: query.priority });
+    if (query.status)
+      qb.andWhere('t.status = :status', { status: query.status });
+    if (query.category)
+      qb.andWhere('t.category = :category', { category: query.category });
+    if (query.priority)
+      qb.andWhere('t.priority = :priority', { priority: query.priority });
     if (query.search) {
-      qb.andWhere('(t.subject ILIKE :search OR t.ticket_number ILIKE :search)', { search: `%${query.search}%` });
+      qb.andWhere(
+        '(t.subject ILIKE :search OR t.ticket_number ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
     }
-    if (query.assignedTo) qb.andWhere('t.assigned_to = :assignedTo', { assignedTo: query.assignedTo });
+    if (query.assignedTo)
+      qb.andWhere('t.assigned_to = :assignedTo', {
+        assignedTo: query.assignedTo,
+      });
     if (query.customer) {
       qb.andWhere(
         '(customer.firstName ILIKE :customer OR customer.lastName ILIKE :customer OR customer.email ILIKE :customer)',
         { customer: `%${query.customer}%` },
       );
     }
-    if (query.dateFrom) qb.andWhere('t.created_at >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('t.created_at <= :dateTo', { dateTo: query.dateTo });
+    if (query.dateFrom)
+      qb.andWhere('t.created_at >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('t.created_at <= :dateTo', { dateTo: query.dateTo });
 
     qb.orderBy('t.createdAt', 'DESC');
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return { data, total, page, limit };
   }
 
   async assign(ticketId: string, adminId: string, dto: AssignTicketDto) {
     const ticket = await this.findOne(ticketId);
-    if (ticket.status === TicketStatus.CLOSED) throw new BadRequestException('Cannot assign closed ticket');
-    if (ticket.status === TicketStatus.RESOLVED) throw new BadRequestException('Cannot assign resolved ticket');
+    if (ticket.status === TicketStatus.CLOSED)
+      throw new BadRequestException('Cannot assign closed ticket');
+    if (ticket.status === TicketStatus.RESOLVED)
+      throw new BadRequestException('Cannot assign resolved ticket');
 
     const previousAssignee = ticket.assignedTo;
     const previousStatus = ticket.status;
 
     ticket.assignedTo = dto.assignedTo;
-    if (ticket.status === TicketStatus.OPEN) ticket.status = TicketStatus.ASSIGNED;
+    if (ticket.status === TicketStatus.OPEN)
+      ticket.status = TicketStatus.ASSIGNED;
     await this.ticketRepo.save(ticket);
 
     const assignment = this.assignmentRepo.create({
@@ -214,22 +249,25 @@ export class SupportService {
     });
     await this.assignmentRepo.save(assignment);
 
-    await this.auditRepo.save(this.auditRepo.create({
-      ticketId,
-      action: 'assign',
-      previousAssignee,
-      newAssignee: dto.assignedTo,
-      previousStatus,
-      newStatus: ticket.status,
-      performedBy: adminId,
-    }));
+    await this.auditRepo.save(
+      this.auditRepo.create({
+        ticketId,
+        action: 'assign',
+        previousAssignee,
+        newAssignee: dto.assignedTo,
+        previousStatus,
+        newStatus: ticket.status,
+        performedBy: adminId,
+      }),
+    );
 
     return { message: 'Ticket assigned' };
   }
 
   async adminReply(ticketId: string, adminId: string, dto: ReplyTicketDto) {
     const ticket = await this.findOne(ticketId);
-    if (ticket.status === TicketStatus.CLOSED) throw new BadRequestException('Ticket is closed');
+    if (ticket.status === TicketStatus.CLOSED)
+      throw new BadRequestException('Ticket is closed');
 
     const msg = this.messageRepo.create({
       ticketId,
@@ -244,12 +282,17 @@ export class SupportService {
       await this.updateSlaResponse(ticket);
     }
 
-    if (ticket.status === TicketStatus.ASSIGNED || ticket.status === TicketStatus.OPEN) {
+    if (
+      ticket.status === TicketStatus.ASSIGNED ||
+      ticket.status === TicketStatus.OPEN
+    ) {
       ticket.status = TicketStatus.IN_PROGRESS;
     }
     await this.ticketRepo.save(ticket);
 
-    const customer = await this.userRepo.findOne({ where: { id: ticket.customerId } });
+    const customer = await this.userRepo.findOne({
+      where: { id: ticket.customerId },
+    });
     if (customer) {
       await this.notificationsService.sendTemplatedEmail({
         to: customer.email,
@@ -266,8 +309,10 @@ export class SupportService {
 
   async resolve(ticketId: string, adminId: string) {
     const ticket = await this.findOne(ticketId);
-    if (ticket.status === TicketStatus.CLOSED) throw new BadRequestException('Ticket is already closed');
-    if (ticket.status === TicketStatus.RESOLVED) throw new BadRequestException('Ticket is already resolved');
+    if (ticket.status === TicketStatus.CLOSED)
+      throw new BadRequestException('Ticket is already closed');
+    if (ticket.status === TicketStatus.RESOLVED)
+      throw new BadRequestException('Ticket is already resolved');
 
     const previousStatus = ticket.status;
 
@@ -277,13 +322,15 @@ export class SupportService {
 
     await this.updateSlaResolution(ticket);
 
-    await this.auditRepo.save(this.auditRepo.create({
-      ticketId,
-      action: 'resolve',
-      previousStatus,
-      newStatus: TicketStatus.RESOLVED,
-      performedBy: adminId,
-    }));
+    await this.auditRepo.save(
+      this.auditRepo.create({
+        ticketId,
+        action: 'resolve',
+        previousStatus,
+        newStatus: TicketStatus.RESOLVED,
+        performedBy: adminId,
+      }),
+    );
 
     return { message: 'Ticket resolved' };
   }
@@ -298,13 +345,15 @@ export class SupportService {
     ticket.resolvedAt = null;
     await this.ticketRepo.save(ticket);
 
-    await this.auditRepo.save(this.auditRepo.create({
-      ticketId,
-      action: 'reopen',
-      previousStatus,
-      newStatus: TicketStatus.REOPENED,
-      performedBy: adminId ?? null,
-    }));
+    await this.auditRepo.save(
+      this.auditRepo.create({
+        ticketId,
+        action: 'reopen',
+        previousStatus,
+        newStatus: TicketStatus.REOPENED,
+        performedBy: adminId ?? null,
+      }),
+    );
 
     return { message: 'Ticket reopened' };
   }
@@ -320,24 +369,49 @@ export class SupportService {
     return { message: 'Note added' };
   }
 
-  async uploadAttachment(ticketId: string, fileUrl: string, fileName: string, uploadedBy: string) {
-    const attachment = this.attachmentRepo.create({ ticketId, fileUrl, fileName, uploadedBy });
+  async uploadAttachment(
+    ticketId: string,
+    fileUrl: string,
+    fileName: string,
+    uploadedBy: string,
+  ) {
+    const attachment = this.attachmentRepo.create({
+      ticketId,
+      fileUrl,
+      fileName,
+      uploadedBy,
+    });
     await this.attachmentRepo.save(attachment);
     return attachment;
   }
 
   async getAttachments(ticketId: string) {
-    return this.attachmentRepo.find({ where: { ticketId }, order: { createdAt: 'DESC' } });
+    return this.attachmentRepo.find({
+      where: { ticketId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async getAuditHistory(ticketId: string) {
-    return this.auditRepo.find({ where: { ticketId }, order: { createdAt: 'DESC' } });
+    return this.auditRepo.find({
+      where: { ticketId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  async rateTicket(ticketId: string, rating: number, customerId: string, comment?: string) {
+  async rateTicket(
+    ticketId: string,
+    rating: number,
+    customerId: string,
+    comment?: string,
+  ) {
     const ticket = await this.findOne(ticketId);
-    if (ticket.customerId !== customerId) throw new ForbiddenException('You can only rate your own tickets');
-    if (ticket.status !== TicketStatus.RESOLVED && ticket.status !== TicketStatus.CLOSED) {
+    if (ticket.customerId !== customerId)
+      throw new ForbiddenException('You can only rate your own tickets');
+    if (
+      ticket.status !== TicketStatus.RESOLVED &&
+      ticket.status !== TicketStatus.CLOSED
+    ) {
       throw new BadRequestException('Can only rate resolved or closed tickets');
     }
     const existing = await this.ratingRepo.findOne({ where: { ticketId } });
@@ -351,7 +425,8 @@ export class SupportService {
   async addTag(ticketId: string, tag: string) {
     const ticket = await this.findOne(ticketId);
     const existing = await this.tagRepo.findOne({ where: { ticketId, tag } });
-    if (existing) throw new BadRequestException('Tag already exists on this ticket');
+    if (existing)
+      throw new BadRequestException('Tag already exists on this ticket');
     const tagEntity = this.tagRepo.create({ ticketId, tag });
     await this.tagRepo.save(tagEntity);
     return tagEntity;
@@ -371,7 +446,11 @@ export class SupportService {
     const minutes = this.minutesSince(ticket.createdAt);
     let sla = await this.slaLogRepo.findOne({ where: { ticketId: ticket.id } });
     if (!sla) {
-      sla = this.slaLogRepo.create({ ticketId: ticket.id, firstResponseAt: new Date(), responseMinutes: minutes });
+      sla = this.slaLogRepo.create({
+        ticketId: ticket.id,
+        firstResponseAt: new Date(),
+        responseMinutes: minutes,
+      });
     } else {
       sla.firstResponseAt = new Date();
       sla.responseMinutes = minutes;
@@ -383,7 +462,11 @@ export class SupportService {
     const minutes = this.minutesSince(ticket.createdAt);
     let sla = await this.slaLogRepo.findOne({ where: { ticketId: ticket.id } });
     if (!sla) {
-      sla = this.slaLogRepo.create({ ticketId: ticket.id, resolvedAt: new Date(), resolutionMinutes: minutes });
+      sla = this.slaLogRepo.create({
+        ticketId: ticket.id,
+        resolvedAt: new Date(),
+        resolutionMinutes: minutes,
+      });
     } else {
       sla.resolvedAt = new Date();
       sla.resolutionMinutes = minutes;

@@ -33,10 +33,18 @@ export class EmailNotification extends BaseEntity {
   @Column({ name: 'recipient_email', type: 'varchar', length: 255 })
   recipientEmail: string;
 
-  @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.PENDING,
+  })
   status: NotificationStatus;
 
-  @Column({ type: 'enum', enum: TransactionalEmailType, default: TransactionalEmailType.CUSTOM })
+  @Column({
+    type: 'enum',
+    enum: TransactionalEmailType,
+    default: TransactionalEmailType.CUSTOM,
+  })
   type: TransactionalEmailType;
 
   @Column({ name: 'sent_at', type: 'timestamptz', nullable: true })

@@ -6,7 +6,8 @@ export class ProductReportService {
   constructor(private readonly dataSource: DataSource) {}
 
   async getReport(dateFrom?: string, dateTo?: string) {
-    const qb = this.dataSource.createQueryBuilder()
+    const qb = this.dataSource
+      .createQueryBuilder()
       .select([
         'p.id as "productId"',
         'p.name as "productName"',
@@ -16,7 +17,12 @@ export class ProductReportService {
       ])
       .from('products', 'p')
       .leftJoin('order_items', 'oi', 'oi.product_id = p.id')
-      .leftJoin('orders', 'o', 'o.id = oi.order_id AND o.status NOT IN (:...excluded)', { excluded: ['CANCELLED'] });
+      .leftJoin(
+        'orders',
+        'o',
+        'o.id = oi.order_id AND o.status NOT IN (:...excluded)',
+        { excluded: ['CANCELLED'] },
+      );
 
     if (dateFrom) qb.andWhere('o.created_at >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('o.created_at <= :dateTo', { dateTo });
@@ -29,7 +35,8 @@ export class ProductReportService {
   }
 
   async getByCategory(dateFrom?: string, dateTo?: string) {
-    const qb = this.dataSource.createQueryBuilder()
+    const qb = this.dataSource
+      .createQueryBuilder()
       .select([
         'c.id as "categoryId"',
         'c.name as "categoryName"',
@@ -40,7 +47,12 @@ export class ProductReportService {
       .from('categories', 'c')
       .leftJoin('products', 'p', 'p.category_id = c.id')
       .leftJoin('order_items', 'oi', 'oi.product_id = p.id')
-      .leftJoin('orders', 'o', 'o.id = oi.order_id AND o.status NOT IN (:...excluded)', { excluded: ['CANCELLED'] });
+      .leftJoin(
+        'orders',
+        'o',
+        'o.id = oi.order_id AND o.status NOT IN (:...excluded)',
+        { excluded: ['CANCELLED'] },
+      );
 
     if (dateFrom) qb.andWhere('o.created_at >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('o.created_at <= :dateTo', { dateTo });
@@ -53,7 +65,8 @@ export class ProductReportService {
   }
 
   async getByBrand(dateFrom?: string, dateTo?: string) {
-    const qb = this.dataSource.createQueryBuilder()
+    const qb = this.dataSource
+      .createQueryBuilder()
       .select([
         'b.id as "brandId"',
         'b.name as "brandName"',
@@ -64,7 +77,12 @@ export class ProductReportService {
       .from('brands', 'b')
       .leftJoin('products', 'p', 'p.brand_id = b.id')
       .leftJoin('order_items', 'oi', 'oi.product_id = p.id')
-      .leftJoin('orders', 'o', 'o.id = oi.order_id AND o.status NOT IN (:...excluded)', { excluded: ['CANCELLED'] });
+      .leftJoin(
+        'orders',
+        'o',
+        'o.id = oi.order_id AND o.status NOT IN (:...excluded)',
+        { excluded: ['CANCELLED'] },
+      );
 
     if (dateFrom) qb.andWhere('o.created_at >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('o.created_at <= :dateTo', { dateTo });

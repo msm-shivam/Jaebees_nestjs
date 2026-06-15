@@ -20,16 +20,26 @@ export class EmailCampaignService {
     return this.campaignRepo.save(campaign);
   }
 
-  async findAll(query: { page?: number; limit?: number; status?: string; type?: string }) {
-    const qb = this.campaignRepo.createQueryBuilder('c')
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    type?: string;
+  }) {
+    const qb = this.campaignRepo
+      .createQueryBuilder('c')
       .orderBy('c.createdAt', 'DESC');
 
-    if (query.status) qb.andWhere('c.status = :status', { status: query.status });
+    if (query.status)
+      qb.andWhere('c.status = :status', { status: query.status });
     if (query.type) qb.andWhere('c.type = :type', { type: query.type });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 
@@ -39,11 +49,16 @@ export class EmailCampaignService {
     return campaign;
   }
 
-  async update(id: string, dto: UpdateEmailCampaignDto): Promise<EmailCampaign> {
+  async update(
+    id: string,
+    dto: UpdateEmailCampaignDto,
+  ): Promise<EmailCampaign> {
     const campaign = await this.findOne(id);
     Object.assign(campaign, {
       ...dto,
-      scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : campaign.scheduledAt,
+      scheduledAt: dto.scheduledAt
+        ? new Date(dto.scheduledAt)
+        : campaign.scheduledAt,
     });
     return this.campaignRepo.save(campaign);
   }

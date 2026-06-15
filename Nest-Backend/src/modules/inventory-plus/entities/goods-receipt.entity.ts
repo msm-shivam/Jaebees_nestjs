@@ -1,5 +1,12 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, Index, OneToMany,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  OneToMany,
 } from 'typeorm';
 import { PurchaseOrder } from './purchase-order.entity';
 import { GoodsReceiptItem } from './goods-receipt-item.entity';

@@ -14,13 +14,27 @@ export class ReverseShipment extends BaseEntity {
   @JoinColumn({ name: 'return_request_id' })
   returnRequest: ReturnRequest;
 
-  @Column({ name: 'courier_name', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'courier_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   courierName: string;
 
-  @Column({ name: 'tracking_number', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'tracking_number',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   trackingNumber: string;
 
-  @Column({ type: 'enum', enum: ReverseShipmentStatus, default: ReverseShipmentStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: ReverseShipmentStatus,
+    default: ReverseShipmentStatus.PENDING,
+  })
   status: ReverseShipmentStatus;
 
   @Column({ name: 'pickup_date', type: 'timestamptz', nullable: true })

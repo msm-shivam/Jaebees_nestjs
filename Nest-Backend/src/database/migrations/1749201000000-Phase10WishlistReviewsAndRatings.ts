@@ -7,9 +7,7 @@ import {
   TableColumn,
 } from 'typeorm';
 
-export class Phase10WishlistReviewsAndRatings1749201000000
-  implements MigrationInterface
-{
+export class Phase10WishlistReviewsAndRatings1749201000000 implements MigrationInterface {
   name = 'Phase10WishlistReviewsAndRatings1749201000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

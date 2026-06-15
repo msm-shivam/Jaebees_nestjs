@@ -48,9 +48,9 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
     submenu: [
       { title: 'Stock Levels', href: '/inventory/stock', permission: 'inventory.view' },
       { title: 'Suppliers', href: '/inventory/suppliers', permission: 'supplier.view' },
-      { title: 'Purchase Orders', href: '/inventory/purchase-orders', permission: 'purchase-order.view' },
-      { title: 'Goods Receipts', href: '/inventory/goods-receipts', permission: 'goods-receipt.view' },
-      { title: 'Stock Adjustments', href: '/inventory/stock-adjustments', permission: 'stock-adjustment.view' },
+      { title: 'Purchase Orders', href: '/inventory/purchase-orders', permission: 'purchase_order.view' },
+      { title: 'Goods Receipts', href: '/inventory/goods-receipts', permission: 'goods_receipt.view' },
+      { title: 'Stock Adjustments', href: '/inventory/stock-adjustments', permission: 'stock_adjustment.view' },
     ],
   },
   {

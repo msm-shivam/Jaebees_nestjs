@@ -47,11 +47,7 @@ import { AdminSearchController } from './controllers/admin-search.controller';
       ProductView,
     ]),
   ],
-  controllers: [
-    SearchController,
-    DiscoveryController,
-    AdminSearchController,
-  ],
+  controllers: [SearchController, DiscoveryController, AdminSearchController],
   providers: [
     SearchService,
     SearchSuggestionsService,

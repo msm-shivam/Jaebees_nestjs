@@ -15,7 +15,10 @@ export class AdminTaxController {
 
   @Get('summary')
   @Permissions(DefaultPermissions.FINANCE_VIEW)
-  async getSummary(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async getSummary(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.taxService.getSummary(dateFrom, dateTo);
   }
 
@@ -28,6 +31,12 @@ export class AdminTaxController {
     @Query('dateTo') dateTo?: string,
     @Query('taxType') taxType?: string,
   ) {
-    return this.taxService.getReports({ page, limit, dateFrom, dateTo, taxType });
+    return this.taxService.getReports({
+      page,
+      limit,
+      dateFrom,
+      dateTo,
+      taxType,
+    });
   }
 }

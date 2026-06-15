@@ -1,4 +1,12 @@
-import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, Min, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  Min,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CampaignType } from '../enums/campaign-type.enum';
 

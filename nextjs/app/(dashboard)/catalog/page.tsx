@@ -1,14 +1,21 @@
 'use client';
 
 import React, { useTransition, use } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import PageHeader from '@/components/layout/PageHeader';
 import StatsCard from '@/components/shared/StatsCard';
 import AppDataTable, { TableColumn } from '@/components/table/AppDataTable';
 import SearchInput from '@/components/shared/SearchInput';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
-import type { Product } from '@/services/types';
-import { Package, Tags, Building2, Star } from 'lucide-react';
+import apiClient from '@/services/api.client';
+import type {
+  Product,
+  CatalogOverview,
+  CatalogSummary,
+  CatalogQuickLink,
+} from '@/services/types';
+import { Package, Tags, Building2, Star, BookOpen, BarChart3 } from 'lucide-react';
 
 export default function CatalogPage({
   searchParams: searchParamsPromise,
@@ -19,14 +26,28 @@ export default function CatalogPage({
   const search = (resolvedSearchParams.search as string) || '';
   const [, startTransition] = useTransition();
 
-  const { data: productsRes } = usePaginatedQuery<Product>('products', '/admin/products', { limit: 5, page: 1 });
-  const { data: categoriesRes } = usePaginatedQuery('categories', '/admin/categories', { limit: 1 });
-  const { data: brandsRes } = usePaginatedQuery('brands', '/admin/brands', { limit: 1 });
+  const { data: overviewRes } = useQuery({
+    queryKey: ['catalog-overview'],
+    queryFn: () => apiClient.get<{ success: boolean; data: CatalogOverview }>('/admin/catalog/overview').then(r => r.data),
+  });
 
+  const { data: summaryRes } = useQuery({
+    queryKey: ['catalog-summary'],
+    queryFn: () => apiClient.get<{ success: boolean; data: CatalogSummary }>('/admin/catalog/summary').then(r => r.data),
+  });
+
+  const { data: linksRes } = useQuery({
+    queryKey: ['catalog-quick-links'],
+    queryFn: () => apiClient.get<{ success: boolean; data: CatalogQuickLink[] }>('/admin/catalog/quick-links').then(r => r.data),
+  });
+
+  const { data: productsRes } = usePaginatedQuery<Product>('products', '/admin/products', { limit: 10, page: 1 });
+
+  const overview = overviewRes?.data;
+  const summaryItems = summaryRes?.data?.items || [];
+  const links = linksRes?.data || [];
   const products = productsRes?.data?.items || [];
   const totalProducts = productsRes?.data?.total || 0;
-  const totalCategories = categoriesRes?.data?.total || 0;
-  const totalBrands = brandsRes?.data?.total || 0;
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -43,9 +64,13 @@ export default function CatalogPage({
     });
   };
 
-  const activeProducts = products.filter((p) => p.status === 'active').length;
-  const outOfStock = products.filter((p) => p.status === 'out of stock').length;
-  const avgRating = 4.2;
+  const summaryColorMap: Record<string, string> = {
+    green: 'text-green-600',
+    yellow: 'text-yellow-500',
+    gray: 'text-zinc-500',
+    red: 'text-red-500',
+    orange: 'text-orange-500',
+  };
 
   const columns: TableColumn[] = [
     { key: 'name', label: 'Product Name', sortable: true },
@@ -65,58 +90,45 @@ export default function CatalogPage({
       <PageHeader title="Catalog" description="Manage your products, categories, brands, and reviews." />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatsCard title="Total Products" value={totalProducts} icon={Package} />
-        <StatsCard title="Active Products" value={activeProducts} icon={Star} trend={{ value: 8.3, isPositive: true, label: 'vs last month' }} />
-        <StatsCard title="Categories" value={totalCategories} icon={Tags} />
-        <StatsCard title="Brands" value={totalBrands} icon={Building2} trend={{ value: 2, isPositive: true, label: 'new this month' }} />
+        <StatsCard title="Total Products" value={overview?.totalProducts ?? 0} icon={Package} />
+        <StatsCard title="Categories" value={overview?.totalCategories ?? 0} icon={Tags} />
+        <StatsCard title="Brands" value={overview?.totalBrands ?? 0} icon={Building2} />
+        <StatsCard title="Reviews" value={overview?.totalReviews ?? 0} icon={Star} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Catalog Summary</h3>
+          <div className="mb-3 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-zinc-500" />
+            <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Catalog Summary</h3>
+          </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Total Products</span>
-              <span className="font-bold text-zinc-800 dark:text-zinc-200">{totalProducts}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Active</span>
-              <span className="font-bold text-green-600">{activeProducts}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Out of Stock</span>
-              <span className="font-bold text-red-500">{outOfStock}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Categories</span>
-              <span className="font-bold text-zinc-800 dark:text-zinc-200">{totalCategories}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Brands</span>
-              <span className="font-bold text-zinc-800 dark:text-zinc-200">{totalBrands}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Avg. Rating</span>
-              <span className="font-bold text-amber-500">{avgRating} / 5</span>
-            </div>
+            {summaryItems.map((item) => (
+              <div key={item.label} className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">{item.label}</span>
+                <span className={`font-bold ${item.color ? summaryColorMap[item.color] : 'text-zinc-800 dark:text-zinc-200'}`}>
+                  {item.value}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Quick Links</h3>
+          <div className="mb-3 flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-zinc-500" />
+            <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Quick Links</h3>
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <a href="/catalog/products" className="rounded-lg bg-zinc-100 p-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-orange-100 hover:text-orange-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400">
-              Products
-            </a>
-            <a href="/catalog/categories" className="rounded-lg bg-zinc-100 p-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-orange-100 hover:text-orange-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400">
-              Categories
-            </a>
-            <a href="/catalog/brands" className="rounded-lg bg-zinc-100 p-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-orange-100 hover:text-orange-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400">
-              Brands
-            </a>
-            <a href="/catalog/reviews" className="rounded-lg bg-zinc-100 p-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-orange-100 hover:text-orange-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400">
-              Reviews
-            </a>
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="rounded-lg bg-zinc-100 p-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-orange-100 hover:text-orange-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </div>
       </div>

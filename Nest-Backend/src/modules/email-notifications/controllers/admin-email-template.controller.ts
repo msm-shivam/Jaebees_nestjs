@@ -1,5 +1,14 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
@@ -30,7 +39,8 @@ export class AdminEmailTemplateController {
     @Query('limit') limit?: number,
     @Query('active') active?: string,
   ) {
-    const isActive = active === 'true' ? true : active === 'false' ? false : undefined;
+    const isActive =
+      active === 'true' ? true : active === 'false' ? false : undefined;
     return this.templateService.findAll({ page, limit, active: isActive });
   }
 

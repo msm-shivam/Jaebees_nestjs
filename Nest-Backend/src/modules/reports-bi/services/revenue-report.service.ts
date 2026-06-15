@@ -6,7 +6,8 @@ export class RevenueReportService {
   constructor(private readonly dataSource: DataSource) {}
 
   async getReport(dateFrom?: string, dateTo?: string) {
-    const qb = this.dataSource.createQueryBuilder()
+    const qb = this.dataSource
+      .createQueryBuilder()
       .select([
         `DATE_TRUNC('month', o.created_at) as "month"`,
         `COUNT(o.id) as "totalOrders"`,

@@ -80,13 +80,25 @@ async function bootstrap() {
     .addTag('Admin — Attributes', 'Product attribute management')
     .addTag('Admin — Attribute Values', 'Attribute value management')
     .addTag('Admin — Product Tags', 'Marketing tag management')
-    .addTag('Admin — Products', 'Product catalog management with images, collections and tags')
-    .addTag('Product Variants', 'Product variant management with SKU and attributes')
-    .addTag('Inventory', 'Inventory stock management with adjustments and reservations')
+    .addTag(
+      'Admin — Products',
+      'Product catalog management with images, collections and tags',
+    )
+    .addTag(
+      'Product Variants',
+      'Product variant management with SKU and attributes',
+    )
+    .addTag(
+      'Inventory',
+      'Inventory stock management with adjustments and reservations',
+    )
     .addTag('Cart', 'Customer shopping cart management')
     .addTag('Customer — Orders', 'Customer order placement and history')
     .addTag('Admin — Orders', 'Admin order management and status updates')
-    .addTag('Payments — Stripe', 'Stripe payment intent creation and webhook handling')
+    .addTag(
+      'Payments — Stripe',
+      'Stripe payment intent creation and webhook handling',
+    )
     .addTag('Customer — Payments', 'Customer payment history')
     .addTag('Admin — Payments', 'Admin payment management and refunds')
     .addTag('Admin — Payment Methods', 'Payment method configuration')
@@ -102,20 +114,44 @@ async function bootstrap() {
     .addTag('Reviews', 'Customer product reviews and ratings')
     .addTag('Admin — Reviews', 'Admin review moderation (approve/reject)')
     // Layer 21 — Reports, Dashboards & Business Intelligence
-    .addTag('Admin — Reports', 'Business intelligence reports (sales, revenue, products, inventory, returns, support, marketing)')
-    .addTag('Admin — Saved Reports', 'Saved report configurations for quick access')
-    .addTag('Admin — Dashboards', 'Aggregated dashboard metrics with snapshot persistence')
+    .addTag(
+      'Admin — Reports',
+      'Business intelligence reports (sales, revenue, products, inventory, returns, support, marketing)',
+    )
+    .addTag(
+      'Admin — Saved Reports',
+      'Saved report configurations for quick access',
+    )
+    .addTag(
+      'Admin — Dashboards',
+      'Aggregated dashboard metrics with snapshot persistence',
+    )
     // Layer 22 — Audit, Security & Compliance
     .addTag('Admin — Audit Logs', 'System-wide audit trail for entity changes')
-    .addTag('Admin — Security', 'Security events, login activities, and active sessions')
-    .addTag('Admin — Privacy', 'Privacy request management (data access, deletion)')
-    .addTag('Customer — Privacy', 'Customer privacy requests and consent management')
+    .addTag(
+      'Admin — Security',
+      'Security events, login activities, and active sessions',
+    )
+    .addTag(
+      'Admin — Privacy',
+      'Privacy request management (data access, deletion)',
+    )
+    .addTag(
+      'Customer — Privacy',
+      'Customer privacy requests and consent management',
+    )
     // Layer 23 — Settings & CMS
     .addTag('Admin — Settings', 'System-wide key-value configuration')
-    .addTag('Admin — CMS Pages', 'CMS page management (about, privacy, terms, etc.)')
+    .addTag(
+      'Admin — CMS Pages',
+      'CMS page management (about, privacy, terms, etc.)',
+    )
     .addTag('Admin — Homepage', 'Homepage section management with sort order')
     .addTag('Admin — Contact Settings', 'Contact information configuration')
-    .addTag('Public — Content', 'Publicly accessible CMS pages, homepage sections, and contact info')
+    .addTag(
+      'Public — Content',
+      'Publicly accessible CMS pages, homepage sections, and contact info',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

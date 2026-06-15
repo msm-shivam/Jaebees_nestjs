@@ -23,8 +23,13 @@ export class QuestionsService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  async create(userId: string, dto: CreateQuestionDto): Promise<ProductQuestion> {
-    const product = await this.productRepository.findOne({ where: { id: dto.productId } });
+  async create(
+    userId: string,
+    dto: CreateQuestionDto,
+  ): Promise<ProductQuestion> {
+    const product = await this.productRepository.findOne({
+      where: { id: dto.productId },
+    });
     if (!product) {
       throw new NotFoundException('Product not found');
     }

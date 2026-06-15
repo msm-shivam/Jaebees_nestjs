@@ -269,6 +269,39 @@ export interface SecurityLog {
   timestamp: string;
 }
 
+export interface CatalogOverview {
+  totalProducts: number;
+  totalCategories: number;
+  totalBrands: number;
+  totalReviews: number;
+  totalVariants: number;
+}
+
+export interface CatalogSummaryItem {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+export interface CatalogSummary {
+  items: CatalogSummaryItem[];
+}
+
+export interface CatalogQuickLink {
+  label: string;
+  href: string;
+  description: string;
+}
+
+export interface CatalogAnalytics {
+  averageRating: number;
+  reviewCount: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  topCategory: string | null;
+  topBrand: string | null;
+}
+
 export interface PrivacyRequest {
   id: string;
   customerName: string;

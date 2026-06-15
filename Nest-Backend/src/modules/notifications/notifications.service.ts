@@ -111,7 +111,10 @@ export class NotificationsService {
     });
   }
 
-  async sendPasswordResetConfirmation(to: string, firstName: string): Promise<void> {
+  async sendPasswordResetConfirmation(
+    to: string,
+    firstName: string,
+  ): Promise<void> {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.PASSWORD_RESET_CONFIRM,
@@ -255,10 +258,7 @@ export class NotificationsService {
     });
   }
 
-  async sendTestEmail(
-    recipient: string,
-    templateCode: string,
-  ): Promise<void> {
+  async sendTestEmail(recipient: string, templateCode: string): Promise<void> {
     return this.sendTemplatedEmail({
       to: recipient,
       templateCode: templateCode as EmailTemplateCode,

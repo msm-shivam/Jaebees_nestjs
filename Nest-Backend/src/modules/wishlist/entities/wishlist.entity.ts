@@ -1,4 +1,12 @@
-import { Entity, Column, Index, OneToMany, JoinColumn, ManyToOne, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  OneToMany,
+  JoinColumn,
+  ManyToOne,
+  DeleteDateColumn,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { WishlistItem } from './wishlist-item.entity';

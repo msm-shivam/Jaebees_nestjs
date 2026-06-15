@@ -1,5 +1,12 @@
 import {
-  Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
@@ -36,7 +43,11 @@ export class AdminNotificationController {
     @Query('limit') limit?: number,
     @Query('status') status?: string,
   ) {
-    return this.notificationService.findAll({ page, limit, status: status as any });
+    return this.notificationService.findAll({
+      page,
+      limit,
+      status: status as any,
+    });
   }
 
   @Get(':id')

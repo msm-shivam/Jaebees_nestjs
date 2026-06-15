@@ -1,5 +1,11 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
 } from 'typeorm';
 import { Promotion } from './promotion.entity';
 
@@ -13,7 +19,9 @@ export class PromotionCategory {
   @Column({ name: 'promotion_id', type: 'uuid' })
   promotionId: string;
 
-  @ManyToOne(() => Promotion, (promotion) => promotion.promotionCategories, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Promotion, (promotion) => promotion.promotionCategories, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'promotion_id' })
   promotion: Promotion;
 

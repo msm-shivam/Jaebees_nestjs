@@ -29,22 +29,32 @@ export class FinancialReportService {
       .select('COALESCE(SUM(t.amount), 0)', 'total')
       .where('t.type = :type', { type: TransactionType.ORDER_PAYMENT })
       .andWhere('t.status = :status', { status: 'COMPLETED' })
-      .andWhere('t.transaction_date >= :dateFrom', { dateFrom: dateFrom || '1970-01-01' })
-      .andWhere('t.transaction_date <= :dateTo', { dateTo: dateTo || '9999-12-31' })
+      .andWhere('t.transaction_date >= :dateFrom', {
+        dateFrom: dateFrom || '1970-01-01',
+      })
+      .andWhere('t.transaction_date <= :dateTo', {
+        dateTo: dateTo || '9999-12-31',
+      })
       .getRawOne();
 
     const refunds = await this.transactionRepo
       .createQueryBuilder('t')
       .select('COALESCE(SUM(t.amount), 0)', 'total')
       .where('t.type = :type', { type: TransactionType.REFUND })
-      .andWhere('t.transaction_date >= :dateFrom', { dateFrom: dateFrom || '1970-01-01' })
-      .andWhere('t.transaction_date <= :dateTo', { dateTo: dateTo || '9999-12-31' })
+      .andWhere('t.transaction_date >= :dateFrom', {
+        dateFrom: dateFrom || '1970-01-01',
+      })
+      .andWhere('t.transaction_date <= :dateTo', {
+        dateTo: dateTo || '9999-12-31',
+      })
       .getRawOne();
 
     const expenses = await this.expenseRepo
       .createQueryBuilder('e')
       .select('COALESCE(SUM(e.amount), 0)', 'total')
-      .where('e.expense_date >= :dateFrom', { dateFrom: dateFrom || '1970-01-01' })
+      .where('e.expense_date >= :dateFrom', {
+        dateFrom: dateFrom || '1970-01-01',
+      })
       .andWhere('e.expense_date <= :dateTo', { dateTo: dateTo || '9999-12-31' })
       .getRawOne();
 
@@ -73,8 +83,7 @@ export class FinancialReportService {
     if (dateFrom) qb.andWhere('t.transaction_date >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('t.transaction_date <= :dateTo', { dateTo });
 
-    qb.groupBy("DATE_TRUNC('day', t.transaction_date)")
-      .orderBy('date', 'DESC');
+    qb.groupBy("DATE_TRUNC('day', t.transaction_date)").orderBy('date', 'DESC');
 
     return qb.getRawMany();
   }
@@ -89,8 +98,7 @@ export class FinancialReportService {
     if (dateFrom) qb.andWhere('e.expense_date >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('e.expense_date <= :dateTo', { dateTo });
 
-    qb.groupBy('e.category')
-      .orderBy('total', 'DESC');
+    qb.groupBy('e.category').orderBy('total', 'DESC');
 
     return qb.getRawMany();
   }

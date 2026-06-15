@@ -17,7 +17,11 @@ export class EmailCampaign extends BaseEntity {
   @Column({ type: 'text' })
   body: string;
 
-  @Column({ type: 'enum', enum: CampaignType, default: CampaignType.PROMOTIONAL })
+  @Column({
+    type: 'enum',
+    enum: CampaignType,
+    default: CampaignType.PROMOTIONAL,
+  })
   type: CampaignType;
 
   @Column({ name: 'target_audience', type: 'jsonb', nullable: true })

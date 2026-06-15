@@ -1,6 +1,13 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
-  ManyToOne, JoinColumn, Index, OneToMany,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  OneToMany,
 } from 'typeorm';
 import { Supplier } from './supplier.entity';
 import { PurchaseOrderItem } from './purchase-order-item.entity';
@@ -24,13 +31,27 @@ export class PurchaseOrder {
   @JoinColumn({ name: 'supplier_id' })
   supplier: Supplier;
 
-  @Column({ type: 'enum', enum: PurchaseOrderStatus, default: PurchaseOrderStatus.DRAFT })
+  @Column({
+    type: 'enum',
+    enum: PurchaseOrderStatus,
+    default: PurchaseOrderStatus.DRAFT,
+  })
   status: PurchaseOrderStatus;
 
-  @Column({ name: 'total_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'total_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   totalAmount: number;
 
-  @Column({ name: 'expected_date', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'expected_date',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   expectedDate: Date | null;
 
   @Column({ type: 'text', nullable: true })

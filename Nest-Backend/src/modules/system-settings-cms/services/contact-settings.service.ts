@@ -12,7 +12,10 @@ export class ContactSettingsService {
   ) {}
 
   async find(): Promise<ContactSetting | null> {
-    const records = await this.contactRepo.find({ take: 1, order: { createdAt: 'DESC' } });
+    const records = await this.contactRepo.find({
+      take: 1,
+      order: { createdAt: 'DESC' },
+    });
     return records[0] ?? null;
   }
 

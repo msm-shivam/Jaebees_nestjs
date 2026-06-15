@@ -12,6 +12,11 @@ export class ContactSetting extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   address: string | null;
 
-  @Column({ name: 'support_hours', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'support_hours',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   supportHours: string | null;
 }

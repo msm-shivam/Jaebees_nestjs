@@ -18,11 +18,21 @@ export class EmailAnalyticsService {
   ) {}
 
   async getSummary() {
-    const totalSent = await this.notificationRepo.count({ where: { status: NotificationStatus.SENT } });
-    const totalFailed = await this.notificationRepo.count({ where: { status: NotificationStatus.FAILED } });
-    const totalPending = await this.notificationRepo.count({ where: { status: NotificationStatus.PENDING } });
-    const totalOpened = await this.notificationRepo.count({ where: { status: NotificationStatus.OPENED } });
-    const totalClicked = await this.notificationRepo.count({ where: { status: NotificationStatus.CLICKED } });
+    const totalSent = await this.notificationRepo.count({
+      where: { status: NotificationStatus.SENT },
+    });
+    const totalFailed = await this.notificationRepo.count({
+      where: { status: NotificationStatus.FAILED },
+    });
+    const totalPending = await this.notificationRepo.count({
+      where: { status: NotificationStatus.PENDING },
+    });
+    const totalOpened = await this.notificationRepo.count({
+      where: { status: NotificationStatus.OPENED },
+    });
+    const totalClicked = await this.notificationRepo.count({
+      where: { status: NotificationStatus.CLICKED },
+    });
 
     const totalNotifications = await this.notificationRepo.count();
 
@@ -33,32 +43,53 @@ export class EmailAnalyticsService {
       totalPending,
       totalOpened,
       totalClicked,
-      deliveryRate: totalNotifications > 0 ? Math.round((totalSent / totalNotifications) * 100) : 0,
+      deliveryRate:
+        totalNotifications > 0
+          ? Math.round((totalSent / totalNotifications) * 100)
+          : 0,
       openRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0,
-      clickRate: totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
+      clickRate:
+        totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
     };
   }
 
-  async getEmailStats(query: { page?: number; limit?: number; dateFrom?: string; dateTo?: string }) {
-    const qb = this.notificationRepo.createQueryBuilder('n')
+  async getEmailStats(query: {
+    page?: number;
+    limit?: number;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const qb = this.notificationRepo
+      .createQueryBuilder('n')
       .leftJoinAndSelect('n.user', 'user')
       .orderBy('n.createdAt', 'DESC');
 
-    if (query.dateFrom) qb.andWhere('n.created_at >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('n.created_at <= :dateTo', { dateTo: query.dateTo });
+    if (query.dateFrom)
+      qb.andWhere('n.created_at >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('n.created_at <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return { data, total, page, limit };
   }
 
   async getCampaignStats() {
     const totalCampaigns = await this.campaignRepo.count();
-    const sentCampaigns = await this.campaignRepo.count({ where: { status: 'SENT' } as any });
-    const draftCampaigns = await this.campaignRepo.count({ where: { status: 'DRAFT' as any } });
-    const scheduledCampaigns = await this.campaignRepo.count({ where: { status: 'SCHEDULED' as any } });
+    const sentCampaigns = await this.campaignRepo.count({
+      where: { status: 'SENT' } as any,
+    });
+    const draftCampaigns = await this.campaignRepo.count({
+      where: { status: 'DRAFT' as any },
+    });
+    const scheduledCampaigns = await this.campaignRepo.count({
+      where: { status: 'SCHEDULED' as any },
+    });
 
     const aggregate = await this.campaignRepo
       .createQueryBuilder('c')

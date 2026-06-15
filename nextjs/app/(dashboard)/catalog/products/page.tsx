@@ -80,7 +80,7 @@ export default function ProductsPage({
   const { data: productsRes, isLoading } = usePaginatedQuery<Types.Product>(
     'products',
     '/admin/products',
-    { page, limit, search, status, category: categoryFilter, brand: brandFilter }
+    { page, limit, search, status }
   );
 
   const { data: categoriesRes } = usePaginatedQuery<Types.Category>(

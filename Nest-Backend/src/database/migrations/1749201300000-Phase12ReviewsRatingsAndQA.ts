@@ -7,9 +7,7 @@ import {
   TableColumn,
 } from 'typeorm';
 
-export class Phase12ReviewsRatingsAndQA1749201300000
-  implements MigrationInterface
-{
+export class Phase12ReviewsRatingsAndQA1749201300000 implements MigrationInterface {
   name = 'Phase12ReviewsRatingsAndQA1749201300000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -352,11 +350,20 @@ export class Phase12ReviewsRatingsAndQA1749201300000
     await queryRunner.dropForeignKey('product_answers', 'fk_answers_user');
     await queryRunner.dropForeignKey('product_answers', 'fk_answers_question');
     await queryRunner.dropForeignKey('product_questions', 'fk_questions_user');
-    await queryRunner.dropForeignKey('product_questions', 'fk_questions_product');
+    await queryRunner.dropForeignKey(
+      'product_questions',
+      'fk_questions_product',
+    );
     await queryRunner.dropForeignKey('review_reports', 'fk_reports_user');
     await queryRunner.dropForeignKey('review_reports', 'fk_reports_review');
-    await queryRunner.dropForeignKey('review_helpful_votes', 'fk_helpful_votes_user');
-    await queryRunner.dropForeignKey('review_helpful_votes', 'fk_helpful_votes_review');
+    await queryRunner.dropForeignKey(
+      'review_helpful_votes',
+      'fk_helpful_votes_user',
+    );
+    await queryRunner.dropForeignKey(
+      'review_helpful_votes',
+      'fk_helpful_votes_review',
+    );
     await queryRunner.dropTable('product_answers');
     await queryRunner.dropTable('product_questions');
     await queryRunner.dropTable('review_reports');

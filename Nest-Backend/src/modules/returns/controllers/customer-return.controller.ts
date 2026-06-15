@@ -1,5 +1,13 @@
 import {
-  Controller, Get, Post, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -22,17 +30,26 @@ export class CustomerReturnController {
   }
 
   @Get('my')
-  async findMy(@CurrentUser() user: JwtPayload, @Query() query: ReturnQueryDto) {
+  async findMy(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: ReturnQueryDto,
+  ) {
     return this.returnService.findMyReturns(user.sub, query);
   }
 
   @Get(':id')
-  async findOne(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async findOne(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.returnService.findOne(id, user.sub);
   }
 
   @Delete(':id')
-  async cancel(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async cancel(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.returnService.cancel(id, user.sub);
   }
 }

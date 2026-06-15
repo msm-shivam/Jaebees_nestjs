@@ -13,7 +13,10 @@ export interface CouponValidationContext {
 export class CouponValidationService {
   constructor(private readonly couponUsageService: CouponUsageService) {}
 
-  async validate(coupon: Coupon, context: CouponValidationContext): Promise<void> {
+  async validate(
+    coupon: Coupon,
+    context: CouponValidationContext,
+  ): Promise<void> {
     if (!coupon.isActive) {
       throw new BadRequestException('Coupon is disabled');
     }
@@ -30,7 +33,10 @@ export class CouponValidationService {
       throw new BadRequestException('Coupon usage limit has been reached');
     }
 
-    if (coupon.minimumOrderAmount > 0 && context.orderAmount < coupon.minimumOrderAmount) {
+    if (
+      coupon.minimumOrderAmount > 0 &&
+      context.orderAmount < coupon.minimumOrderAmount
+    ) {
       throw new BadRequestException(
         `Minimum order amount of ${coupon.minimumOrderAmount} required`,
       );
@@ -41,9 +47,14 @@ export class CouponValidationService {
     }
 
     if (coupon.maxUsesPerUser) {
-      const userUsageCount = await this.couponUsageService.getUserUsageCount(coupon.id, context.userId);
+      const userUsageCount = await this.couponUsageService.getUserUsageCount(
+        coupon.id,
+        context.userId,
+      );
       if (userUsageCount >= coupon.maxUsesPerUser) {
-        throw new BadRequestException('You have reached the usage limit for this coupon');
+        throw new BadRequestException(
+          'You have reached the usage limit for this coupon',
+        );
       }
     }
   }

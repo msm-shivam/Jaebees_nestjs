@@ -1,4 +1,12 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn, CreateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { Wishlist } from './wishlist.entity';
 import { Product } from '../../products/entities/product.entity';
@@ -11,7 +19,9 @@ export class WishlistItem extends BaseEntity {
   @Column({ name: 'wishlist_id', type: 'uuid' })
   wishlistId: string;
 
-  @ManyToOne(() => Wishlist, (wishlist) => wishlist.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Wishlist, (wishlist) => wishlist.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'wishlist_id' })
   wishlist: Wishlist;
 

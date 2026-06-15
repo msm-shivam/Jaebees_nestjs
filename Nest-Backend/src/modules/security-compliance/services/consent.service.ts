@@ -11,10 +11,21 @@ export class ConsentService {
     private readonly consentRepo: Repository<ConsentRecord>,
   ) {}
 
-  async createOrUpdate(userId: string, consentType: ConsentType, accepted: boolean): Promise<ConsentRecord> {
-    let record = await this.consentRepo.findOne({ where: { userId, consentType } });
+  async createOrUpdate(
+    userId: string,
+    consentType: ConsentType,
+    accepted: boolean,
+  ): Promise<ConsentRecord> {
+    let record = await this.consentRepo.findOne({
+      where: { userId, consentType },
+    });
     if (!record) {
-      record = this.consentRepo.create({ userId, consentType, accepted, acceptedAt: new Date() });
+      record = this.consentRepo.create({
+        userId,
+        consentType,
+        accepted,
+        acceptedAt: new Date(),
+      });
     } else {
       record.accepted = accepted;
       record.acceptedAt = new Date();
@@ -23,6 +34,9 @@ export class ConsentService {
   }
 
   async findByUser(userId: string): Promise<ConsentRecord[]> {
-    return this.consentRepo.find({ where: { userId }, order: { createdAt: 'DESC' } });
+    return this.consentRepo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

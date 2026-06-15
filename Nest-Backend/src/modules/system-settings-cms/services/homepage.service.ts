@@ -21,7 +21,10 @@ export class HomepageService {
     return this.sectionRepo.save(section);
   }
 
-  async update(id: string, dto: UpdateHomepageSectionDto): Promise<HomepageSection> {
+  async update(
+    id: string,
+    dto: UpdateHomepageSectionDto,
+  ): Promise<HomepageSection> {
     const section = await this.sectionRepo.findOne({ where: { id } });
     if (!section) throw new NotFoundException('Homepage section not found');
     Object.assign(section, dto);

@@ -52,21 +52,35 @@ export class ReturnService {
       relations: { user: true, items: true },
     });
     if (!order) throw new NotFoundException('Order not found');
-    if (order.userId !== userId) throw new ForbiddenException('This order does not belong to you');
-    if (order.status !== 'DELIVERED') throw new BadRequestException('Only delivered orders can be returned');
+    if (order.userId !== userId)
+      throw new ForbiddenException('This order does not belong to you');
+    if (order.status !== 'DELIVERED')
+      throw new BadRequestException('Only delivered orders can be returned');
 
     const hoursSinceDelivery = this.getHoursSince(order.updatedAt);
-    if (hoursSinceDelivery > 24) throw new BadRequestException('Return window of 24 hours has expired');
+    if (hoursSinceDelivery > 24)
+      throw new BadRequestException('Return window of 24 hours has expired');
 
     const existing = await this.returnRepo.findOne({
-      where: { orderId: dto.orderId, userId, status: ReturnRequestStatus.REQUESTED },
+      where: {
+        orderId: dto.orderId,
+        userId,
+        status: ReturnRequestStatus.REQUESTED,
+      },
     });
-    if (existing) throw new BadRequestException('An active return request already exists for this order');
+    if (existing)
+      throw new BadRequestException(
+        'An active return request already exists for this order',
+      );
 
     for (const item of dto.items) {
       const orderItem = order.items.find((oi) => oi.id === item.orderItemId);
-      if (!orderItem) throw new NotFoundException(`Order item ${item.orderItemId} not found`);
-      if (item.quantity > orderItem.quantity) throw new BadRequestException(`Return quantity exceeds purchased quantity for item ${item.orderItemId}`);
+      if (!orderItem)
+        throw new NotFoundException(`Order item ${item.orderItemId} not found`);
+      if (item.quantity > orderItem.quantity)
+        throw new BadRequestException(
+          `Return quantity exceeds purchased quantity for item ${item.orderItemId}`,
+        );
     }
 
     const returnNumber = await this.generateReturnNumber();
@@ -92,7 +106,12 @@ export class ReturnService {
 
     const saved = await this.returnRepo.save(returnRequest);
 
-    await this.createAudit(saved.id, null, 'RETURN_CREATED', 'Return request created by customer');
+    await this.createAudit(
+      saved.id,
+      null,
+      'RETURN_CREATED',
+      'Return request created by customer',
+    );
 
     await this.notificationsService.sendTemplatedEmail({
       to: order.user.email,
@@ -108,17 +127,22 @@ export class ReturnService {
   }
 
   async findMyReturns(userId: string, query: ReturnQueryDto) {
-    const qb = this.returnRepo.createQueryBuilder('return')
+    const qb = this.returnRepo
+      .createQueryBuilder('return')
       .leftJoinAndSelect('return.items', 'items')
       .leftJoinAndSelect('return.shipments', 'shipments')
       .where('return.user_id = :userId', { userId });
 
-    if (query.status) qb.andWhere('return.status = :status', { status: query.status });
+    if (query.status)
+      qb.andWhere('return.status = :status', { status: query.status });
     qb.orderBy('return.requestedAt', 'DESC');
 
     const page = query.page || 1;
     const limit = query.limit || 10;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return { data, total, page, limit };
   }
@@ -129,7 +153,8 @@ export class ReturnService {
       relations: { items: true, shipments: true, audits: true, order: true },
     });
     if (!returnRequest) throw new NotFoundException('Return request not found');
-    if (userId && returnRequest.userId !== userId) throw new ForbiddenException('Access denied');
+    if (userId && returnRequest.userId !== userId)
+      throw new ForbiddenException('Access denied');
     return returnRequest;
   }
 
@@ -140,22 +165,32 @@ export class ReturnService {
     }
     returnRequest.status = ReturnRequestStatus.REJECTED;
     await this.returnRepo.save(returnRequest);
-    await this.createAudit(returnId, null, 'RETURN_CANCELLED', 'Return cancelled by customer');
+    await this.createAudit(
+      returnId,
+      null,
+      'RETURN_CANCELLED',
+      'Return cancelled by customer',
+    );
     return { message: 'Return request cancelled' };
   }
 
   async findAll(query: ReturnQueryDto) {
-    const qb = this.returnRepo.createQueryBuilder('return')
+    const qb = this.returnRepo
+      .createQueryBuilder('return')
       .leftJoinAndSelect('return.items', 'items')
       .leftJoinAndSelect('return.shipments', 'shipments')
       .leftJoinAndSelect('return.user', 'user');
 
-    if (query.status) qb.andWhere('return.status = :status', { status: query.status });
+    if (query.status)
+      qb.andWhere('return.status = :status', { status: query.status });
     qb.orderBy('return.requestedAt', 'DESC');
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return { data, total, page, limit };
   }
@@ -168,7 +203,12 @@ export class ReturnService {
     returnRequest.status = ReturnRequestStatus.APPROVED;
     returnRequest.approvedAt = new Date();
     await this.returnRepo.save(returnRequest);
-    await this.createAudit(returnId, adminId, 'RETURN_APPROVED', 'Return request approved');
+    await this.createAudit(
+      returnId,
+      adminId,
+      'RETURN_APPROVED',
+      'Return request approved',
+    );
 
     if (returnRequest.order?.user?.email) {
       await this.notificationsService.sendTemplatedEmail({
@@ -190,9 +230,16 @@ export class ReturnService {
       throw new BadRequestException('Only requested returns can be rejected');
     }
     returnRequest.status = ReturnRequestStatus.REJECTED;
-    returnRequest.notes = dto.reason ? `${returnRequest.notes ? returnRequest.notes + ' | ' : ''}Rejected: ${dto.reason}` : returnRequest.notes;
+    returnRequest.notes = dto.reason
+      ? `${returnRequest.notes ? returnRequest.notes + ' | ' : ''}Rejected: ${dto.reason}`
+      : returnRequest.notes;
     await this.returnRepo.save(returnRequest);
-    await this.createAudit(returnId, adminId, 'RETURN_REJECTED', dto.reason || 'Return request rejected');
+    await this.createAudit(
+      returnId,
+      adminId,
+      'RETURN_REJECTED',
+      dto.reason || 'Return request rejected',
+    );
 
     if (returnRequest.order?.user?.email) {
       await this.notificationsService.sendTemplatedEmail({
@@ -209,10 +256,16 @@ export class ReturnService {
     return { message: 'Return request rejected' };
   }
 
-  async schedulePickup(returnId: string, adminId: string, dto: SchedulePickupDto) {
+  async schedulePickup(
+    returnId: string,
+    adminId: string,
+    dto: SchedulePickupDto,
+  ) {
     const returnRequest = await this.findOne(returnId);
     if (returnRequest.status !== ReturnRequestStatus.APPROVED) {
-      throw new BadRequestException('Only approved returns can schedule pickup');
+      throw new BadRequestException(
+        'Only approved returns can schedule pickup',
+      );
     }
 
     const shipment = this.shipmentRepo.create({
@@ -226,7 +279,12 @@ export class ReturnService {
     returnRequest.status = ReturnRequestStatus.PICKUP_SCHEDULED;
     await this.returnRepo.save(returnRequest);
 
-    await this.createAudit(returnId, adminId, 'PICKUP_SCHEDULED', `Pickup scheduled with ${dto.courierName}`);
+    await this.createAudit(
+      returnId,
+      adminId,
+      'PICKUP_SCHEDULED',
+      `Pickup scheduled with ${dto.courierName}`,
+    );
 
     return { message: 'Pickup scheduled', data: shipment };
   }
@@ -234,30 +292,47 @@ export class ReturnService {
   async markReceived(returnId: string, adminId: string) {
     const returnRequest = await this.findOne(returnId);
     if (returnRequest.status !== ReturnRequestStatus.IN_TRANSIT) {
-      throw new BadRequestException('Return must be in transit before marking received');
+      throw new BadRequestException(
+        'Return must be in transit before marking received',
+      );
     }
 
     returnRequest.status = ReturnRequestStatus.RECEIVED;
     await this.returnRepo.save(returnRequest);
 
-    await this.createAudit(returnId, adminId, 'RETURN_RECEIVED', 'Return received at warehouse');
+    await this.createAudit(
+      returnId,
+      adminId,
+      'RETURN_RECEIVED',
+      'Return received at warehouse',
+    );
 
     return { message: 'Return marked as received' };
   }
 
-  async processRefund(returnId: string, adminId: string, dto: ProcessRefundDto) {
+  async processRefund(
+    returnId: string,
+    adminId: string,
+    dto: ProcessRefundDto,
+  ) {
     const returnRequest = await this.findOne(returnId);
     if (returnRequest.status !== ReturnRequestStatus.RECEIVED) {
-      throw new BadRequestException('Return must be received before refund can be processed');
+      throw new BadRequestException(
+        'Return must be received before refund can be processed',
+      );
     }
 
-    const items = await this.returnItemRepo.find({ where: { returnRequestId: returnId } });
+    const items = await this.returnItemRepo.find({
+      where: { returnRequestId: returnId },
+    });
     let totalRefund = 0;
     for (const item of items) {
-      const orderItem = await this.orderItemRepo.findOne({ where: { id: item.orderItemId } });
+      const orderItem = await this.orderItemRepo.findOne({
+        where: { id: item.orderItemId },
+      });
       if (orderItem) {
         const refundAmount = dto.amount
-          ? (dto.amount / items.length)
+          ? dto.amount / items.length
           : Number(orderItem.unitPrice) * item.quantity;
         item.refundAmount = refundAmount;
         totalRefund += refundAmount;
@@ -270,13 +345,20 @@ export class ReturnService {
     await this.returnRepo.save(returnRequest);
 
     for (const item of items) {
-      const orderItem = await this.orderItemRepo.findOne({ where: { id: item.orderItemId } });
+      const orderItem = await this.orderItemRepo.findOne({
+        where: { id: item.orderItemId },
+      });
       if (orderItem) {
         await this.restockInventory(orderItem.variantId, item.quantity);
       }
     }
 
-    await this.createAudit(returnId, adminId, 'REFUND_PROCESSED', `Refund of ${totalRefund} processed`);
+    await this.createAudit(
+      returnId,
+      adminId,
+      'REFUND_PROCESSED',
+      `Refund of ${totalRefund} processed`,
+    );
 
     if (returnRequest.order?.user?.email) {
       await this.notificationsService.sendTemplatedEmail({
@@ -296,35 +378,59 @@ export class ReturnService {
   async complete(returnId: string, adminId: string) {
     const returnRequest = await this.findOne(returnId);
     if (returnRequest.status !== ReturnRequestStatus.REFUNDED) {
-      throw new BadRequestException('Return must be refunded before completing');
+      throw new BadRequestException(
+        'Return must be refunded before completing',
+      );
     }
 
     returnRequest.status = ReturnRequestStatus.COMPLETED;
     returnRequest.completedAt = new Date();
     await this.returnRepo.save(returnRequest);
 
-    await this.createAudit(returnId, adminId, 'RETURN_COMPLETED', 'Return process completed');
+    await this.createAudit(
+      returnId,
+      adminId,
+      'RETURN_COMPLETED',
+      'Return process completed',
+    );
 
     return { message: 'Return completed' };
   }
 
-  async updateShipmentStatus(returnId: string, status: ReverseShipmentStatus, trackingNumber?: string) {
-    const shipment = await this.shipmentRepo.findOne({ where: { returnRequestId: returnId } });
-    if (!shipment) throw new NotFoundException('No shipment found for this return');
+  async updateShipmentStatus(
+    returnId: string,
+    status: ReverseShipmentStatus,
+    trackingNumber?: string,
+  ) {
+    const shipment = await this.shipmentRepo.findOne({
+      where: { returnRequestId: returnId },
+    });
+    if (!shipment)
+      throw new NotFoundException('No shipment found for this return');
 
     shipment.status = status;
     if (trackingNumber) shipment.trackingNumber = trackingNumber;
     if (status === ReverseShipmentStatus.IN_TRANSIT) {
-      const returnRequest = await this.returnRepo.findOne({ where: { id: returnId } });
-      if (returnRequest && returnRequest.status === ReturnRequestStatus.PICKUP_SCHEDULED) {
+      const returnRequest = await this.returnRepo.findOne({
+        where: { id: returnId },
+      });
+      if (
+        returnRequest &&
+        returnRequest.status === ReturnRequestStatus.PICKUP_SCHEDULED
+      ) {
         returnRequest.status = ReturnRequestStatus.IN_TRANSIT;
         await this.returnRepo.save(returnRequest);
       }
     }
     if (status === ReverseShipmentStatus.DELIVERED) {
       shipment.deliveredDate = new Date();
-      const returnRequest = await this.returnRepo.findOne({ where: { id: returnId } });
-      if (returnRequest && returnRequest.status === ReturnRequestStatus.IN_TRANSIT) {
+      const returnRequest = await this.returnRepo.findOne({
+        where: { id: returnId },
+      });
+      if (
+        returnRequest &&
+        returnRequest.status === ReturnRequestStatus.IN_TRANSIT
+      ) {
         returnRequest.status = ReturnRequestStatus.RECEIVED;
         await this.returnRepo.save(returnRequest);
       }
@@ -335,15 +441,23 @@ export class ReturnService {
   }
 
   private async restockInventory(variantId: string, quantity: number) {
-    const inventory = await this.inventoryRepo.findOne({ where: { variantId } });
+    const inventory = await this.inventoryRepo.findOne({
+      where: { variantId },
+    });
     if (inventory) {
       inventory.quantity = Number(inventory.quantity) + quantity;
-      inventory.availableQuantity = Number(inventory.availableQuantity) + quantity;
+      inventory.availableQuantity =
+        Number(inventory.availableQuantity) + quantity;
       await this.inventoryRepo.save(inventory);
     }
   }
 
-  private async createAudit(returnId: string, performedBy: string | null, action: string, notes?: string) {
+  private async createAudit(
+    returnId: string,
+    performedBy: string | null,
+    action: string,
+    notes?: string,
+  ) {
     const audit = this.auditRepo.create({
       returnRequestId: returnId,
       performedBy,

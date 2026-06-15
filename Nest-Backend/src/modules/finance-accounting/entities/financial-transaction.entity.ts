@@ -8,7 +8,12 @@ import { TransactionType } from '../enums/transaction-type.enum';
 @Index(['referenceType', 'referenceId'])
 @Index(['createdAt'])
 export class FinancialTransaction extends BaseEntity {
-  @Column({ name: 'transaction_number', type: 'varchar', length: 50, unique: true })
+  @Column({
+    name: 'transaction_number',
+    type: 'varchar',
+    length: 50,
+    unique: true,
+  })
   transactionNumber: string;
 
   @Column({ type: 'enum', enum: TransactionType })
@@ -20,7 +25,12 @@ export class FinancialTransaction extends BaseEntity {
   @Column({ type: 'varchar', length: 50, default: 'COMPLETED' })
   status: string;
 
-  @Column({ name: 'reference_type', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'reference_type',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   referenceType: string | null;
 
   @Column({ name: 'reference_id', type: 'uuid', nullable: true })
@@ -29,6 +39,10 @@ export class FinancialTransaction extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ name: 'transaction_date', type: 'timestamptz', default: () => 'NOW()' })
+  @Column({
+    name: 'transaction_date',
+    type: 'timestamptz',
+    default: () => 'NOW()',
+  })
   transactionDate: Date;
 }

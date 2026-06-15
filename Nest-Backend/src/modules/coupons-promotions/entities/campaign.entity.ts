@@ -1,5 +1,10 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { CampaignType } from '../enums/campaign-type.enum';
 
@@ -25,7 +30,13 @@ export class Campaign {
   @Column({ name: 'landing_page_url', length: 500, nullable: true })
   landingPageUrl: string;
 
-  @Column({ name: 'discount_value', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'discount_value',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   discountValue: number;
 
   @Column({ name: 'start_date', type: 'timestamp with time zone' })

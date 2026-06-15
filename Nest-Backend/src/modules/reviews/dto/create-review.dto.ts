@@ -1,4 +1,12 @@
-import { IsString, IsNumber, Min, Max, IsOptional, MaxLength, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+  IsOptional,
+  MaxLength,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateReviewDto {

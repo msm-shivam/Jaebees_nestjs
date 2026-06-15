@@ -1,5 +1,13 @@
 import {
-  Controller, Get, Post, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
@@ -57,13 +65,19 @@ export class AdminSupportController {
 
   @Post(':id/resolve')
   @Permissions(DefaultPermissions.SUPPORT_RESOLVE)
-  async resolve(@CurrentUser() admin: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async resolve(
+    @CurrentUser() admin: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.supportService.resolve(id, admin.sub);
   }
 
   @Post(':id/reopen')
   @Permissions(DefaultPermissions.SUPPORT_RESOLVE)
-  async reopen(@CurrentUser() admin: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async reopen(
+    @CurrentUser() admin: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.supportService.reopen(id, admin.sub);
   }
 
@@ -85,7 +99,12 @@ export class AdminSupportController {
     @Body('fileUrl') fileUrl: string,
     @Body('fileName') fileName: string,
   ) {
-    return this.supportService.uploadAttachment(id, fileUrl, fileName, admin.sub);
+    return this.supportService.uploadAttachment(
+      id,
+      fileUrl,
+      fileName,
+      admin.sub,
+    );
   }
 
   @Get(':id/attachments')

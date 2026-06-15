@@ -49,35 +49,63 @@ export class LedgerService {
   }
 
   async findByTransaction(transactionId: string): Promise<LedgerEntry[]> {
-    return this.ledgerRepo.find({ where: { transactionId }, order: { createdAt: 'ASC' } });
+    return this.ledgerRepo.find({
+      where: { transactionId },
+      order: { createdAt: 'ASC' },
+    });
   }
 
-  async findByAccount(accountCode: string, query: { page?: number; limit?: number; dateFrom?: string; dateTo?: string }) {
-    const qb = this.ledgerRepo.createQueryBuilder('l')
+  async findByAccount(
+    accountCode: string,
+    query: {
+      page?: number;
+      limit?: number;
+      dateFrom?: string;
+      dateTo?: string;
+    },
+  ) {
+    const qb = this.ledgerRepo
+      .createQueryBuilder('l')
       .leftJoinAndSelect('l.transaction', 'transaction')
       .where('l.account_code = :accountCode', { accountCode })
       .orderBy('l.createdAt', 'DESC');
 
-    if (query.dateFrom) qb.andWhere('l.entry_date >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('l.entry_date <= :dateTo', { dateTo: query.dateTo });
+    if (query.dateFrom)
+      qb.andWhere('l.entry_date >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('l.entry_date <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 
-  async findAll(query: { page?: number; limit?: number; dateFrom?: string; dateTo?: string }) {
-    const qb = this.ledgerRepo.createQueryBuilder('l')
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const qb = this.ledgerRepo
+      .createQueryBuilder('l')
       .leftJoinAndSelect('l.transaction', 'transaction')
       .orderBy('l.createdAt', 'DESC');
 
-    if (query.dateFrom) qb.andWhere('l.entry_date >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('l.entry_date <= :dateTo', { dateTo: query.dateTo });
+    if (query.dateFrom)
+      qb.andWhere('l.entry_date >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('l.entry_date <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 }

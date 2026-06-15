@@ -27,9 +27,13 @@ export class SearchSuggestionsService {
     const term = `%${q.toLowerCase()}%`;
 
     const products = await this.productRepo.find({
-      where: { name: ILike(term), status: ProductStatus.ACTIVE, isActive: true },
+      where: {
+        name: ILike(term),
+        status: ProductStatus.ACTIVE,
+        isActive: true,
+      },
       take: limit,
-      order: { totalReviews: 'DESC' as any },
+      order: { totalReviews: 'DESC' },
     });
     products.forEach((p) => suggestions.add(p.name));
 
@@ -60,11 +64,14 @@ export class SearchSuggestionsService {
     if (suggestions.size < limit) {
       const popular = await this.searchLogRepo.find({
         take: limit * 2,
-        order: { createdAt: 'DESC' as any },
+        order: { createdAt: 'DESC' },
       });
       const seen = new Set<string>();
       for (const log of popular) {
-        if (log.keyword.toLowerCase().includes(q.toLowerCase()) && !seen.has(log.keyword)) {
+        if (
+          log.keyword.toLowerCase().includes(q.toLowerCase()) &&
+          !seen.has(log.keyword)
+        ) {
           seen.add(log.keyword);
           suggestions.add(log.keyword);
           if (suggestions.size >= limit) break;

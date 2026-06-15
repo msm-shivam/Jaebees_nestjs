@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -39,7 +43,9 @@ export class PurchaseOrderService {
   }
 
   async create(dto: CreatePurchaseOrderDto): Promise<PurchaseOrder> {
-    const supplier = await this.supplierRepository.findOne({ where: { id: dto.supplierId } });
+    const supplier = await this.supplierRepository.findOne({
+      where: { id: dto.supplierId },
+    });
     if (!supplier) {
       throw new NotFoundException('Supplier not found');
     }
@@ -56,7 +62,9 @@ export class PurchaseOrderService {
     let totalAmount = 0;
     const items: PurchaseOrderItem[] = [];
     for (const itemDto of dto.items) {
-      const variant = await this.variantRepository.findOne({ where: { id: itemDto.variantId } });
+      const variant = await this.variantRepository.findOne({
+        where: { id: itemDto.variantId },
+      });
       if (!variant) {
         throw new NotFoundException(`Variant ${itemDto.variantId} not found`);
       }
@@ -78,9 +86,12 @@ export class PurchaseOrderService {
     return this.findById(savedPO.id);
   }
 
-  async findAll(query: PurchaseOrderQueryDto): Promise<{ items: PurchaseOrder[]; total: number }> {
+  async findAll(
+    query: PurchaseOrderQueryDto,
+  ): Promise<{ items: PurchaseOrder[]; total: number }> {
     const { search, status, supplierId, page = 1, limit = 20 } = query;
-    const qb = this.poRepository.createQueryBuilder('po')
+    const qb = this.poRepository
+      .createQueryBuilder('po')
       .leftJoinAndSelect('po.supplier', 'supplier')
       .leftJoinAndSelect('po.items', 'items');
 
@@ -114,14 +125,19 @@ export class PurchaseOrderService {
     return po;
   }
 
-  async update(id: string, dto: UpdatePurchaseOrderDto): Promise<PurchaseOrder> {
+  async update(
+    id: string,
+    dto: UpdatePurchaseOrderDto,
+  ): Promise<PurchaseOrder> {
     const po = await this.findById(id);
     if (po.status !== PurchaseOrderStatus.DRAFT) {
       throw new BadRequestException('Can only update DRAFT purchase orders');
     }
 
     if (dto.supplierId) {
-      const supplier = await this.supplierRepository.findOne({ where: { id: dto.supplierId } });
+      const supplier = await this.supplierRepository.findOne({
+        where: { id: dto.supplierId },
+      });
       if (!supplier) {
         throw new NotFoundException('Supplier not found');
       }
@@ -133,7 +149,9 @@ export class PurchaseOrderService {
       let totalAmount = 0;
       const items: PurchaseOrderItem[] = [];
       for (const itemDto of dto.items) {
-        const variant = await this.variantRepository.findOne({ where: { id: itemDto.variantId } });
+        const variant = await this.variantRepository.findOne({
+          where: { id: itemDto.variantId },
+        });
         if (!variant) {
           throw new NotFoundException(`Variant ${itemDto.variantId} not found`);
         }
@@ -163,7 +181,9 @@ export class PurchaseOrderService {
   async approve(id: string): Promise<PurchaseOrder> {
     const po = await this.findById(id);
     if (po.status !== PurchaseOrderStatus.DRAFT) {
-      throw new BadRequestException('Only DRAFT purchase orders can be approved');
+      throw new BadRequestException(
+        'Only DRAFT purchase orders can be approved',
+      );
     }
     po.status = PurchaseOrderStatus.APPROVED;
     return this.poRepository.save(po);
@@ -171,8 +191,13 @@ export class PurchaseOrderService {
 
   async cancel(id: string): Promise<PurchaseOrder> {
     const po = await this.findById(id);
-    if (po.status === PurchaseOrderStatus.CLOSED || po.status === PurchaseOrderStatus.CANCELLED) {
-      throw new BadRequestException('Purchase order is already closed or cancelled');
+    if (
+      po.status === PurchaseOrderStatus.CLOSED ||
+      po.status === PurchaseOrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        'Purchase order is already closed or cancelled',
+      );
     }
     po.status = PurchaseOrderStatus.CANCELLED;
     return this.poRepository.save(po);
@@ -182,7 +207,10 @@ export class PurchaseOrderService {
     const po = await this.findById(id);
     const allItems = po.items;
     const totalQty = allItems.reduce((sum, i) => sum + i.quantity, 0);
-    const receivedQty = allItems.reduce((sum, i) => sum + i.receivedQuantity, 0);
+    const receivedQty = allItems.reduce(
+      (sum, i) => sum + i.receivedQuantity,
+      0,
+    );
 
     if (receivedQty === 0) return;
 

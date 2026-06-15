@@ -1,5 +1,9 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('stock_alerts')
@@ -25,10 +29,18 @@ export class StockAlert {
   @Column({ name: 'is_resolved', default: false })
   isResolved: boolean;
 
-  @Column({ name: 'triggered_at', type: 'timestamp with time zone', default: () => 'now()' })
+  @Column({
+    name: 'triggered_at',
+    type: 'timestamp with time zone',
+    default: () => 'now()',
+  })
   triggeredAt: Date;
 
-  @Column({ name: 'resolved_at', type: 'timestamp with time zone', nullable: true })
+  @Column({
+    name: 'resolved_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
   resolvedAt: Date;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })

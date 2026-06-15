@@ -36,9 +36,19 @@ export class ReviewAnalyticsResponseDto {
   @ApiProperty({ type: RatingDistributionDto })
   ratingDistribution: RatingDistributionDto;
 
-  @ApiProperty({ type: 'array', example: [{ productId: '...', productName: '...', reviewCount: 5 }] })
-  mostReviewedProducts: Array<{ productId: string; productName: string; reviewCount: number }>;
+  @ApiProperty({
+    type: 'array',
+    example: [{ productId: '...', productName: '...', reviewCount: 5 }],
+  })
+  mostReviewedProducts: Array<{
+    productId: string;
+    productName: string;
+    reviewCount: number;
+  }>;
 
-  @ApiProperty({ type: 'array', example: [{ reviewId: '...', helpfulCount: 10 }] })
+  @ApiProperty({
+    type: 'array',
+    example: [{ reviewId: '...', helpfulCount: 10 }],
+  })
   mostHelpfulReviews: Array<{ reviewId: string; helpfulCount: number }>;
 }

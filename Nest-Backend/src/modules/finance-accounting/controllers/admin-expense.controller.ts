@@ -1,5 +1,14 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
@@ -21,7 +30,10 @@ export class AdminExpenseController {
 
   @Post()
   @Permissions(DefaultPermissions.FINANCE_MANAGE)
-  async create(@CurrentUser() admin: JwtPayload, @Body() dto: CreateExpenseDto) {
+  async create(
+    @CurrentUser() admin: JwtPayload,
+    @Body() dto: CreateExpenseDto,
+  ) {
     return this.expenseService.create(dto, admin.sub);
   }
 
@@ -34,7 +46,13 @@ export class AdminExpenseController {
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    return this.expenseService.findAll({ page, limit, category, dateFrom, dateTo });
+    return this.expenseService.findAll({
+      page,
+      limit,
+      category,
+      dateFrom,
+      dateTo,
+    });
   }
 
   @Get(':id')
@@ -45,7 +63,10 @@ export class AdminExpenseController {
 
   @Patch(':id')
   @Permissions(DefaultPermissions.FINANCE_MANAGE)
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateExpenseDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateExpenseDto,
+  ) {
     return this.expenseService.update(id, dto);
   }
 

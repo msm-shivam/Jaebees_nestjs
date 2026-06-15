@@ -12,7 +12,9 @@ import type { UpdateContactSettingsDto } from '../dto/update-contact-settings.dt
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller('admin/contact-settings')
 export class AdminContactSettingsController {
-  constructor(private readonly contactSettingsService: ContactSettingsService) {}
+  constructor(
+    private readonly contactSettingsService: ContactSettingsService,
+  ) {}
 
   @Get()
   @Permissions(DefaultPermissions.SETTINGS_VIEW)

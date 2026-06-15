@@ -1,5 +1,9 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index,
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('stock_adjustments')

@@ -24,16 +24,29 @@ export class SettlementService {
     return this.settlementRepo.save(settlement);
   }
 
-  async findAll(query: { page?: number; limit?: number; status?: string; supplierId?: string }) {
-    const qb = this.settlementRepo.createQueryBuilder('s')
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    supplierId?: string;
+  }) {
+    const qb = this.settlementRepo
+      .createQueryBuilder('s')
       .orderBy('s.createdAt', 'DESC');
 
-    if (query.status) qb.andWhere('s.status = :status', { status: query.status });
-    if (query.supplierId) qb.andWhere('s.supplier_id = :supplierId', { supplierId: query.supplierId });
+    if (query.status)
+      qb.andWhere('s.status = :status', { status: query.status });
+    if (query.supplierId)
+      qb.andWhere('s.supplier_id = :supplierId', {
+        supplierId: query.supplierId,
+      });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 
@@ -47,7 +60,9 @@ export class SettlementService {
     const settlement = await this.findOne(id);
     Object.assign(settlement, {
       ...dto,
-      settlementDate: dto.settlementDate ? new Date(dto.settlementDate) : settlement.settlementDate,
+      settlementDate: dto.settlementDate
+        ? new Date(dto.settlementDate)
+        : settlement.settlementDate,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : settlement.dueDate,
     });
     return this.settlementRepo.save(settlement);

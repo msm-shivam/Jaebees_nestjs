@@ -46,10 +46,6 @@ import { AdminFinancialReportsController } from './controllers/admin-financial-r
     ExpenseService,
     FinancialReportService,
   ],
-  exports: [
-    FinanceService,
-    LedgerService,
-    TaxService,
-  ],
+  exports: [FinanceService, LedgerService, TaxService],
 })
 export class FinanceAccountingModule {}

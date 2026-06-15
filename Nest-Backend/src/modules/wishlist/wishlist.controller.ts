@@ -10,7 +10,10 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WishlistService } from './wishlist.service';
-import { CreateWishlistItemDto, SaveForLaterDto } from './dto/create-wishlist-item.dto';
+import {
+  CreateWishlistItemDto,
+  SaveForLaterDto,
+} from './dto/create-wishlist-item.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { Request } from 'express';
 
@@ -37,7 +40,9 @@ export class WishlistController {
   }
 
   @Post('items')
-  @ApiOperation({ summary: 'Add product to wishlist (validates product/variant ACTIVE)' })
+  @ApiOperation({
+    summary: 'Add product to wishlist (validates product/variant ACTIVE)',
+  })
   addItem(@Body() dto: CreateWishlistItemDto, @Req() req: Request) {
     const userId: string = (req.user as Record<string, unknown>).id as string;
     return this.wishlistService.addItem(userId, dto);
@@ -51,7 +56,9 @@ export class WishlistController {
   }
 
   @Post('items/:id/move-to-cart')
-  @ApiOperation({ summary: 'Move wishlist item to cart with inventory validation' })
+  @ApiOperation({
+    summary: 'Move wishlist item to cart with inventory validation',
+  })
   moveToCart(@Param('id') id: string, @Req() req: Request) {
     const userId: string = (req.user as Record<string, unknown>).id as string;
     return this.wishlistService.moveToCart(userId, id);

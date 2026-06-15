@@ -84,7 +84,10 @@ export class AuthService {
     await this.userRepo.save(user);
 
     const otp = await this.createAndSaveOtp(user.email, OtpType.EMAIL_VERIFY);
-    await this.notificationsService.sendWelcomeEmail(user.email, user.firstName);
+    await this.notificationsService.sendWelcomeEmail(
+      user.email,
+      user.firstName,
+    );
     await this.notificationsService.sendVerifyEmail(user.email, otp);
     return { message: AuthMessages.REGISTER_SUCCESS };
   }
@@ -116,7 +119,10 @@ export class AuthService {
       ipAddress,
       userAgent,
     );
-    await this.notificationsService.sendEmailVerified(user.email, user.firstName);
+    await this.notificationsService.sendEmailVerified(
+      user.email,
+      user.firstName,
+    );
     return { message: AuthMessages.OTP_VERIFIED, data: tokens };
   }
 
@@ -234,7 +240,10 @@ export class AuthService {
     });
     if (!user) return { message: AuthMessages.OTP_SENT };
 
-    const otp = await this.createAndSaveOtp(user.email, OtpType.FORGOT_PASSWORD);
+    const otp = await this.createAndSaveOtp(
+      user.email,
+      OtpType.FORGOT_PASSWORD,
+    );
     await this.notificationsService.sendPasswordResetEmail(user.email, otp);
     return { message: AuthMessages.OTP_SENT };
   }
@@ -256,7 +265,10 @@ export class AuthService {
     await this.userRepo.update(user.id, { passwordHash });
     await this.userSessionRepo.delete({ userId: user.id });
 
-    await this.notificationsService.sendPasswordResetConfirmation(user.email, user.firstName);
+    await this.notificationsService.sendPasswordResetConfirmation(
+      user.email,
+      user.firstName,
+    );
     return { message: AuthMessages.PASSWORD_RESET_SUCCESS };
   }
 
@@ -312,7 +324,10 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async createAndSaveOtp(email: string, type: OtpType): Promise<string> {
+  private async createAndSaveOtp(
+    email: string,
+    type: OtpType,
+  ): Promise<string> {
     await this.otpRepo
       .createQueryBuilder()
       .update()

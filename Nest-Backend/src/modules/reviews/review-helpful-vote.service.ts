@@ -18,7 +18,9 @@ export class ReviewHelpfulVoteService {
   ) {}
 
   async vote(reviewId: string, userId: string): Promise<void> {
-    const review = await this.reviewRepository.findOne({ where: { id: reviewId } });
+    const review = await this.reviewRepository.findOne({
+      where: { id: reviewId },
+    });
     if (!review) {
       throw new NotFoundException('Review not found');
     }
@@ -30,7 +32,9 @@ export class ReviewHelpfulVoteService {
       throw new ConflictException('You have already voted on this review');
     }
 
-    await this.voteRepository.save(this.voteRepository.create({ reviewId, userId }));
+    await this.voteRepository.save(
+      this.voteRepository.create({ reviewId, userId }),
+    );
     await this.reviewRepository.increment({ id: reviewId }, 'helpfulCount', 1);
   }
 

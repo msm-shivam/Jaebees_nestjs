@@ -6,9 +6,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 @ApiTags('Discovery')
 @Controller('discovery')
 export class DiscoveryController {
-  constructor(
-    private readonly discoveryService: DiscoveryService,
-  ) {}
+  constructor(private readonly discoveryService: DiscoveryService) {}
 
   @Get('related/:productId')
   @ApiOperation({ summary: 'Get related products' })
@@ -59,10 +57,7 @@ export class DiscoveryController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get recently viewed products (customer)' })
-  async recentlyViewed(
-    @Req() req: any,
-    @Query('limit') limit?: number,
-  ) {
+  async recentlyViewed(@Req() req: any, @Query('limit') limit?: number) {
     return this.discoveryService.getRecentlyViewed(req.user.id, limit);
   }
 
@@ -70,10 +65,7 @@ export class DiscoveryController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get personalized product recommendations' })
-  async recommended(
-    @Req() req: any,
-    @Query('limit') limit?: number,
-  ) {
+  async recommended(@Req() req: any, @Query('limit') limit?: number) {
     return this.discoveryService.getRecommended(req.user.id, limit);
   }
 
@@ -102,10 +94,7 @@ export class DiscoveryController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Record a product view' })
-  async recordView(
-    @Req() req: any,
-    @Param('productId') productId: string,
-  ) {
+  async recordView(@Req() req: any, @Param('productId') productId: string) {
     await this.discoveryService.recordView(req.user.id, productId);
     return { message: 'View recorded' };
   }

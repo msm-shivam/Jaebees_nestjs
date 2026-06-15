@@ -13,7 +13,10 @@ export class PrivacyRequestService {
     private readonly privacyRepo: Repository<PrivacyRequest>,
   ) {}
 
-  async create(userId: string, requestType: PrivacyRequestType): Promise<PrivacyRequest> {
+  async create(
+    userId: string,
+    requestType: PrivacyRequestType,
+  ): Promise<PrivacyRequest> {
     const request = this.privacyRepo.create({ userId, requestType });
     return this.privacyRepo.save(request);
   }
@@ -40,10 +43,16 @@ export class PrivacyRequestService {
     return request;
   }
 
-  async process(id: string, dto: ProcessPrivacyRequestDto): Promise<PrivacyRequest> {
+  async process(
+    id: string,
+    dto: ProcessPrivacyRequestDto,
+  ): Promise<PrivacyRequest> {
     const request = await this.findOne(id);
     if (dto.status) request.status = dto.status;
-    if (dto.status === PrivacyRequestStatus.COMPLETED || dto.status === PrivacyRequestStatus.REJECTED) {
+    if (
+      dto.status === PrivacyRequestStatus.COMPLETED ||
+      dto.status === PrivacyRequestStatus.REJECTED
+    ) {
       request.processedAt = new Date();
     }
     return this.privacyRepo.save(request);

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Coupon } from '../entities/coupon.entity';
@@ -28,7 +32,9 @@ export class CouponService {
     return this.couponRepository.save(coupon);
   }
 
-  async findAll(query: CouponQueryDto): Promise<{ items: Coupon[]; total: number }> {
+  async findAll(
+    query: CouponQueryDto,
+  ): Promise<{ items: Coupon[]; total: number }> {
     const { search, type, isActive, page = 1, limit = 20 } = query;
     const where: any = {};
     if (search) {
@@ -58,7 +64,9 @@ export class CouponService {
   }
 
   async findByCode(code: string): Promise<Coupon> {
-    const coupon = await this.couponRepository.findOne({ where: { code: code.toUpperCase() } });
+    const coupon = await this.couponRepository.findOne({
+      where: { code: code.toUpperCase() },
+    });
     if (!coupon) {
       throw new NotFoundException(`Coupon "${code}" not found`);
     }
@@ -68,9 +76,13 @@ export class CouponService {
   async update(id: string, dto: UpdateCouponDto): Promise<Coupon> {
     const coupon = await this.findById(id);
     if (dto.code && dto.code.toUpperCase() !== coupon.code) {
-      const existing = await this.couponRepository.findOne({ where: { code: dto.code.toUpperCase() } });
+      const existing = await this.couponRepository.findOne({
+        where: { code: dto.code.toUpperCase() },
+      });
       if (existing) {
-        throw new ConflictException(`Coupon code "${dto.code.toUpperCase()}" already exists`);
+        throw new ConflictException(
+          `Coupon code "${dto.code.toUpperCase()}" already exists`,
+        );
       }
     }
     const updateData: any = { ...dto };

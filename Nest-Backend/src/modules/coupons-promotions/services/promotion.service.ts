@@ -36,14 +36,20 @@ export class PromotionService {
 
     if (dto.productIds?.length) {
       const products = dto.productIds.map((productId) =>
-        this.promotionProductRepository.create({ promotionId: saved.id, productId }),
+        this.promotionProductRepository.create({
+          promotionId: saved.id,
+          productId,
+        }),
       );
       await this.promotionProductRepository.save(products);
     }
 
     if (dto.categoryIds?.length) {
       const categories = dto.categoryIds.map((categoryId) =>
-        this.promotionCategoryRepository.create({ promotionId: saved.id, categoryId }),
+        this.promotionCategoryRepository.create({
+          promotionId: saved.id,
+          categoryId,
+        }),
       );
       await this.promotionCategoryRepository.save(categories);
     }
@@ -51,7 +57,9 @@ export class PromotionService {
     return this.findById(saved.id);
   }
 
-  async findAll(query: PromotionQueryDto): Promise<{ items: Promotion[]; total: number }> {
+  async findAll(
+    query: PromotionQueryDto,
+  ): Promise<{ items: Promotion[]; total: number }> {
     const { search, type, isActive, page = 1, limit = 20 } = query;
     const where: any = {};
     if (search) {
@@ -99,7 +107,10 @@ export class PromotionService {
       await this.promotionProductRepository.delete({ promotionId: id });
       if (dto.productIds.length) {
         const products = dto.productIds.map((productId) =>
-          this.promotionProductRepository.create({ promotionId: id, productId }),
+          this.promotionProductRepository.create({
+            promotionId: id,
+            productId,
+          }),
         );
         await this.promotionProductRepository.save(products);
       }
@@ -109,7 +120,10 @@ export class PromotionService {
       await this.promotionCategoryRepository.delete({ promotionId: id });
       if (dto.categoryIds.length) {
         const categories = dto.categoryIds.map((categoryId) =>
-          this.promotionCategoryRepository.create({ promotionId: id, categoryId }),
+          this.promotionCategoryRepository.create({
+            promotionId: id,
+            categoryId,
+          }),
         );
         await this.promotionCategoryRepository.save(categories);
       }

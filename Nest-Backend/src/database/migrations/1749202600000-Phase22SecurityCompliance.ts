@@ -53,10 +53,18 @@ export class Phase22SecurityCompliance1749202600000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_audit_logs_user_id" ON "audit_logs" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_audit_logs_action" ON "audit_logs" ("action")`);
-    await queryRunner.query(`CREATE INDEX "idx_audit_logs_entity" ON "audit_logs" ("entity_type", "entity_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_audit_logs_created_at" ON "audit_logs" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_audit_logs_user_id" ON "audit_logs" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_audit_logs_action" ON "audit_logs" ("action")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_audit_logs_entity" ON "audit_logs" ("entity_type", "entity_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_audit_logs_created_at" ON "audit_logs" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "login_activities" (
@@ -73,10 +81,18 @@ export class Phase22SecurityCompliance1749202600000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_login_activities_user_id" ON "login_activities" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_login_activities_status" ON "login_activities" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_login_activities_login_at" ON "login_activities" ("login_at")`);
-    await queryRunner.query(`CREATE INDEX "idx_login_activities_created_at" ON "login_activities" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_login_activities_user_id" ON "login_activities" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_login_activities_status" ON "login_activities" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_login_activities_login_at" ON "login_activities" ("login_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_login_activities_created_at" ON "login_activities" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "security_sessions" (
@@ -93,9 +109,15 @@ export class Phase22SecurityCompliance1749202600000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_security_sessions_user_id" ON "security_sessions" ("user_id")`);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_security_sessions_token_id" ON "security_sessions" ("token_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_security_sessions_created_at" ON "security_sessions" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_security_sessions_user_id" ON "security_sessions" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_security_sessions_token_id" ON "security_sessions" ("token_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_security_sessions_created_at" ON "security_sessions" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "security_events" (
@@ -110,10 +132,18 @@ export class Phase22SecurityCompliance1749202600000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_security_events_event_type" ON "security_events" ("event_type")`);
-    await queryRunner.query(`CREATE INDEX "idx_security_events_severity" ON "security_events" ("severity")`);
-    await queryRunner.query(`CREATE INDEX "idx_security_events_user_id" ON "security_events" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_security_events_created_at" ON "security_events" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_security_events_event_type" ON "security_events" ("event_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_security_events_severity" ON "security_events" ("severity")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_security_events_user_id" ON "security_events" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_security_events_created_at" ON "security_events" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "privacy_requests" (
@@ -128,10 +158,18 @@ export class Phase22SecurityCompliance1749202600000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_privacy_requests_user_id" ON "privacy_requests" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_privacy_requests_request_type" ON "privacy_requests" ("request_type")`);
-    await queryRunner.query(`CREATE INDEX "idx_privacy_requests_status" ON "privacy_requests" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_privacy_requests_created_at" ON "privacy_requests" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_privacy_requests_user_id" ON "privacy_requests" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_privacy_requests_request_type" ON "privacy_requests" ("request_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_privacy_requests_status" ON "privacy_requests" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_privacy_requests_created_at" ON "privacy_requests" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "consent_records" (
@@ -146,9 +184,15 @@ export class Phase22SecurityCompliance1749202600000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_consent_records_user_id" ON "consent_records" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_consent_records_consent_type" ON "consent_records" ("consent_type")`);
-    await queryRunner.query(`CREATE INDEX "idx_consent_records_created_at" ON "consent_records" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_consent_records_user_id" ON "consent_records" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_consent_records_consent_type" ON "consent_records" ("consent_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_consent_records_created_at" ON "consent_records" ("created_at")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

@@ -716,6 +716,16 @@ const PERMISSIONS: PermissionDef[] = [
     name: 'Manage CMS',
     module: 'cms',
   },
+  {
+    slug: DefaultPermissions.CATALOG_VIEW,
+    name: 'View Catalog',
+    module: 'catalog',
+  },
+  {
+    slug: DefaultPermissions.CATALOG_MANAGE,
+    name: 'Manage Catalog',
+    module: 'catalog',
+  },
 ];
 
 // ─── Role → Permission Mappings ──────────────────────────────────────────────
@@ -723,6 +733,8 @@ const PERMISSIONS: PermissionDef[] = [
 const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
   [DefaultRoles.SUPER_ADMIN]: Object.values(DefaultPermissions),
   [DefaultRoles.PRODUCT_MANAGER]: [
+    DefaultPermissions.CATALOG_VIEW,
+    DefaultPermissions.CATALOG_MANAGE,
     DefaultPermissions.PRODUCT_CREATE,
     DefaultPermissions.PRODUCT_UPDATE,
     DefaultPermissions.PRODUCT_DELETE,
@@ -759,28 +771,29 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.COUPON_UPDATE,
     DefaultPermissions.COUPON_DELETE,
     DefaultPermissions.PROMOTION_VIEW,
-        DefaultPermissions.REVIEW_VIEW,
-        DefaultPermissions.REVIEW_APPROVE,
-        DefaultPermissions.REVIEW_REJECT,
-        DefaultPermissions.REVIEW_MODERATE,
-        DefaultPermissions.QUESTION_VIEW,
-        DefaultPermissions.QUESTION_ANSWER,
-        DefaultPermissions.NOTIFICATION_VIEW,
-        DefaultPermissions.EMAIL_TEMPLATE_VIEW,
-        DefaultPermissions.EMAIL_TEMPLATE_CREATE,
-        DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
-        DefaultPermissions.EMAIL_TEMPLATE_DELETE,
-        DefaultPermissions.SEARCH_ANALYTICS_VIEW,
-        DefaultPermissions.SEARCH_ANALYTICS_MANAGE,
-        DefaultPermissions.CAMPAIGN_CREATE,
-        DefaultPermissions.CAMPAIGN_VIEW,
-        DefaultPermissions.CAMPAIGN_UPDATE,
-        DefaultPermissions.CAMPAIGN_DELETE,
-        DefaultPermissions.SUPPLIER_VIEW,
-        DefaultPermissions.PURCHASE_ORDER_VIEW,
-        DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
-      ],
+    DefaultPermissions.REVIEW_VIEW,
+    DefaultPermissions.REVIEW_APPROVE,
+    DefaultPermissions.REVIEW_REJECT,
+    DefaultPermissions.REVIEW_MODERATE,
+    DefaultPermissions.QUESTION_VIEW,
+    DefaultPermissions.QUESTION_ANSWER,
+    DefaultPermissions.NOTIFICATION_VIEW,
+    DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+    DefaultPermissions.EMAIL_TEMPLATE_CREATE,
+    DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
+    DefaultPermissions.EMAIL_TEMPLATE_DELETE,
+    DefaultPermissions.SEARCH_ANALYTICS_VIEW,
+    DefaultPermissions.SEARCH_ANALYTICS_MANAGE,
+    DefaultPermissions.CAMPAIGN_CREATE,
+    DefaultPermissions.CAMPAIGN_VIEW,
+    DefaultPermissions.CAMPAIGN_UPDATE,
+    DefaultPermissions.CAMPAIGN_DELETE,
+    DefaultPermissions.SUPPLIER_VIEW,
+    DefaultPermissions.PURCHASE_ORDER_VIEW,
+    DefaultPermissions.INVENTORY_ANALYTICS_VIEW,
+  ],
   [DefaultRoles.INVENTORY_MANAGER]: [
+    DefaultPermissions.CATALOG_VIEW,
     DefaultPermissions.INVENTORY_CREATE,
     DefaultPermissions.INVENTORY_VIEW,
     DefaultPermissions.INVENTORY_UPDATE,
@@ -846,18 +859,18 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.SUPPORT_NOTE,
     DefaultPermissions.USER_VIEW,
     DefaultPermissions.ORDER_VIEW,
-        DefaultPermissions.REVIEW_VIEW,
-        DefaultPermissions.QUESTION_VIEW,
-        DefaultPermissions.NOTIFICATION_VIEW,
-        DefaultPermissions.NOTIFICATION_MANAGE,
-        DefaultPermissions.EMAIL_TEMPLATE_VIEW,
-        DefaultPermissions.EMAIL_TEMPLATE_CREATE,
-        DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
-        DefaultPermissions.EMAIL_TEMPLATE_DELETE,
-        DefaultPermissions.RETURN_VIEW,
-        DefaultPermissions.REPORTS_VIEW,
-        DefaultPermissions.DASHBOARD_VIEW,
-      ],
+    DefaultPermissions.REVIEW_VIEW,
+    DefaultPermissions.QUESTION_VIEW,
+    DefaultPermissions.NOTIFICATION_VIEW,
+    DefaultPermissions.NOTIFICATION_MANAGE,
+    DefaultPermissions.EMAIL_TEMPLATE_VIEW,
+    DefaultPermissions.EMAIL_TEMPLATE_CREATE,
+    DefaultPermissions.EMAIL_TEMPLATE_UPDATE,
+    DefaultPermissions.EMAIL_TEMPLATE_DELETE,
+    DefaultPermissions.RETURN_VIEW,
+    DefaultPermissions.REPORTS_VIEW,
+    DefaultPermissions.DASHBOARD_VIEW,
+  ],
   [DefaultRoles.MARKETING_MANAGER]: [
     DefaultPermissions.NOTIFICATION_VIEW,
     DefaultPermissions.NOTIFICATION_SEND,
@@ -878,6 +891,7 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.PROMOTION_VIEW,
     DefaultPermissions.SEARCH_ANALYTICS_VIEW,
     DefaultPermissions.SEARCH_ANALYTICS_MANAGE,
+    DefaultPermissions.CATALOG_VIEW,
     DefaultPermissions.PRODUCT_VIEW,
     DefaultPermissions.REVIEW_VIEW,
     DefaultPermissions.USER_VIEW,
@@ -886,6 +900,7 @@ const ROLE_PERMISSIONS: Record<DefaultRoles, DefaultPermissions[]> = {
     DefaultPermissions.CMS_MANAGE,
   ],
   [DefaultRoles.WAREHOUSE_MANAGER]: [
+    DefaultPermissions.CATALOG_VIEW,
     DefaultPermissions.INVENTORY_VIEW,
     DefaultPermissions.INVENTORY_CREATE,
     DefaultPermissions.INVENTORY_UPDATE,
@@ -946,12 +961,14 @@ const ROLES: Array<{ slug: DefaultRoles; name: string; description: string }> =
     {
       slug: DefaultRoles.WAREHOUSE_MANAGER,
       name: 'Warehouse Manager',
-      description: 'Manages suppliers, purchase orders, goods receipt, and inventory operations.',
+      description:
+        'Manages suppliers, purchase orders, goods receipt, and inventory operations.',
     },
     {
       slug: DefaultRoles.MARKETING_MANAGER,
       name: 'Marketing Manager',
-      description: 'Manages email campaigns, templates, notifications, and promotions.',
+      description:
+        'Manages email campaigns, templates, notifications, and promotions.',
     },
   ];
 
@@ -1013,11 +1030,12 @@ async function seed() {
       console.log(`  ⏭  Updating permissions for: ${def.slug}`);
     }
 
-    const permsForRole = def.slug === DefaultRoles.SUPER_ADMIN
-      ? [...permissionMap.values()]
-      : ROLE_PERMISSIONS[def.slug]
-          .map((slug) => permissionMap.get(slug))
-          .filter((p): p is Permission => !!p);
+    const permsForRole =
+      def.slug === DefaultRoles.SUPER_ADMIN
+        ? [...permissionMap.values()]
+        : ROLE_PERMISSIONS[def.slug]
+            .map((slug) => permissionMap.get(slug))
+            .filter((p): p is Permission => !!p);
 
     role.permissions = permsForRole;
     role = await roleRepo.save(role);

@@ -48,6 +48,10 @@ import { CustomerNotificationsController } from './controllers/customer-notifica
     NotificationLogService,
     NotificationsService,
   ],
-  exports: [NotificationsService, EmailQueueService, NotificationPreferenceService],
+  exports: [
+    NotificationsService,
+    EmailQueueService,
+    NotificationPreferenceService,
+  ],
 })
 export class NotificationsModule {}

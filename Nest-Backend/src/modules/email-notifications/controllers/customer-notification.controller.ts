@@ -1,5 +1,13 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -21,7 +29,10 @@ export class CustomerNotificationController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.notificationService.findMyNotifications(user.sub, { page, limit });
+    return this.notificationService.findMyNotifications(user.sub, {
+      page,
+      limit,
+    });
   }
 
   @Get('unread-count')

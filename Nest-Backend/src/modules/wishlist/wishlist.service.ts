@@ -9,7 +9,10 @@ import { Repository, IsNull } from 'typeorm';
 import { Wishlist } from './entities/wishlist.entity';
 import { WishlistItem } from './entities/wishlist-item.entity';
 import { Product, ProductStatus } from '../products/entities/product.entity';
-import { ProductVariant, VariantStatus } from '../product-variants/entities/product-variant.entity';
+import {
+  ProductVariant,
+  VariantStatus,
+} from '../product-variants/entities/product-variant.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { CartService } from '../cart/cart.service';
 import { CartItem } from '../cart/entities/cart-item.entity';
@@ -55,7 +58,9 @@ export class WishlistService {
   }
 
   async addItem(userId: string, dto: CreateWishlistItemDto): Promise<Wishlist> {
-    const product = await this.productRepository.findOne({ where: { id: dto.productId } });
+    const product = await this.productRepository.findOne({
+      where: { id: dto.productId },
+    });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
@@ -72,7 +77,9 @@ export class WishlistService {
         throw new NotFoundException('Variant not found');
       }
       if (variant.productId !== dto.productId) {
-        throw new BadRequestException('Variant does not belong to this product');
+        throw new BadRequestException(
+          'Variant does not belong to this product',
+        );
       }
       if (variant.status !== VariantStatus.ACTIVE) {
         throw new BadRequestException('Variant is not available');
@@ -125,7 +132,10 @@ export class WishlistService {
     return this.getOrCreateWishlist(userId);
   }
 
-  async moveToCart(userId: string, itemId: string): Promise<{ message: string }> {
+  async moveToCart(
+    userId: string,
+    itemId: string,
+  ): Promise<{ message: string }> {
     const wishlist = await this.getOrCreateWishlist(userId);
     const item = await this.wishlistItemRepository.findOne({
       where: { id: itemId, wishlistId: wishlist.id },
@@ -155,7 +165,10 @@ export class WishlistService {
       throw new BadRequestException('Item is out of stock');
     }
 
-    await this.cartService.addItem(userId, { variantId: targetVariantId, quantity: 1 });
+    await this.cartService.addItem(userId, {
+      variantId: targetVariantId,
+      quantity: 1,
+    });
     await this.wishlistItemRepository.softRemove(item);
 
     wishlist.totalItems = await this.wishlistItemRepository.count({

@@ -22,9 +22,7 @@ import { UpdateEmailTemplateDto } from '../dto/update-email-template.dto';
 @UseGuards(AdminJwtGuard, PermissionsGuard)
 @Controller('admin/email-templates')
 export class AdminEmailTemplatesController {
-  constructor(
-    private readonly emailTemplateService: EmailTemplateService,
-  ) {}
+  constructor(private readonly emailTemplateService: EmailTemplateService) {}
 
   @Post()
   @Permissions(DefaultPermissions.EMAIL_TEMPLATE_CREATE)

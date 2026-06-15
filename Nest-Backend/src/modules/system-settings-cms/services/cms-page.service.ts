@@ -34,7 +34,9 @@ export class CmsPageService {
   }
 
   async findBySlug(slug: string): Promise<CmsPage | null> {
-    return this.cmsPageRepo.findOne({ where: { slug, status: CmsPageStatus.PUBLISHED } });
+    return this.cmsPageRepo.findOne({
+      where: { slug, status: CmsPageStatus.PUBLISHED },
+    });
   }
 
   async update(id: string, dto: UpdateCmsPageDto): Promise<CmsPage> {

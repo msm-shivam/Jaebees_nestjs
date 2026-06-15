@@ -20,13 +20,31 @@ export class LedgerEntry extends BaseEntity {
   @Column({ name: 'account_name', type: 'varchar', length: 255 })
   accountName: string;
 
-  @Column({ name: 'debit_amount', type: 'decimal', precision: 15, scale: 2, default: 0 })
+  @Column({
+    name: 'debit_amount',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+  })
   debitAmount: number;
 
-  @Column({ name: 'credit_amount', type: 'decimal', precision: 15, scale: 2, default: 0 })
+  @Column({
+    name: 'credit_amount',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+  })
   creditAmount: number;
 
-  @Column({ name: 'balance_after', type: 'decimal', precision: 15, scale: 2, nullable: true })
+  @Column({
+    name: 'balance_after',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+  })
   balanceAfter: number | null;
 
   @Column({ type: 'text', nullable: true })

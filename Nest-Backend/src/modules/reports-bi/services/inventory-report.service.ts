@@ -6,7 +6,8 @@ export class InventoryReportService {
   constructor(private readonly dataSource: DataSource) {}
 
   async getReport(_dateFrom?: string, _dateTo?: string) {
-    const qb = this.dataSource.createQueryBuilder()
+    const qb = this.dataSource
+      .createQueryBuilder()
       .select([
         'COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, 0)), 0) as "totalStockValue"',
         'COUNT(CASE WHEN i.quantity <= i.low_stock_threshold AND i.quantity > 0 THEN 1 END)::int as "lowStockItems"',
@@ -18,7 +19,8 @@ export class InventoryReportService {
 
     const summary = await qb.getRawOne();
 
-    const lowStock = await this.dataSource.createQueryBuilder()
+    const lowStock = await this.dataSource
+      .createQueryBuilder()
       .select([
         'i.id as "inventoryId"',
         'pv.product_id as "productId"',

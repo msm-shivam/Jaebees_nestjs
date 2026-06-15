@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
@@ -34,12 +42,22 @@ export class AdminSecurityController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.securityService.findLoginActivities({ status, userId, dateFrom, dateTo, page, limit });
+    return this.securityService.findLoginActivities({
+      status,
+      userId,
+      dateFrom,
+      dateTo,
+      page,
+      limit,
+    });
   }
 
   @Get('sessions')
   @Permissions(DefaultPermissions.SECURITY_VIEW)
-  async findSessions(@Query('page') page?: number, @Query('limit') limit?: number) {
+  async findSessions(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
     return this.sessionService.findAll(page, limit);
   }
 

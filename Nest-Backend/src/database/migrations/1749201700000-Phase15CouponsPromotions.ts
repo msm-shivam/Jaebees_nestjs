@@ -57,7 +57,9 @@ export class Phase15CouponsPromotions1749201700000 implements MigrationInterface
         CONSTRAINT "UQ_coupons_code" UNIQUE ("code")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_coupons_active_period" ON "coupons" ("is_active", "start_date", "end_date")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_coupons_active_period" ON "coupons" ("is_active", "start_date", "end_date")`,
+    );
 
     // Create coupon_usages table
     await queryRunner.query(`
@@ -74,9 +76,15 @@ export class Phase15CouponsPromotions1749201700000 implements MigrationInterface
         CONSTRAINT "FK_coupon_usages_order" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_coupon_usages_coupon" ON "coupon_usages" ("coupon_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_coupon_usages_user" ON "coupon_usages" ("user_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_coupon_usages_order" ON "coupon_usages" ("order_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_coupon_usages_coupon" ON "coupon_usages" ("coupon_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_coupon_usages_user" ON "coupon_usages" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_coupon_usages_order" ON "coupon_usages" ("order_id")`,
+    );
 
     // Create promotions table
     await queryRunner.query(`
@@ -97,8 +105,12 @@ export class Phase15CouponsPromotions1749201700000 implements MigrationInterface
         CONSTRAINT "PK_promotions_id" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_promotions_active_period" ON "promotions" ("is_active", "start_date", "end_date")`);
-    await queryRunner.query(`CREATE INDEX "idx_promotions_priority" ON "promotions" ("priority")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_promotions_active_period" ON "promotions" ("is_active", "start_date", "end_date")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_promotions_priority" ON "promotions" ("priority")`,
+    );
 
     // Create promotion_products table
     await queryRunner.query(`
@@ -111,8 +123,12 @@ export class Phase15CouponsPromotions1749201700000 implements MigrationInterface
         CONSTRAINT "FK_promotion_products_promotion" FOREIGN KEY ("promotion_id") REFERENCES "promotions"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_promotion_products_promotion" ON "promotion_products" ("promotion_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_promotion_products_product" ON "promotion_products" ("product_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_promotion_products_promotion" ON "promotion_products" ("promotion_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_promotion_products_product" ON "promotion_products" ("product_id")`,
+    );
 
     // Create promotion_categories table
     await queryRunner.query(`
@@ -125,8 +141,12 @@ export class Phase15CouponsPromotions1749201700000 implements MigrationInterface
         CONSTRAINT "FK_promotion_categories_promotion" FOREIGN KEY ("promotion_id") REFERENCES "promotions"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_promotion_categories_promotion" ON "promotion_categories" ("promotion_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_promotion_categories_category" ON "promotion_categories" ("category_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_promotion_categories_promotion" ON "promotion_categories" ("promotion_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_promotion_categories_category" ON "promotion_categories" ("category_id")`,
+    );
 
     // Create campaigns table
     await queryRunner.query(`
@@ -147,20 +167,32 @@ export class Phase15CouponsPromotions1749201700000 implements MigrationInterface
         CONSTRAINT "PK_campaigns_id" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_campaigns_active_period" ON "campaigns" ("is_active", "start_date", "end_date")`);
-    await queryRunner.query(`CREATE INDEX "idx_campaigns_type" ON "campaigns" ("type")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_campaigns_active_period" ON "campaigns" ("is_active", "start_date", "end_date")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_campaigns_type" ON "campaigns" ("type")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE IF EXISTS "campaigns" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "promotion_categories" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "promotion_products" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "promotion_categories" CASCADE`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "promotion_products" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "promotions" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "coupon_usages" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "coupons" CASCADE`);
 
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."campaigns_type_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."promotions_type_enum"`);
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."campaigns_type_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."promotions_type_enum"`,
+    );
     await queryRunner.query(`DROP TYPE IF EXISTS "public"."coupons_type_enum"`);
   }
 }

@@ -1,4 +1,11 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
@@ -32,7 +39,11 @@ export class ReturnRequest extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'enum', enum: ReturnRequestStatus, default: ReturnRequestStatus.REQUESTED })
+  @Column({
+    type: 'enum',
+    enum: ReturnRequestStatus,
+    default: ReturnRequestStatus.REQUESTED,
+  })
   status: ReturnRequestStatus;
 
   @Column({ type: 'enum', enum: ReturnReason })
@@ -41,10 +52,20 @@ export class ReturnRequest extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
-  @Column({ name: 'total_refund_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'total_refund_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   totalRefundAmount: number;
 
-  @Column({ name: 'requested_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'requested_at',
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   requestedAt: Date;
 
   @Column({ name: 'approved_at', type: 'timestamptz', nullable: true })

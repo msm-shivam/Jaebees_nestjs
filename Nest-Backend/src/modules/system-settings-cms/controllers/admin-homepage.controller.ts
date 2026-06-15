@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
@@ -29,7 +39,10 @@ export class AdminHomepageController {
 
   @Patch(':id')
   @Permissions(DefaultPermissions.CMS_MANAGE)
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateHomepageSectionDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateHomepageSectionDto,
+  ) {
     return this.homepageService.update(id, dto);
   }
 

@@ -41,13 +41,15 @@ export class SearchAnalyticsService {
       where: { createdAt: MoreThan(since), convertedOrderId: Not(IsNull()) },
     });
 
-    const clickThroughRate = totalSearches > 0
-      ? Number(((searchesWithClicks / totalSearches) * 100).toFixed(2))
-      : 0;
+    const clickThroughRate =
+      totalSearches > 0
+        ? Number(((searchesWithClicks / totalSearches) * 100).toFixed(2))
+        : 0;
 
-    const conversionRate = totalSearches > 0
-      ? Number(((searchesWithConversion / totalSearches) * 100).toFixed(2))
-      : 0;
+    const conversionRate =
+      totalSearches > 0
+        ? Number(((searchesWithConversion / totalSearches) * 100).toFixed(2))
+        : 0;
 
     return {
       totalSearches,
@@ -72,7 +74,10 @@ export class SearchAnalyticsService {
       .orderBy('count', 'DESC')
       .limit(limit)
       .getRawMany();
-    return results.map((r) => ({ keyword: r.keyword, count: parseInt(r.count, 10) }));
+    return results.map((r) => ({
+      keyword: r.keyword,
+      count: parseInt(r.count, 10),
+    }));
   }
 
   async getTrendingKeywords(limit = 20) {
@@ -97,9 +102,15 @@ export class SearchAnalyticsService {
           .andWhere('log.created_at > :from', { from: last30d })
           .andWhere('log.created_at < :to', { to: last7d })
           .getCount();
-        const growthRate = prevCount > 0
-          ? Number((((parseInt(r.count, 10) - prevCount) / prevCount) * 100).toFixed(2))
-          : 100;
+        const growthRate =
+          prevCount > 0
+            ? Number(
+                (
+                  ((parseInt(r.count, 10) - prevCount) / prevCount) *
+                  100
+                ).toFixed(2),
+              )
+            : 100;
         return {
           keyword: r.keyword,
           count: parseInt(r.count, 10),
@@ -108,7 +119,9 @@ export class SearchAnalyticsService {
       }),
     );
 
-    return trending.sort((a, b) => b.growthRate - a.growthRate || b.count - a.count);
+    return trending.sort(
+      (a, b) => b.growthRate - a.growthRate || b.count - a.count,
+    );
   }
 
   async getNoResultKeywords(period: '7d' | '30d' | '90d' = '30d', limit = 20) {
@@ -122,7 +135,10 @@ export class SearchAnalyticsService {
       .orderBy('count', 'DESC')
       .limit(limit)
       .getRawMany();
-    return results.map((r) => ({ keyword: r.keyword, count: parseInt(r.count, 10) }));
+    return results.map((r) => ({
+      keyword: r.keyword,
+      count: parseInt(r.count, 10),
+    }));
   }
 
   async logSearch(data: {
@@ -141,7 +157,9 @@ export class SearchAnalyticsService {
   }
 
   async logClick(searchLogId: string, productId: string): Promise<void> {
-    await this.searchLogRepo.update(searchLogId, { clickedProductId: productId });
+    await this.searchLogRepo.update(searchLogId, {
+      clickedProductId: productId,
+    });
   }
 
   async logConversion(searchLogId: string, orderId: string): Promise<void> {
@@ -163,8 +181,14 @@ export class SearchAnalyticsService {
       where: { createdAt: MoreThan(since), convertedOrderId: Not(IsNull()) },
     });
 
-    const ctr = totalSearches > 0 ? Number(((clickCount / totalSearches) * 100).toFixed(2)) : 0;
-    const conversionRate = totalSearches > 0 ? Number(((conversionCount / totalSearches) * 100).toFixed(2)) : 0;
+    const ctr =
+      totalSearches > 0
+        ? Number(((clickCount / totalSearches) * 100).toFixed(2))
+        : 0;
+    const conversionRate =
+      totalSearches > 0
+        ? Number(((conversionCount / totalSearches) * 100).toFixed(2))
+        : 0;
 
     const avgPositionClicked = await this.searchLogRepo
       .createQueryBuilder('log')
@@ -175,11 +199,13 @@ export class SearchAnalyticsService {
 
     return {
       totalSearches,
-      uniqueSearches: (await this.searchLogRepo
-        .createQueryBuilder('log')
-        .select('DISTINCT log.keyword')
-        .where('log.created_at > :since', { since })
-        .getRawMany()).length,
+      uniqueSearches: (
+        await this.searchLogRepo
+          .createQueryBuilder('log')
+          .select('DISTINCT log.keyword')
+          .where('log.created_at > :since', { since })
+          .getRawMany()
+      ).length,
       clickCount,
       ctr,
       conversionCount,

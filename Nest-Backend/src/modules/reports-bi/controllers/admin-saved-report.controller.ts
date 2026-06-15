@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
@@ -19,7 +30,10 @@ export class AdminSavedReportController {
 
   @Post()
   @Permissions(DefaultPermissions.REPORTS_VIEW)
-  async create(@CurrentUser() admin: JwtPayload, @Body() dto: CreateSavedReportDto) {
+  async create(
+    @CurrentUser() admin: JwtPayload,
+    @Body() dto: CreateSavedReportDto,
+  ) {
     return this.savedReportService.create(dto, admin.sub);
   }
 
@@ -37,7 +51,10 @@ export class AdminSavedReportController {
 
   @Patch(':id')
   @Permissions(DefaultPermissions.REPORTS_VIEW)
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSavedReportDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSavedReportDto,
+  ) {
     return this.savedReportService.update(id, dto);
   }
 

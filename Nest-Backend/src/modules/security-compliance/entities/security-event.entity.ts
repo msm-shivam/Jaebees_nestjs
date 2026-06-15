@@ -12,7 +12,12 @@ export class SecurityEvent extends BaseEntity {
   @Column({ name: 'event_type', type: 'enum', enum: SecurityEventType })
   eventType: SecurityEventType;
 
-  @Column({ name: 'severity', type: 'enum', enum: SeverityLevel, default: SeverityLevel.LOW })
+  @Column({
+    name: 'severity',
+    type: 'enum',
+    enum: SeverityLevel,
+    default: SeverityLevel.LOW,
+  })
   severity: SeverityLevel;
 
   @Column({ name: 'user_id', type: 'uuid', nullable: true })

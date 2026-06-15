@@ -27,7 +27,12 @@ export class AdminCommunicationAnalyticsController {
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    return this.analyticsService.getEmailStats({ page, limit, dateFrom, dateTo });
+    return this.analyticsService.getEmailStats({
+      page,
+      limit,
+      dateFrom,
+      dateTo,
+    });
   }
 
   @Get('campaigns')

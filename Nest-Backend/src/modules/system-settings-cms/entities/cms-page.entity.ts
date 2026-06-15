@@ -21,6 +21,11 @@ export class CmsPage extends BaseEntity {
   @Column({ type: 'enum', enum: CmsPageStatus, default: CmsPageStatus.DRAFT })
   status: CmsPageStatus;
 
-  @Column({ name: 'page_type', type: 'enum', enum: CmsPageType, nullable: true })
+  @Column({
+    name: 'page_type',
+    type: 'enum',
+    enum: CmsPageType,
+    nullable: true,
+  })
   pageType: CmsPageType | null;
 }

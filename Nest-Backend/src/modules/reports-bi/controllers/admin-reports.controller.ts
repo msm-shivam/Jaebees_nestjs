@@ -33,7 +33,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async sales(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async sales(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.salesReportService.getReport(dateFrom, dateTo);
   }
 
@@ -41,7 +44,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async revenue(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async revenue(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.revenueReportService.getReport(dateFrom, dateTo);
   }
 
@@ -49,7 +55,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async products(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async products(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.productReportService.getReport(dateFrom, dateTo);
   }
 
@@ -57,7 +66,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async categories(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async categories(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.productReportService.getByCategory(dateFrom, dateTo);
   }
 
@@ -65,7 +77,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async brands(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async brands(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.productReportService.getByBrand(dateFrom, dateTo);
   }
 
@@ -73,7 +88,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async customers(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async customers(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.customerReportService.getReport(dateFrom, dateTo);
   }
 
@@ -81,7 +99,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async inventory(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async inventory(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.inventoryReportService.getReport(dateFrom, dateTo);
   }
 
@@ -89,7 +110,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async returns(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async returns(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.returnReportService.getReport(dateFrom, dateTo);
   }
 
@@ -97,7 +121,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async support(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async support(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.supportReportService.getReport(dateFrom, dateTo);
   }
 
@@ -105,7 +132,10 @@ export class AdminReportsController {
   @Permissions(DefaultPermissions.REPORTS_VIEW)
   @ApiQuery({ name: 'dateFrom', required: false })
   @ApiQuery({ name: 'dateTo', required: false })
-  async marketing(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
+  async marketing(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
     return this.marketingReportService.getReport(dateFrom, dateTo);
   }
 }

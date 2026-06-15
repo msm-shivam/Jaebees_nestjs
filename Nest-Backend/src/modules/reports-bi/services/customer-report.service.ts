@@ -6,20 +6,23 @@ export class CustomerReportService {
   constructor(private readonly dataSource: DataSource) {}
 
   async getReport(dateFrom?: string, dateTo?: string) {
-    const baseCondition = dateFrom || dateTo
-      ? `WHERE o.created_at ${dateFrom ? '>= :dateFrom' : ''}${dateFrom && dateTo ? ' AND ' : ''}${dateTo ? '<= :dateTo' : ''}`
-      : '';
+    const baseCondition =
+      dateFrom || dateTo
+        ? `WHERE o.created_at ${dateFrom ? '>= :dateFrom' : ''}${dateFrom && dateTo ? ' AND ' : ''}${dateTo ? '<= :dateTo' : ''}`
+        : '';
 
     const params: Record<string, unknown> = {};
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
 
-    const [newCustomers, repeatCustomers, topSpenders, totalCustomers] = await Promise.all([
-      this.dataSource.query(
-        `SELECT COUNT(*)::int as "count" FROM "users" u ${baseCondition.replace('o.created_at', 'u.created_at')}`,
-        params,
-      ),
-      this.dataSource.query(`
+    const [newCustomers, repeatCustomers, topSpenders, totalCustomers] =
+      await Promise.all([
+        this.dataSource.query(
+          `SELECT COUNT(*)::int as "count" FROM "users" u ${baseCondition.replace('o.created_at', 'u.created_at')}`,
+          params,
+        ),
+        this.dataSource.query(
+          `
         SELECT COUNT(*)::int as "count" FROM (
           SELECT o.customer_id FROM "orders" o
           WHERE o.status NOT IN ('CANCELLED')
@@ -27,8 +30,11 @@ export class CustomerReportService {
           ${dateTo ? 'AND o.created_at <= :dateTo' : ''}
           GROUP BY o.customer_id HAVING COUNT(o.id) > 1
         ) repeat
-      `, params),
-      this.dataSource.query(`
+      `,
+          params,
+        ),
+        this.dataSource.query(
+          `
         SELECT o.customer_id as "customerId", u.first_name || ' ' || u.last_name as "customerName",
                COUNT(o.id) as "orderCount", COALESCE(SUM(o.total_amount), 0) as "totalSpent"
         FROM "orders" o
@@ -38,9 +44,14 @@ export class CustomerReportService {
         ${dateTo ? 'AND o.created_at <= :dateTo' : ''}
         GROUP BY o.customer_id, u.first_name, u.last_name
         ORDER BY "totalSpent" DESC LIMIT 10
-      `, params),
-      this.dataSource.query('SELECT COUNT(*)::int as "count" FROM "users"', []),
-    ]);
+      `,
+          params,
+        ),
+        this.dataSource.query(
+          'SELECT COUNT(*)::int as "count" FROM "users"',
+          [],
+        ),
+      ]);
 
     return {
       data: {

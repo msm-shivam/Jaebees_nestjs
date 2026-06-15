@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
@@ -28,7 +37,10 @@ export class AdminPrivacyController {
 
   @Post('requests/:id/process')
   @Permissions(DefaultPermissions.PRIVACY_MANAGE)
-  async process(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ProcessPrivacyRequestDto) {
+  async process(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ProcessPrivacyRequestDto,
+  ) {
     return this.privacyRequestService.process(id, dto);
   }
 }

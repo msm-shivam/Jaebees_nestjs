@@ -15,12 +15,18 @@ export class CustomerPrivacyController {
 
   @Post('export-data')
   async exportData(@CurrentUser() user: JwtPayload) {
-    return this.privacyRequestService.create(user.sub, PrivacyRequestType.EXPORT_DATA);
+    return this.privacyRequestService.create(
+      user.sub,
+      PrivacyRequestType.EXPORT_DATA,
+    );
   }
 
   @Post('delete-account')
   async deleteAccount(@CurrentUser() user: JwtPayload) {
-    return this.privacyRequestService.create(user.sub, PrivacyRequestType.DELETE_ACCOUNT);
+    return this.privacyRequestService.create(
+      user.sub,
+      PrivacyRequestType.DELETE_ACCOUNT,
+    );
   }
 
   @Get('requests')

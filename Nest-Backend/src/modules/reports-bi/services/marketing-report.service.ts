@@ -8,11 +8,18 @@ export class MarketingReportService {
   async getReport(dateFrom?: string, dateTo?: string) {
     const params: Record<string, unknown> = {};
     let whereClause = '';
-    if (dateFrom) { whereClause += ' AND c.created_at >= :dateFrom'; params.dateFrom = dateFrom; }
-    if (dateTo) { whereClause += ' AND c.created_at <= :dateTo'; params.dateTo = dateTo; }
+    if (dateFrom) {
+      whereClause += ' AND c.created_at >= :dateFrom';
+      params.dateFrom = dateFrom;
+    }
+    if (dateTo) {
+      whereClause += ' AND c.created_at <= :dateTo';
+      params.dateTo = dateTo;
+    }
 
     const [couponUsage, campaigns] = await Promise.all([
-      this.dataSource.query(`
+      this.dataSource.query(
+        `
         SELECT
           COUNT(DISTINCT cu.coupon_id)::int as "activeCoupons",
           COUNT(cu.id)::int as "totalUses",
@@ -20,8 +27,11 @@ export class MarketingReportService {
         FROM "coupon_usage" cu
         LEFT JOIN "coupons" c ON c.id = cu.coupon_id
         WHERE 1=1 ${whereClause}
-      `, params),
-      this.dataSource.query(`
+      `,
+        params,
+      ),
+      this.dataSource.query(
+        `
         SELECT
           COUNT(*)::int as "totalCampaigns",
           COUNT(CASE WHEN c.status = 'SENDING' THEN 1 END)::int as "activeCampaigns",
@@ -32,13 +42,25 @@ export class MarketingReportService {
             ELSE 0 END as "clickRate"
         FROM "email_campaigns" c
         WHERE 1=1 ${whereClause}
-      `, params),
+      `,
+        params,
+      ),
     ]);
 
     return {
       data: {
-        couponUsage: couponUsage[0] ?? { activeCoupons: 0, totalUses: 0, totalDiscountGiven: 0 },
-        campaigns: campaigns[0] ?? { totalCampaigns: 0, activeCampaigns: 0, totalOpens: 0, totalClicks: 0, clickRate: 0 },
+        couponUsage: couponUsage[0] ?? {
+          activeCoupons: 0,
+          totalUses: 0,
+          totalDiscountGiven: 0,
+        },
+        campaigns: campaigns[0] ?? {
+          totalCampaigns: 0,
+          activeCampaigns: 0,
+          totalOpens: 0,
+          totalClicks: 0,
+          clickRate: 0,
+        },
       },
     };
   }

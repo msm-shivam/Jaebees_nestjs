@@ -25,7 +25,9 @@ export class InventoryAnalyticsService {
   ) {}
 
   async getSummary(): Promise<any> {
-    const inventories = await this.inventoryRepository.find({ relations: { variant: true } });
+    const inventories = await this.inventoryRepository.find({
+      relations: { variant: true },
+    });
 
     let totalStockValue = 0;
     let totalStockUnits = 0;
@@ -35,7 +37,10 @@ export class InventoryAnalyticsService {
     for (const inv of inventories) {
       totalStockUnits += inv.quantity;
       totalStockValue += (inv.variant?.costPrice || 0) * inv.quantity;
-      if (inv.availableQuantity <= inv.lowStockThreshold && inv.availableQuantity > 0) {
+      if (
+        inv.availableQuantity <= inv.lowStockThreshold &&
+        inv.availableQuantity > 0
+      ) {
         lowStockCount++;
       }
       if (inv.availableQuantity <= 0) {
@@ -43,7 +48,9 @@ export class InventoryAnalyticsService {
       }
     }
 
-    const activeSuppliers = await this.supplierRepository.count({ where: { isActive: true } });
+    const activeSuppliers = await this.supplierRepository.count({
+      where: { isActive: true },
+    });
     const openPOs = await this.poRepository.count({
       where: [
         { status: PurchaseOrderStatus.DRAFT },
@@ -67,7 +74,9 @@ export class InventoryAnalyticsService {
       .createQueryBuilder('audit')
       .select('audit.variantId', 'variantId')
       .addSelect('COUNT(*)', 'transactions')
-      .where('audit.actionType = :actionType', { actionType: AuditActionType.STOCK_OUT })
+      .where('audit.actionType = :actionType', {
+        actionType: AuditActionType.STOCK_OUT,
+      })
       .groupBy('audit.variantId')
       .orderBy('"transactions"', 'DESC')
       .limit(limit)
@@ -88,7 +97,10 @@ export class InventoryAnalyticsService {
     const result: any[] = [];
     for (const inv of inventories) {
       const recentMovement = await this.auditRepository.findOne({
-        where: { variantId: inv.variantId, actionType: AuditActionType.STOCK_OUT },
+        where: {
+          variantId: inv.variantId,
+          actionType: AuditActionType.STOCK_OUT,
+        },
         order: { createdAt: 'DESC' },
       });
 
@@ -98,7 +110,10 @@ export class InventoryAnalyticsService {
           currentStock: inv.quantity,
           lastMovementDate: recentMovement?.createdAt || null,
           daysWithoutSale: recentMovement
-            ? Math.floor((Date.now() - recentMovement.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+            ? Math.floor(
+                (Date.now() - recentMovement.createdAt.getTime()) /
+                  (1000 * 60 * 60 * 24),
+              )
             : 999,
         });
       }
@@ -108,7 +123,9 @@ export class InventoryAnalyticsService {
   }
 
   async getStockValue(): Promise<any> {
-    const inventories = await this.inventoryRepository.find({ relations: { variant: true } });
+    const inventories = await this.inventoryRepository.find({
+      relations: { variant: true },
+    });
 
     let totalValue = 0;
     for (const inv of inventories) {
@@ -123,9 +140,15 @@ export class InventoryAnalyticsService {
 
   async getAlertStats(): Promise<any> {
     const totalAlerts = await this.alertRepository.count();
-    const unresolvedAlerts = await this.alertRepository.count({ where: { isResolved: false } });
-    const lowStockAlerts = await this.alertRepository.count({ where: { alertType: 'LOW_STOCK', isResolved: false } });
-    const outOfStockAlerts = await this.alertRepository.count({ where: { alertType: 'OUT_OF_STOCK', isResolved: false } });
+    const unresolvedAlerts = await this.alertRepository.count({
+      where: { isResolved: false },
+    });
+    const lowStockAlerts = await this.alertRepository.count({
+      where: { alertType: 'LOW_STOCK', isResolved: false },
+    });
+    const outOfStockAlerts = await this.alertRepository.count({
+      where: { alertType: 'OUT_OF_STOCK', isResolved: false },
+    });
 
     return {
       totalAlerts,

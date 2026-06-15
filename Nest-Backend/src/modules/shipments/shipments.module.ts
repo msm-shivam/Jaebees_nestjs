@@ -9,7 +9,9 @@ import { ShipmentsController } from './shipments.controller';
 import { AdminShipmentsController } from './admin-shipments.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Shipment, ShipmentTrackingLog, Order, User])],
+  imports: [
+    TypeOrmModule.forFeature([Shipment, ShipmentTrackingLog, Order, User]),
+  ],
   controllers: [ShipmentsController, AdminShipmentsController],
   providers: [ShipmentsService],
   exports: [ShipmentsService],

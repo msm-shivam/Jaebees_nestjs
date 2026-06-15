@@ -25,16 +25,24 @@ export class AdminSearchController {
 
   @Get('summary')
   @Permissions(DefaultPermissions.SEARCH_ANALYTICS_VIEW)
-  @ApiOperation({ summary: 'Get analytics summary (searchCount, CTR, conversionRate, avgPosition)' })
+  @ApiOperation({
+    summary:
+      'Get analytics summary (searchCount, CTR, conversionRate, avgPosition)',
+  })
   async summary(@Query() query: SearchAnalyticsQueryDto) {
-    return this.searchAnalyticsService.getAnalyticsSummary(query.period || '30d');
+    return this.searchAnalyticsService.getAnalyticsSummary(
+      query.period || '30d',
+    );
   }
 
   @Get('top-keywords')
   @Permissions(DefaultPermissions.SEARCH_ANALYTICS_VIEW)
   @ApiOperation({ summary: 'Get top search keywords' })
   async topKeywords(@Query() query: SearchAnalyticsQueryDto) {
-    return this.searchAnalyticsService.getTopKeywords(query.period || '30d', query.limit);
+    return this.searchAnalyticsService.getTopKeywords(
+      query.period || '30d',
+      query.limit,
+    );
   }
 
   @Get('trending')
@@ -48,7 +56,10 @@ export class AdminSearchController {
   @Permissions(DefaultPermissions.SEARCH_ANALYTICS_VIEW)
   @ApiOperation({ summary: 'Get searches with no results' })
   async noResults(@Query() query: SearchAnalyticsQueryDto) {
-    return this.searchAnalyticsService.getNoResultKeywords(query.period || '30d', query.limit);
+    return this.searchAnalyticsService.getNoResultKeywords(
+      query.period || '30d',
+      query.limit,
+    );
   }
 
   @Delete('cache')

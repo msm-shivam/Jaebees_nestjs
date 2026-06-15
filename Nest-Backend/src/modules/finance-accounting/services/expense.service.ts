@@ -12,7 +12,10 @@ export class ExpenseService {
     private readonly expenseRepo: Repository<ExpenseRecord>,
   ) {}
 
-  async create(dto: CreateExpenseDto, createdBy?: string): Promise<ExpenseRecord> {
+  async create(
+    dto: CreateExpenseDto,
+    createdBy?: string,
+  ): Promise<ExpenseRecord> {
     const expense = this.expenseRepo.create({
       ...dto,
       expenseDate: new Date(dto.expenseDate),
@@ -21,17 +24,30 @@ export class ExpenseService {
     return this.expenseRepo.save(expense);
   }
 
-  async findAll(query: { page?: number; limit?: number; category?: string; dateFrom?: string; dateTo?: string }) {
-    const qb = this.expenseRepo.createQueryBuilder('e')
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const qb = this.expenseRepo
+      .createQueryBuilder('e')
       .orderBy('e.createdAt', 'DESC');
 
-    if (query.category) qb.andWhere('e.category = :category', { category: query.category });
-    if (query.dateFrom) qb.andWhere('e.expense_date >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('e.expense_date <= :dateTo', { dateTo: query.dateTo });
+    if (query.category)
+      qb.andWhere('e.category = :category', { category: query.category });
+    if (query.dateFrom)
+      qb.andWhere('e.expense_date >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('e.expense_date <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 
@@ -45,7 +61,9 @@ export class ExpenseService {
     const expense = await this.findOne(id);
     Object.assign(expense, {
       ...dto,
-      expenseDate: dto.expenseDate ? new Date(dto.expenseDate) : expense.expenseDate,
+      expenseDate: dto.expenseDate
+        ? new Date(dto.expenseDate)
+        : expense.expenseDate,
     });
     return this.expenseRepo.save(expense);
   }

@@ -1,4 +1,13 @@
-import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, IsArray, Min, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  IsArray,
+  Min,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PromotionType } from '../enums/promotion-type.enum';
 

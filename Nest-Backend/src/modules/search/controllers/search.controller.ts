@@ -1,4 +1,13 @@
-import { Controller, Get, Query, Post, Body, Req, UseGuards, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { SearchService } from '../services/search.service';
@@ -35,10 +44,7 @@ export class SearchController {
 
   @Get()
   @ApiOperation({ summary: 'Global product search with filters' })
-  async search(
-    @Query() query: SearchQueryDto,
-    @Req() req: Request,
-  ) {
+  async search(@Query() query: SearchQueryDto, @Req() req: Request) {
     const userId = (req as any).user?.id;
     const ipAddress = req.ip;
 
@@ -95,10 +101,7 @@ export class SearchController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get recent searches (customer)' })
-  async recentSearches(
-    @Req() req: any,
-    @Query() query: RecentSearchQueryDto,
-  ) {
+  async recentSearches(@Req() req: any, @Query() query: RecentSearchQueryDto) {
     const searches = await this.recentSearchRepo.find({
       where: { userId: req.user.id },
       order: { createdAt: 'DESC' },
@@ -116,9 +119,20 @@ export class SearchController {
 
   @Get('category/:slug')
   @ApiOperation({ summary: 'Search products by category slug' })
-  async searchByCategory(@Param('slug') slug: string, @Query() query: SearchQueryDto, @Req() req: Request) {
+  async searchByCategory(
+    @Param('slug') slug: string,
+    @Query() query: SearchQueryDto,
+    @Req() req: Request,
+  ) {
     const category = await this.categoryRepo.findOne({ where: { slug } });
-    if (!category) return { items: [], total: 0, page: 1, limit: query.limit || 20, totalPages: 0 };
+    if (!category)
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: query.limit || 20,
+        totalPages: 0,
+      };
     query.categoryIds = [category.id];
     const userId = (req as any).user?.id;
     const ipAddress = req.ip;
@@ -127,9 +141,20 @@ export class SearchController {
 
   @Get('brand/:slug')
   @ApiOperation({ summary: 'Search products by brand slug' })
-  async searchByBrand(@Param('slug') slug: string, @Query() query: SearchQueryDto, @Req() req: Request) {
+  async searchByBrand(
+    @Param('slug') slug: string,
+    @Query() query: SearchQueryDto,
+    @Req() req: Request,
+  ) {
     const brand = await this.brandRepo.findOne({ where: { slug } });
-    if (!brand) return { items: [], total: 0, page: 1, limit: query.limit || 20, totalPages: 0 };
+    if (!brand)
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: query.limit || 20,
+        totalPages: 0,
+      };
     query.brandIds = [brand.id];
     const userId = (req as any).user?.id;
     const ipAddress = req.ip;
@@ -138,9 +163,20 @@ export class SearchController {
 
   @Get('collection/:slug')
   @ApiOperation({ summary: 'Search products by collection slug' })
-  async searchByCollection(@Param('slug') slug: string, @Query() query: SearchQueryDto, @Req() req: Request) {
+  async searchByCollection(
+    @Param('slug') slug: string,
+    @Query() query: SearchQueryDto,
+    @Req() req: Request,
+  ) {
     const collection = await this.collectionRepo.findOne({ where: { slug } });
-    if (!collection) return { items: [], total: 0, page: 1, limit: query.limit || 20, totalPages: 0 };
+    if (!collection)
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: query.limit || 20,
+        totalPages: 0,
+      };
     query.collectionIds = [collection.id];
     const userId = (req as any).user?.id;
     const ipAddress = req.ip;

@@ -6,7 +6,8 @@ export class ReturnReportService {
   constructor(private readonly dataSource: DataSource) {}
 
   async getReport(dateFrom?: string, dateTo?: string) {
-    const qb = this.dataSource.createQueryBuilder()
+    const qb = this.dataSource
+      .createQueryBuilder()
       .select([
         'COUNT(*)::int as "totalReturns"',
         `COUNT(CASE WHEN r.status = 'COMPLETED' OR r.status = 'REFUNDED' THEN 1 END)::int as "completedReturns"`,
@@ -21,7 +22,8 @@ export class ReturnReportService {
 
     const summary = await qb.getRawOne();
 
-    const byReason = await this.dataSource.createQueryBuilder()
+    const byReason = await this.dataSource
+      .createQueryBuilder()
       .select([
         'r.reason as "reason"',
         'COUNT(*)::int as "count"',

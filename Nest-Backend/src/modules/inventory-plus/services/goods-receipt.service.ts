@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -51,8 +55,13 @@ export class GoodsReceiptService {
     if (!po) {
       throw new NotFoundException('Purchase order not found');
     }
-    if (po.status !== PurchaseOrderStatus.APPROVED && po.status !== PurchaseOrderStatus.PARTIALLY_RECEIVED) {
-      throw new BadRequestException('Purchase order must be APPROVED to receive goods');
+    if (
+      po.status !== PurchaseOrderStatus.APPROVED &&
+      po.status !== PurchaseOrderStatus.PARTIALLY_RECEIVED
+    ) {
+      throw new BadRequestException(
+        'Purchase order must be APPROVED to receive goods',
+      );
     }
 
     const receiptNumber = await this.generateReceiptNumber();
@@ -67,7 +76,9 @@ export class GoodsReceiptService {
     for (const itemDto of dto.items) {
       const poItem = po.items.find((i) => i.variantId === itemDto.variantId);
       if (!poItem) {
-        throw new NotFoundException(`Variant ${itemDto.variantId} not found in purchase order`);
+        throw new NotFoundException(
+          `Variant ${itemDto.variantId} not found in purchase order`,
+        );
       }
 
       const newReceived = poItem.receivedQuantity + itemDto.quantityReceived;
@@ -87,21 +98,26 @@ export class GoodsReceiptService {
       poItem.receivedQuantity = newReceived;
       await this.poItemRepository.save(poItem);
 
-      let inventory = await this.inventoryRepository.findOne({ where: { variantId: itemDto.variantId } });
+      const inventory = await this.inventoryRepository.findOne({
+        where: { variantId: itemDto.variantId },
+      });
       if (inventory) {
         const beforeQty = inventory.quantity;
         inventory.quantity += itemDto.quantityReceived;
-        inventory.availableQuantity = inventory.quantity - inventory.reservedQuantity;
+        inventory.availableQuantity =
+          inventory.quantity - inventory.reservedQuantity;
         await this.inventoryRepository.save(inventory);
 
-        await this.auditRepository.save(this.auditRepository.create({
-          variantId: itemDto.variantId,
-          actionType: AuditActionType.GOODS_RECEIPT,
-          beforeQuantity: beforeQty,
-          afterQuantity: inventory.quantity,
-          referenceType: 'goods_receipt',
-          referenceId: savedReceipt.id,
-        }));
+        await this.auditRepository.save(
+          this.auditRepository.create({
+            variantId: itemDto.variantId,
+            actionType: AuditActionType.GOODS_RECEIPT,
+            beforeQuantity: beforeQty,
+            afterQuantity: inventory.quantity,
+            referenceType: 'goods_receipt',
+            referenceId: savedReceipt.id,
+          }),
+        );
       }
     }
 
@@ -109,7 +125,10 @@ export class GoodsReceiptService {
     return this.findById(savedReceipt.id);
   }
 
-  async findAll(page = 1, limit = 20): Promise<{ items: GoodsReceipt[]; total: number }> {
+  async findAll(
+    page = 1,
+    limit = 20,
+  ): Promise<{ items: GoodsReceipt[]; total: number }> {
     const [items, total] = await this.receiptRepository.findAndCount({
       relations: { purchaseOrder: true, items: true },
       order: { createdAt: 'DESC' },

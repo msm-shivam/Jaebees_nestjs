@@ -15,7 +15,11 @@ export class EmailPreference extends BaseEntity {
   @Column({ name: 'marketing_emails_enabled', type: 'boolean', default: true })
   marketingEmailsEnabled: boolean;
 
-  @Column({ name: 'transactional_emails_enabled', type: 'boolean', default: true })
+  @Column({
+    name: 'transactional_emails_enabled',
+    type: 'boolean',
+    default: true,
+  })
   transactionalEmailsEnabled: boolean;
 
   @Column({ name: 'order_updates', type: 'boolean', default: true })

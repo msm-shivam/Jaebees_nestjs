@@ -1,4 +1,12 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { AdminUser } from '../../admin/entities/admin-user.entity';
@@ -46,7 +54,11 @@ export class SupportTicket extends BaseEntity {
   @Column({ type: 'enum', enum: TicketCategory })
   category: TicketCategory;
 
-  @Column({ type: 'enum', enum: TicketPriority, default: TicketPriority.MEDIUM })
+  @Column({
+    type: 'enum',
+    enum: TicketPriority,
+    default: TicketPriority.MEDIUM,
+  })
   priority: TicketPriority;
 
   @Column({ type: 'enum', enum: TicketStatus, default: TicketStatus.OPEN })

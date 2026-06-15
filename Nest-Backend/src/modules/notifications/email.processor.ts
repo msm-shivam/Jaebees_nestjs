@@ -11,13 +11,15 @@ export class EmailProcessor {
   constructor(private readonly emailService: EmailService) {}
 
   @Process('send')
-  async handleSend(job: Job<{
-    to: string;
-    subject: string;
-    html: string;
-    userId?: string;
-    templateCode?: string;
-  }>): Promise<void> {
+  async handleSend(
+    job: Job<{
+      to: string;
+      subject: string;
+      html: string;
+      userId?: string;
+      templateCode?: string;
+    }>,
+  ): Promise<void> {
     this.logger.log(`Processing email job ${job.id}: ${job.data.to}`);
     const sent = await this.emailService.sendEmail({
       to: job.data.to,

@@ -6,9 +6,7 @@ import {
   TableForeignKey,
 } from 'typeorm';
 
-export class Phase13EmailNotifications1749201400000
-  implements MigrationInterface
-{
+export class Phase13EmailNotifications1749201400000 implements MigrationInterface {
   name = 'Phase13EmailNotifications1749201400000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

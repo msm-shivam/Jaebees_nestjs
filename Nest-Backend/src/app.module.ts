@@ -36,6 +36,7 @@ import { EmailNotificationsModule } from './modules/email-notifications/email-no
 import { FinanceAccountingModule } from './modules/finance-accounting/finance-accounting.module';
 import { ReportsBusinessIntelligenceModule } from './modules/reports-bi/reports-bi.module';
 import { SecurityComplianceModule } from './modules/security-compliance/security-compliance.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { SystemSettingsCmsModule } from './modules/system-settings-cms/system-settings-cms.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -79,6 +80,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     FinanceAccountingModule,
     ReportsBusinessIntelligenceModule,
     SecurityComplianceModule,
+    CatalogModule,
     SystemSettingsCmsModule,
   ],
   providers: [

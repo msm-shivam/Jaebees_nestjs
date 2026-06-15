@@ -12,7 +12,10 @@ export class SavedReportService {
     private readonly savedReportRepo: Repository<SavedReport>,
   ) {}
 
-  async create(dto: CreateSavedReportDto, createdBy?: string): Promise<SavedReport> {
+  async create(
+    dto: CreateSavedReportDto,
+    createdBy?: string,
+  ): Promise<SavedReport> {
     const report = this.savedReportRepo.create({
       ...dto,
       createdBy: createdBy ?? null,

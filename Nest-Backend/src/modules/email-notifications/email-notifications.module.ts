@@ -42,9 +42,6 @@ import { AdminCommunicationAnalyticsController } from './controllers/admin-commu
     EmailCampaignService,
     EmailAnalyticsService,
   ],
-  exports: [
-    EmailNotificationService,
-    TransactionalEmailService,
-  ],
+  exports: [EmailNotificationService, TransactionalEmailService],
 })
 export class EmailNotificationsModule {}

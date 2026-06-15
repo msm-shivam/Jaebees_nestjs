@@ -28,9 +28,15 @@ export class Phase23SystemSettingsCms1749202700000 implements MigrationInterface
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_system_settings_key" ON "system_settings" ("key")`);
-    await queryRunner.query(`CREATE INDEX "idx_system_settings_category" ON "system_settings" ("category")`);
-    await queryRunner.query(`CREATE INDEX "idx_system_settings_created_at" ON "system_settings" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_system_settings_key" ON "system_settings" ("key")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_system_settings_category" ON "system_settings" ("category")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_system_settings_created_at" ON "system_settings" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "cms_pages" (
@@ -47,10 +53,18 @@ export class Phase23SystemSettingsCms1749202700000 implements MigrationInterface
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_cms_pages_slug" ON "cms_pages" ("slug")`);
-    await queryRunner.query(`CREATE INDEX "idx_cms_pages_status" ON "cms_pages" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_cms_pages_page_type" ON "cms_pages" ("page_type")`);
-    await queryRunner.query(`CREATE INDEX "idx_cms_pages_created_at" ON "cms_pages" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_cms_pages_slug" ON "cms_pages" ("slug")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_cms_pages_status" ON "cms_pages" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_cms_pages_page_type" ON "cms_pages" ("page_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_cms_pages_created_at" ON "cms_pages" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "homepage_sections" (
@@ -65,9 +79,15 @@ export class Phase23SystemSettingsCms1749202700000 implements MigrationInterface
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX "idx_homepage_sections_section_key" ON "homepage_sections" ("section_key")`);
-    await queryRunner.query(`CREATE INDEX "idx_homepage_sections_sort_order" ON "homepage_sections" ("sort_order")`);
-    await queryRunner.query(`CREATE INDEX "idx_homepage_sections_created_at" ON "homepage_sections" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_homepage_sections_section_key" ON "homepage_sections" ("section_key")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_homepage_sections_sort_order" ON "homepage_sections" ("sort_order")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_homepage_sections_created_at" ON "homepage_sections" ("created_at")`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "contact_settings" (

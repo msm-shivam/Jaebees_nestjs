@@ -13,7 +13,9 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "CK_finance_sequence_counters_locked" CHECK (locked = 1)
       )
     `);
-    await queryRunner.query(`INSERT INTO finance_sequence_counters (locked, last_number) VALUES (1, 0)`);
+    await queryRunner.query(
+      `INSERT INTO finance_sequence_counters (locked, last_number) VALUES (1, 0)`,
+    );
 
     await queryRunner.query(`
       CREATE TABLE "settlement_sequence_counters" (
@@ -23,7 +25,9 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "CK_settlement_sequence_counters_locked" CHECK (locked = 1)
       )
     `);
-    await queryRunner.query(`INSERT INTO settlement_sequence_counters (locked, last_number) VALUES (1, 0)`);
+    await queryRunner.query(
+      `INSERT INTO settlement_sequence_counters (locked, last_number) VALUES (1, 0)`,
+    );
 
     // Enums
     await queryRunner.query(`
@@ -55,10 +59,18 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "PK_financial_transactions" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_financial_transactions_number" ON "financial_transactions" ("transaction_number")`);
-    await queryRunner.query(`CREATE INDEX "idx_financial_transactions_type" ON "financial_transactions" ("type")`);
-    await queryRunner.query(`CREATE INDEX "idx_financial_transactions_reference" ON "financial_transactions" ("reference_type", "reference_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_financial_transactions_created_at" ON "financial_transactions" ("created_at")`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_financial_transactions_number" ON "financial_transactions" ("transaction_number")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_financial_transactions_type" ON "financial_transactions" ("type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_financial_transactions_reference" ON "financial_transactions" ("reference_type", "reference_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_financial_transactions_created_at" ON "financial_transactions" ("created_at")`,
+    );
 
     // ledger_entries
     await queryRunner.query(`
@@ -77,10 +89,18 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "PK_ledger_entries" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_ledger_entries_transaction_id" ON "ledger_entries" ("transaction_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_ledger_entries_account_code" ON "ledger_entries" ("account_code")`);
-    await queryRunner.query(`CREATE INDEX "idx_ledger_entries_created_at" ON "ledger_entries" ("created_at")`);
-    await queryRunner.query(`ALTER TABLE "ledger_entries" ADD CONSTRAINT "FK_ledger_entries_transaction_id" FOREIGN KEY ("transaction_id") REFERENCES "financial_transactions"("id") ON DELETE CASCADE`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_ledger_entries_transaction_id" ON "ledger_entries" ("transaction_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_ledger_entries_account_code" ON "ledger_entries" ("account_code")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_ledger_entries_created_at" ON "ledger_entries" ("created_at")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ledger_entries" ADD CONSTRAINT "FK_ledger_entries_transaction_id" FOREIGN KEY ("transaction_id") REFERENCES "financial_transactions"("id") ON DELETE CASCADE`,
+    );
 
     // settlements
     await queryRunner.query(`
@@ -100,10 +120,18 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "PK_settlements" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX "idx_settlements_number" ON "settlements" ("settlement_number")`);
-    await queryRunner.query(`CREATE INDEX "idx_settlements_supplier_id" ON "settlements" ("supplier_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_settlements_status" ON "settlements" ("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_settlements_created_at" ON "settlements" ("created_at")`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "idx_settlements_number" ON "settlements" ("settlement_number")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_settlements_supplier_id" ON "settlements" ("supplier_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_settlements_status" ON "settlements" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_settlements_created_at" ON "settlements" ("created_at")`,
+    );
 
     // tax_records
     await queryRunner.query(`
@@ -120,10 +148,18 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "PK_tax_records" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_tax_records_order_id" ON "tax_records" ("order_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_tax_records_tax_type" ON "tax_records" ("tax_type")`);
-    await queryRunner.query(`CREATE INDEX "idx_tax_records_created_at" ON "tax_records" ("created_at")`);
-    await queryRunner.query(`ALTER TABLE "tax_records" ADD CONSTRAINT "FK_tax_records_order_id" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE SET NULL`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_tax_records_order_id" ON "tax_records" ("order_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_tax_records_tax_type" ON "tax_records" ("tax_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_tax_records_created_at" ON "tax_records" ("created_at")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tax_records" ADD CONSTRAINT "FK_tax_records_order_id" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE SET NULL`,
+    );
 
     // expense_records
     await queryRunner.query(`
@@ -141,9 +177,15 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "PK_expense_records" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_expense_records_category" ON "expense_records" ("category")`);
-    await queryRunner.query(`CREATE INDEX "idx_expense_records_expense_date" ON "expense_records" ("expense_date")`);
-    await queryRunner.query(`CREATE INDEX "idx_expense_records_created_at" ON "expense_records" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_expense_records_category" ON "expense_records" ("category")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_expense_records_expense_date" ON "expense_records" ("expense_date")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_expense_records_created_at" ON "expense_records" ("created_at")`,
+    );
 
     // financial_audits
     await queryRunner.query(`
@@ -160,8 +202,12 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
         CONSTRAINT "PK_financial_audits" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_financial_audits_entity" ON "financial_audits" ("entity_type", "entity_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_financial_audits_created_at" ON "financial_audits" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_financial_audits_entity" ON "financial_audits" ("entity_type", "entity_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_financial_audits_created_at" ON "financial_audits" ("created_at")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -174,7 +220,9 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
     await queryRunner.query(`DROP INDEX "idx_expense_records_category"`);
     await queryRunner.query(`DROP TABLE "expense_records"`);
 
-    await queryRunner.query(`ALTER TABLE "tax_records" DROP CONSTRAINT "FK_tax_records_order_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "tax_records" DROP CONSTRAINT "FK_tax_records_order_id"`,
+    );
     await queryRunner.query(`DROP INDEX "idx_tax_records_created_at"`);
     await queryRunner.query(`DROP INDEX "idx_tax_records_tax_type"`);
     await queryRunner.query(`DROP INDEX "idx_tax_records_order_id"`);
@@ -186,14 +234,20 @@ export class Phase20FinanceAccounting1749202400000 implements MigrationInterface
     await queryRunner.query(`DROP INDEX "idx_settlements_number"`);
     await queryRunner.query(`DROP TABLE "settlements"`);
 
-    await queryRunner.query(`ALTER TABLE "ledger_entries" DROP CONSTRAINT "FK_ledger_entries_transaction_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "ledger_entries" DROP CONSTRAINT "FK_ledger_entries_transaction_id"`,
+    );
     await queryRunner.query(`DROP INDEX "idx_ledger_entries_created_at"`);
     await queryRunner.query(`DROP INDEX "idx_ledger_entries_account_code"`);
     await queryRunner.query(`DROP INDEX "idx_ledger_entries_transaction_id"`);
     await queryRunner.query(`DROP TABLE "ledger_entries"`);
 
-    await queryRunner.query(`DROP INDEX "idx_financial_transactions_created_at"`);
-    await queryRunner.query(`DROP INDEX "idx_financial_transactions_reference"`);
+    await queryRunner.query(
+      `DROP INDEX "idx_financial_transactions_created_at"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "idx_financial_transactions_reference"`,
+    );
     await queryRunner.query(`DROP INDEX "idx_financial_transactions_type"`);
     await queryRunner.query(`DROP INDEX "idx_financial_transactions_number"`);
     await queryRunner.query(`DROP TABLE "financial_transactions"`);

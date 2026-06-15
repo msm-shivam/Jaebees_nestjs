@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { ReviewStatus } from './enums/review-status.enum';
-import { ReviewAnalyticsResponseDto, RatingDistributionDto } from './dto/review-analytics-response.dto';
+import {
+  ReviewAnalyticsResponseDto,
+  RatingDistributionDto,
+} from './dto/review-analytics-response.dto';
 
 @Injectable()
 export class ReviewAnalyticsService {
@@ -13,7 +16,9 @@ export class ReviewAnalyticsService {
   ) {}
 
   async getAnalytics(): Promise<ReviewAnalyticsResponseDto> {
-    const totalReviews = await this.reviewRepository.count({ withDeleted: false });
+    const totalReviews = await this.reviewRepository.count({
+      withDeleted: false,
+    });
     const approvedReviews = await this.reviewRepository.count({
       where: { status: ReviewStatus.APPROVED },
     });

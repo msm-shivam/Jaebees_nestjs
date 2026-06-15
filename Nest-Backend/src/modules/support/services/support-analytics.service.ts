@@ -16,11 +16,21 @@ export class SupportAnalyticsService {
 
   async getSummary() {
     const total = await this.ticketRepo.count();
-    const open = await this.ticketRepo.count({ where: { status: TicketStatus.OPEN } });
-    const assigned = await this.ticketRepo.count({ where: { status: TicketStatus.ASSIGNED } });
-    const inProgress = await this.ticketRepo.count({ where: { status: TicketStatus.IN_PROGRESS } });
-    const resolved = await this.ticketRepo.count({ where: { status: TicketStatus.RESOLVED } });
-    const closed = await this.ticketRepo.count({ where: { status: TicketStatus.CLOSED } });
+    const open = await this.ticketRepo.count({
+      where: { status: TicketStatus.OPEN },
+    });
+    const assigned = await this.ticketRepo.count({
+      where: { status: TicketStatus.ASSIGNED },
+    });
+    const inProgress = await this.ticketRepo.count({
+      where: { status: TicketStatus.IN_PROGRESS },
+    });
+    const resolved = await this.ticketRepo.count({
+      where: { status: TicketStatus.RESOLVED },
+    });
+    const closed = await this.ticketRepo.count({
+      where: { status: TicketStatus.CLOSED },
+    });
 
     const avgResponse = await this.slaLogRepo
       .createQueryBuilder('sla')
@@ -61,8 +71,14 @@ export class SupportAnalyticsService {
       .createQueryBuilder('t')
       .select('t.assigned_to', 'agentId')
       .addSelect('COUNT(*)', 'ticketsAssigned')
-      .addSelect('SUM(CASE WHEN t.status = :resolved THEN 1 ELSE 0 END)', 'ticketsResolved')
-      .addSelect('AVG(EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600)', 'avgResolutionHours')
+      .addSelect(
+        'SUM(CASE WHEN t.status = :resolved THEN 1 ELSE 0 END)',
+        'ticketsResolved',
+      )
+      .addSelect(
+        'AVG(EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600)',
+        'avgResolutionHours',
+      )
       .setParameter('resolved', TicketStatus.RESOLVED)
       .where('t.assigned_to IS NOT NULL')
       .groupBy('t.assigned_to')
@@ -73,7 +89,9 @@ export class SupportAnalyticsService {
 
   async getSlaSummary() {
     const total = await this.slaLogRepo.count();
-    const withResponse = await this.slaLogRepo.count({ where: { resolvedAt: null as any } });
+    const withResponse = await this.slaLogRepo.count({
+      where: { resolvedAt: null as any },
+    });
     return {
       totalTracked: total,
       pendingResponse: withResponse,

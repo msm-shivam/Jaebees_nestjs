@@ -17,16 +17,36 @@ export class TicketAudit extends BaseEntity {
   @Column({ type: 'varchar', length: 50 })
   action: string;
 
-  @Column({ name: 'previous_status', type: 'enum', enum: TicketStatus, nullable: true })
+  @Column({
+    name: 'previous_status',
+    type: 'enum',
+    enum: TicketStatus,
+    nullable: true,
+  })
   previousStatus: TicketStatus | null;
 
-  @Column({ name: 'new_status', type: 'enum', enum: TicketStatus, nullable: true })
+  @Column({
+    name: 'new_status',
+    type: 'enum',
+    enum: TicketStatus,
+    nullable: true,
+  })
   newStatus: TicketStatus | null;
 
-  @Column({ name: 'previous_priority', type: 'enum', enum: TicketPriority, nullable: true })
+  @Column({
+    name: 'previous_priority',
+    type: 'enum',
+    enum: TicketPriority,
+    nullable: true,
+  })
   previousPriority: TicketPriority | null;
 
-  @Column({ name: 'new_priority', type: 'enum', enum: TicketPriority, nullable: true })
+  @Column({
+    name: 'new_priority',
+    type: 'enum',
+    enum: TicketPriority,
+    nullable: true,
+  })
   newPriority: TicketPriority | null;
 
   @Column({ name: 'previous_assignee', type: 'uuid', nullable: true })

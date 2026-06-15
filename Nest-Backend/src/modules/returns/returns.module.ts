@@ -33,11 +33,7 @@ import { AdminReturnAnalyticsController } from './controllers/admin-return-analy
     AdminReturnController,
     AdminReturnAnalyticsController,
   ],
-  providers: [
-    ReturnService,
-    ReverseLogisticsService,
-    ReturnAnalyticsService,
-  ],
+  providers: [ReturnService, ReverseLogisticsService, ReturnAnalyticsService],
   exports: [ReturnService],
 })
 export class ReturnsModule {}

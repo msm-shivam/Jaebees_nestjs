@@ -22,7 +22,9 @@ export class CampaignService {
     return this.campaignRepository.save(campaign);
   }
 
-  async findAll(query: CampaignQueryDto): Promise<{ items: Campaign[]; total: number }> {
+  async findAll(
+    query: CampaignQueryDto,
+  ): Promise<{ items: Campaign[]; total: number }> {
     const { search, type, isActive, page = 1, limit = 20 } = query;
     const where: any = {};
     if (search) {

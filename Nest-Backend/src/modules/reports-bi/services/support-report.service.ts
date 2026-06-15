@@ -8,10 +8,17 @@ export class SupportReportService {
   async getReport(dateFrom?: string, dateTo?: string) {
     const params: Record<string, unknown> = {};
     let whereClause = '';
-    if (dateFrom) { whereClause += ' AND t.created_at >= :dateFrom'; params.dateFrom = dateFrom; }
-    if (dateTo) { whereClause += ' AND t.created_at <= :dateTo'; params.dateTo = dateTo; }
+    if (dateFrom) {
+      whereClause += ' AND t.created_at >= :dateFrom';
+      params.dateFrom = dateFrom;
+    }
+    if (dateTo) {
+      whereClause += ' AND t.created_at <= :dateTo';
+      params.dateTo = dateTo;
+    }
 
-    const summary = await this.dataSource.query(`
+    const summary = await this.dataSource.query(
+      `
       SELECT
         COUNT(*)::int as "totalTickets",
         COUNT(CASE WHEN t.status = 'OPEN' THEN 1 END)::int as "openTickets",
@@ -23,13 +30,18 @@ export class SupportReportService {
           ELSE 0 END as "resolutionRate"
       FROM "support_tickets" t
       WHERE 1=1 ${whereClause}
-    `, params);
+    `,
+      params,
+    );
 
-    const byPriority = await this.dataSource.query(`
+    const byPriority = await this.dataSource.query(
+      `
       SELECT t.priority as "priority", COUNT(*)::int as "count"
       FROM "support_tickets" t WHERE 1=1 ${whereClause}
       GROUP BY t.priority ORDER BY t.priority
-    `, params);
+    `,
+      params,
+    );
 
     const row = summary[0];
     return {

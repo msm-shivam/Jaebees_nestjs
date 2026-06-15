@@ -1,4 +1,11 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+  DeleteDateColumn,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { Review } from './review.entity';
 

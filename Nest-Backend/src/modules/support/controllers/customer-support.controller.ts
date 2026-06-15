@@ -1,5 +1,12 @@
 import {
-  Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -24,12 +31,18 @@ export class CustomerSupportController {
   }
 
   @Get('my')
-  async findMy(@CurrentUser() user: JwtPayload, @Query() query: TicketQueryDto) {
+  async findMy(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: TicketQueryDto,
+  ) {
     return this.supportService.findMyTickets(user.sub, query);
   }
 
   @Get(':id')
-  async findOne(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async findOne(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.supportService.findOne(id, user.sub);
   }
 
@@ -43,12 +56,18 @@ export class CustomerSupportController {
   }
 
   @Post(':id/close')
-  async close(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async close(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.supportService.close(user.sub, id);
   }
 
   @Post(':id/reopen')
-  async reopen(@CurrentUser() _user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  async reopen(
+    @CurrentUser() _user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.supportService.reopen(id);
   }
 
@@ -58,7 +77,12 @@ export class CustomerSupportController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: RateTicketDto,
   ) {
-    return this.supportService.rateTicket(id, dto.rating, user.sub, dto.comment);
+    return this.supportService.rateTicket(
+      id,
+      dto.rating,
+      user.sub,
+      dto.comment,
+    );
   }
 
   @Get(':id/attachments')

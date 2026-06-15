@@ -16,7 +16,9 @@ export class SecurityService {
   ) {}
 
   async logEvent(params: {
-    eventType: SecurityEventType; severity?: SeverityLevel; userId?: string | null;
+    eventType: SecurityEventType;
+    severity?: SeverityLevel;
+    userId?: string | null;
     details?: Record<string, unknown> | null;
   }) {
     const event = this.eventRepo.create({
@@ -29,8 +31,11 @@ export class SecurityService {
   }
 
   async logLoginAttempt(params: {
-    email: string; status: string; userId?: string | null;
-    ipAddress?: string | null; userAgent?: string | null;
+    email: string;
+    status: string;
+    userId?: string | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
   }) {
     const activity = this.loginActivityRepo.create({
       email: params.email,
@@ -43,17 +48,28 @@ export class SecurityService {
   }
 
   async findEvents(query: {
-    eventType?: string; severity?: string; userId?: string;
-    dateFrom?: string; dateTo?: string; page?: number; limit?: number;
+    eventType?: string;
+    severity?: string;
+    userId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    limit?: number;
   }) {
-    const qb = this.eventRepo.createQueryBuilder('e')
+    const qb = this.eventRepo
+      .createQueryBuilder('e')
       .orderBy('e.createdAt', 'DESC');
 
-    if (query.eventType) qb.andWhere('e.event_type = :eventType', { eventType: query.eventType });
-    if (query.severity) qb.andWhere('e.severity = :severity', { severity: query.severity });
-    if (query.userId) qb.andWhere('e.user_id = :userId', { userId: query.userId });
-    if (query.dateFrom) qb.andWhere('e.created_at >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('e.created_at <= :dateTo', { dateTo: query.dateTo });
+    if (query.eventType)
+      qb.andWhere('e.event_type = :eventType', { eventType: query.eventType });
+    if (query.severity)
+      qb.andWhere('e.severity = :severity', { severity: query.severity });
+    if (query.userId)
+      qb.andWhere('e.user_id = :userId', { userId: query.userId });
+    if (query.dateFrom)
+      qb.andWhere('e.created_at >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('e.created_at <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
@@ -65,16 +81,25 @@ export class SecurityService {
   }
 
   async findLoginActivities(query: {
-    status?: string; userId?: string;
-    dateFrom?: string; dateTo?: string; page?: number; limit?: number;
+    status?: string;
+    userId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    limit?: number;
   }) {
-    const qb = this.loginActivityRepo.createQueryBuilder('l')
+    const qb = this.loginActivityRepo
+      .createQueryBuilder('l')
       .orderBy('l.loginAt', 'DESC');
 
-    if (query.status) qb.andWhere('l.status = :status', { status: query.status });
-    if (query.userId) qb.andWhere('l.user_id = :userId', { userId: query.userId });
-    if (query.dateFrom) qb.andWhere('l.login_at >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('l.login_at <= :dateTo', { dateTo: query.dateTo });
+    if (query.status)
+      qb.andWhere('l.status = :status', { status: query.status });
+    if (query.userId)
+      qb.andWhere('l.user_id = :userId', { userId: query.userId });
+    if (query.dateFrom)
+      qb.andWhere('l.login_at >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('l.login_at <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;

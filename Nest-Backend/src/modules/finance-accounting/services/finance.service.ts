@@ -22,17 +22,31 @@ export class FinanceService {
     return this.transactionRepo.save(transaction);
   }
 
-  async findAll(query: { page?: number; limit?: number; type?: TransactionType; dateFrom?: string; dateTo?: string }) {
-    const qb = this.transactionRepo.createQueryBuilder('t')
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    type?: TransactionType;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const qb = this.transactionRepo
+      .createQueryBuilder('t')
       .orderBy('t.createdAt', 'DESC');
 
     if (query.type) qb.andWhere('t.type = :type', { type: query.type });
-    if (query.dateFrom) qb.andWhere('t.transaction_date >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('t.transaction_date <= :dateTo', { dateTo: query.dateTo });
+    if (query.dateFrom)
+      qb.andWhere('t.transaction_date >= :dateFrom', {
+        dateFrom: query.dateFrom,
+      });
+    if (query.dateTo)
+      qb.andWhere('t.transaction_date <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
-    const [data, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 
@@ -43,7 +57,8 @@ export class FinanceService {
   }
 
   async getRevenue(dateFrom?: string, dateTo?: string) {
-    const qb = this.transactionRepo.createQueryBuilder('t')
+    const qb = this.transactionRepo
+      .createQueryBuilder('t')
       .select('COALESCE(SUM(t.amount), 0)', 'total')
       .addSelect('COUNT(t.id)', 'count')
       .where('t.type = :type', { type: TransactionType.ORDER_PAYMENT })
@@ -56,7 +71,8 @@ export class FinanceService {
   }
 
   async getTotalRefunds(dateFrom?: string, dateTo?: string) {
-    const qb = this.transactionRepo.createQueryBuilder('t')
+    const qb = this.transactionRepo
+      .createQueryBuilder('t')
       .select('COALESCE(SUM(t.amount), 0)', 'total')
       .addSelect('COUNT(t.id)', 'count')
       .where('t.type = :type', { type: TransactionType.REFUND });

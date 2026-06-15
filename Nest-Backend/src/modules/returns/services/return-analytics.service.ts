@@ -21,14 +21,25 @@ export class ReturnAnalyticsService {
       .select('COALESCE(SUM(r.totalRefundAmount), 0)', 'total')
       .getRawOne();
 
-    const pendingCount = await this.returnRepo.count({ where: { status: ReturnRequestStatus.REQUESTED } });
-    const approvedCount = await this.returnRepo.count({ where: { status: ReturnRequestStatus.APPROVED } });
-    const rejectedCount = await this.returnRepo.count({ where: { status: ReturnRequestStatus.REJECTED } });
-    const refundedCount = await this.returnRepo.count({ where: { status: ReturnRequestStatus.REFUNDED } });
+    const pendingCount = await this.returnRepo.count({
+      where: { status: ReturnRequestStatus.REQUESTED },
+    });
+    const approvedCount = await this.returnRepo.count({
+      where: { status: ReturnRequestStatus.APPROVED },
+    });
+    const rejectedCount = await this.returnRepo.count({
+      where: { status: ReturnRequestStatus.REJECTED },
+    });
+    const refundedCount = await this.returnRepo.count({
+      where: { status: ReturnRequestStatus.REFUNDED },
+    });
 
     const avgProcessingTime = await this.returnRepo
       .createQueryBuilder('r')
-      .select('AVG(EXTRACT(EPOCH FROM (r.completed_at - r.requested_at)) / 3600)', 'avgHours')
+      .select(
+        'AVG(EXTRACT(EPOCH FROM (r.completed_at - r.requested_at)) / 3600)',
+        'avgHours',
+      )
       .where('r.completed_at IS NOT NULL')
       .getRawOne();
 
@@ -36,7 +47,9 @@ export class ReturnAnalyticsService {
       totalReturns,
       totalRefundAmount: Number(totalRefundAmount?.total || 0),
       returnRate: 0,
-      averageProcessingTimeHours: Math.round(Number(avgProcessingTime?.avgHours || 0)),
+      averageProcessingTimeHours: Math.round(
+        Number(avgProcessingTime?.avgHours || 0),
+      ),
       pendingReturns: pendingCount,
       approvedReturns: approvedCount,
       rejectedReturns: rejectedCount,
@@ -72,7 +85,9 @@ export class ReturnAnalyticsService {
       .select("TO_CHAR(r.requested_at, 'YYYY-MM')", 'month')
       .addSelect('SUM(r.totalRefundAmount)', 'total')
       .addSelect('COUNT(*)', 'count')
-      .where('r.status IN (:...statuses)', { statuses: [ReturnRequestStatus.REFUNDED, ReturnRequestStatus.COMPLETED] })
+      .where('r.status IN (:...statuses)', {
+        statuses: [ReturnRequestStatus.REFUNDED, ReturnRequestStatus.COMPLETED],
+      })
       .groupBy("TO_CHAR(r.requested_at, 'YYYY-MM')")
       .orderBy('month', 'DESC')
       .limit(12)

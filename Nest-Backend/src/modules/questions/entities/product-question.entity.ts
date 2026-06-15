@@ -1,4 +1,11 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../products/entities/product.entity';
@@ -30,6 +37,8 @@ export class ProductQuestion extends BaseEntity {
   @Column({ type: 'enum', enum: QuestionStatus, default: QuestionStatus.OPEN })
   status: QuestionStatus;
 
-  @OneToMany(() => ProductAnswer, (answer) => answer.question, { cascade: true })
+  @OneToMany(() => ProductAnswer, (answer) => answer.question, {
+    cascade: true,
+  })
   answers: ProductAnswer[];
 }

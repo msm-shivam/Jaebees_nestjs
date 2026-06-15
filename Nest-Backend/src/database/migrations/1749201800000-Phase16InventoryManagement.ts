@@ -41,7 +41,9 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "UQ_suppliers_code" UNIQUE ("code")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_suppliers_active" ON "suppliers" ("is_active")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_suppliers_active" ON "suppliers" ("is_active")`,
+    );
 
     // Create purchase_orders table
     await queryRunner.query(`
@@ -61,8 +63,12 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "FK_purchase_orders_supplier" FOREIGN KEY ("supplier_id") REFERENCES "suppliers"("id") ON DELETE RESTRICT
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_purchase_orders_supplier" ON "purchase_orders" ("supplier_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_purchase_orders_status" ON "purchase_orders" ("status")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_purchase_orders_supplier" ON "purchase_orders" ("supplier_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_purchase_orders_status" ON "purchase_orders" ("status")`,
+    );
 
     // Create purchase_order_items table
     await queryRunner.query(`
@@ -79,8 +85,12 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "FK_purchase_order_items_order" FOREIGN KEY ("purchase_order_id") REFERENCES "purchase_orders"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_purchase_order_items_order" ON "purchase_order_items" ("purchase_order_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_purchase_order_items_variant" ON "purchase_order_items" ("variant_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_purchase_order_items_order" ON "purchase_order_items" ("purchase_order_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_purchase_order_items_variant" ON "purchase_order_items" ("variant_id")`,
+    );
 
     // Create goods_receipts table
     await queryRunner.query(`
@@ -96,7 +106,9 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "FK_goods_receipts_purchase_order" FOREIGN KEY ("purchase_order_id") REFERENCES "purchase_orders"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_goods_receipts_purchase_order" ON "goods_receipts" ("purchase_order_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_goods_receipts_purchase_order" ON "goods_receipts" ("purchase_order_id")`,
+    );
 
     // Create goods_receipt_items table
     await queryRunner.query(`
@@ -110,8 +122,12 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "FK_goods_receipt_items_receipt" FOREIGN KEY ("receipt_id") REFERENCES "goods_receipts"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_goods_receipt_items_receipt" ON "goods_receipt_items" ("receipt_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_goods_receipt_items_variant" ON "goods_receipt_items" ("variant_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_goods_receipt_items_receipt" ON "goods_receipt_items" ("receipt_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_goods_receipt_items_variant" ON "goods_receipt_items" ("variant_id")`,
+    );
 
     // Create stock_adjustments table
     await queryRunner.query(`
@@ -126,7 +142,9 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "PK_stock_adjustments_id" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_stock_adjustments_variant" ON "stock_adjustments" ("variant_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_stock_adjustments_variant" ON "stock_adjustments" ("variant_id")`,
+    );
 
     // Create stock_alerts table
     await queryRunner.query(`
@@ -143,8 +161,12 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "PK_stock_alerts_id" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_stock_alerts_variant" ON "stock_alerts" ("variant_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_stock_alerts_resolved" ON "stock_alerts" ("is_resolved")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_stock_alerts_variant" ON "stock_alerts" ("variant_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_stock_alerts_resolved" ON "stock_alerts" ("is_resolved")`,
+    );
 
     // Create inventory_audits table
     await queryRunner.query(`
@@ -162,22 +184,36 @@ export class Phase16InventoryManagement1749201800000 implements MigrationInterfa
         CONSTRAINT "PK_inventory_audits_id" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "idx_inventory_audits_variant" ON "inventory_audits" ("variant_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_inventory_audits_action" ON "inventory_audits" ("action_type")`);
-    await queryRunner.query(`CREATE INDEX "idx_inventory_audits_created" ON "inventory_audits" ("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_inventory_audits_variant" ON "inventory_audits" ("variant_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_inventory_audits_action" ON "inventory_audits" ("action_type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_inventory_audits_created" ON "inventory_audits" ("created_at")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE IF EXISTS "inventory_audits" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "stock_alerts" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "stock_adjustments" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "goods_receipt_items" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "goods_receipt_items" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "goods_receipts" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "purchase_order_items" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "purchase_order_items" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "purchase_orders" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "suppliers" CASCADE`);
 
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."inventory_audits_action_type_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."purchase_order_status_enum"`);
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."inventory_audits_action_type_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."purchase_order_status_enum"`,
+    );
   }
 }

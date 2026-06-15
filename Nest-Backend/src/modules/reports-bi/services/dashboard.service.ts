@@ -25,15 +25,31 @@ export class DashboardService {
       couponsResult,
       campaignsResult,
     ] = await Promise.all([
-      this.dataSource.query(`SELECT COUNT(*)::int as "total", COALESCE(SUM(total_amount),0) as "revenue" FROM "orders" WHERE status NOT IN ('CANCELLED')`),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total", COALESCE(SUM(total_amount),0) as "revenue" FROM "orders" WHERE status NOT IN ('CANCELLED')`,
+      ),
       this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "users"`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "products" WHERE is_active = true`),
-      this.dataSource.query(`SELECT COALESCE(SUM(total_refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "return_requests" WHERE status = 'REQUESTED'`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "support_tickets" WHERE status = 'OPEN'`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity <= low_stock_threshold AND quantity > 0`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "coupons" WHERE is_active = true`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "email_campaigns" WHERE status = 'SENDING'`),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "products" WHERE is_active = true`,
+      ),
+      this.dataSource.query(
+        `SELECT COALESCE(SUM(total_refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "return_requests" WHERE status = 'REQUESTED'`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "support_tickets" WHERE status = 'OPEN'`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity <= low_stock_threshold AND quantity > 0`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "coupons" WHERE is_active = true`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "email_campaigns" WHERE status = 'SENDING'`,
+      ),
     ]);
 
     const metrics = {
@@ -49,17 +65,27 @@ export class DashboardService {
       activeCampaigns: parseInt(campaignsResult[0]?.total ?? '0', 10),
     };
 
-    await this.saveSnapshot(DashboardType.MAIN, metrics as Record<string, unknown>);
+    await this.saveSnapshot(DashboardType.MAIN, metrics);
     return { data: metrics };
   }
 
   async getFinance() {
     const [revenue, refunds, expenses, tax, settlements] = await Promise.all([
-      this.dataSource.query(`SELECT COALESCE(SUM(total_amount),0) as "gross" FROM "orders" WHERE status NOT IN ('CANCELLED')`),
-      this.dataSource.query(`SELECT COALESCE(SUM(total_refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`),
-      this.dataSource.query(`SELECT COALESCE(SUM(amount),0) as "total" FROM "expense_records"`),
-      this.dataSource.query(`SELECT COALESCE(SUM(tax_amount),0) as "total" FROM "tax_records"`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "settlements" WHERE status = 'PENDING'`),
+      this.dataSource.query(
+        `SELECT COALESCE(SUM(total_amount),0) as "gross" FROM "orders" WHERE status NOT IN ('CANCELLED')`,
+      ),
+      this.dataSource.query(
+        `SELECT COALESCE(SUM(total_refund_amount),0) as "total" FROM "return_requests" WHERE status IN ('COMPLETED','REFUNDED')`,
+      ),
+      this.dataSource.query(
+        `SELECT COALESCE(SUM(amount),0) as "total" FROM "expense_records"`,
+      ),
+      this.dataSource.query(
+        `SELECT COALESCE(SUM(tax_amount),0) as "total" FROM "tax_records"`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "total" FROM "settlements" WHERE status = 'PENDING'`,
+      ),
     ]);
 
     const grossRevenue = parseFloat(revenue[0]?.gross ?? '0');
@@ -78,18 +104,29 @@ export class DashboardService {
       pendingSettlements: parseInt(settlements[0]?.total ?? '0', 10),
     };
 
-    await this.saveSnapshot(DashboardType.FINANCE, metrics as Record<string, unknown>);
+    await this.saveSnapshot(DashboardType.FINANCE, metrics);
     return { data: metrics };
   }
 
   async getInventory() {
-    const [stockValue, lowStock, outOfStock, purchaseOrders, goodsReceipts] = await Promise.all([
-      this.dataSource.query(`SELECT COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, 0)), 0) as "total" FROM "inventories" i LEFT JOIN "product_variants" pv ON pv.id = i.variant_id`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity <= low_stock_threshold AND quantity > 0`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity = 0`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status IN ('APPROVED','PARTIALLY_RECEIVED')`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status = 'APPROVED'`),
-    ]);
+    const [stockValue, lowStock, outOfStock, purchaseOrders, goodsReceipts] =
+      await Promise.all([
+        this.dataSource.query(
+          `SELECT COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, 0)), 0) as "total" FROM "inventories" i LEFT JOIN "product_variants" pv ON pv.id = i.variant_id`,
+        ),
+        this.dataSource.query(
+          `SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity <= low_stock_threshold AND quantity > 0`,
+        ),
+        this.dataSource.query(
+          `SELECT COUNT(*)::int as "total" FROM "inventories" WHERE quantity = 0`,
+        ),
+        this.dataSource.query(
+          `SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status IN ('APPROVED','PARTIALLY_RECEIVED')`,
+        ),
+        this.dataSource.query(
+          `SELECT COUNT(*)::int as "total" FROM "purchase_orders" WHERE status = 'APPROVED'`,
+        ),
+      ]);
 
     const metrics = {
       totalInventoryValue: parseFloat(stockValue[0]?.total ?? '0'),
@@ -99,7 +136,7 @@ export class DashboardService {
       pendingGoodsReceipts: parseInt(goodsReceipts[0]?.total ?? '0', 10),
     };
 
-    await this.saveSnapshot(DashboardType.INVENTORY, metrics as Record<string, unknown>);
+    await this.saveSnapshot(DashboardType.INVENTORY, metrics);
     return { data: metrics };
   }
 
@@ -131,7 +168,7 @@ export class DashboardService {
       slaComplianceRate: parseFloat(slaResult[0]?.slaCompliance ?? '0'),
     };
 
-    await this.saveSnapshot(DashboardType.SUPPORT, metrics as Record<string, unknown>);
+    await this.saveSnapshot(DashboardType.SUPPORT, metrics);
     return { data: metrics };
   }
 
@@ -145,8 +182,12 @@ export class DashboardService {
           COALESCE(SUM(clicks_count), 0)::int as "clicks"
         FROM "email_campaigns"
       `),
-      this.dataSource.query(`SELECT COUNT(*)::int as "sent" FROM "email_notifications"`),
-      this.dataSource.query(`SELECT COUNT(*)::int as "uses" FROM "coupon_usage"`),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "sent" FROM "email_notifications"`,
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*)::int as "uses" FROM "coupon_usage"`,
+      ),
     ]);
 
     const totalOpens = parseInt(campaigns[0]?.opens ?? '0', 10);
@@ -155,17 +196,26 @@ export class DashboardService {
     const metrics = {
       activeCampaigns: parseInt(campaigns[0]?.active ?? '0', 10),
       emailsSent: parseInt(emails[0]?.sent ?? '0', 10),
-      openRate: totalOpens > 0 ? parseFloat((totalClicks / totalOpens * 100).toFixed(2)) : 0,
-      clickRate: totalOpens > 0 ? parseFloat((totalClicks / totalOpens * 100).toFixed(2)) : 0,
+      openRate:
+        totalOpens > 0
+          ? parseFloat(((totalClicks / totalOpens) * 100).toFixed(2))
+          : 0,
+      clickRate:
+        totalOpens > 0
+          ? parseFloat(((totalClicks / totalOpens) * 100).toFixed(2))
+          : 0,
       couponUsage: parseInt(couponUsage[0]?.uses ?? '0', 10),
       promotionUsage: 0,
     };
 
-    await this.saveSnapshot(DashboardType.MARKETING, metrics as Record<string, unknown>);
+    await this.saveSnapshot(DashboardType.MARKETING, metrics);
     return { data: metrics };
   }
 
-  private async saveSnapshot(dashboardType: DashboardType, metrics: Record<string, unknown>) {
+  private async saveSnapshot(
+    dashboardType: DashboardType,
+    metrics: Record<string, unknown>,
+  ) {
     const snapshot = this.snapshotRepo.create({
       snapshotDate: new Date(),
       dashboardType,

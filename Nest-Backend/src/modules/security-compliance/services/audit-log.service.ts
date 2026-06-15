@@ -11,17 +11,30 @@ export class AuditLogService {
   ) {}
 
   async findAll(query: {
-    action?: string; entityType?: string; userId?: string;
-    dateFrom?: string; dateTo?: string; page?: number; limit?: number;
+    action?: string;
+    entityType?: string;
+    userId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    limit?: number;
   }) {
-    const qb = this.auditLogRepo.createQueryBuilder('a')
+    const qb = this.auditLogRepo
+      .createQueryBuilder('a')
       .orderBy('a.createdAt', 'DESC');
 
-    if (query.action) qb.andWhere('a.action = :action', { action: query.action });
-    if (query.entityType) qb.andWhere('a.entity_type = :entityType', { entityType: query.entityType });
-    if (query.userId) qb.andWhere('a.user_id = :userId', { userId: query.userId });
-    if (query.dateFrom) qb.andWhere('a.created_at >= :dateFrom', { dateFrom: query.dateFrom });
-    if (query.dateTo) qb.andWhere('a.created_at <= :dateTo', { dateTo: query.dateTo });
+    if (query.action)
+      qb.andWhere('a.action = :action', { action: query.action });
+    if (query.entityType)
+      qb.andWhere('a.entity_type = :entityType', {
+        entityType: query.entityType,
+      });
+    if (query.userId)
+      qb.andWhere('a.user_id = :userId', { userId: query.userId });
+    if (query.dateFrom)
+      qb.andWhere('a.created_at >= :dateFrom', { dateFrom: query.dateFrom });
+    if (query.dateTo)
+      qb.andWhere('a.created_at <= :dateTo', { dateTo: query.dateTo });
 
     const page = query.page || 1;
     const limit = query.limit || 20;
@@ -46,9 +59,14 @@ export class AuditLogService {
   }
 
   async log(params: {
-    userId?: string | null; action: string; entityType: string; entityId?: string | null;
-    oldValues?: Record<string, unknown> | null; newValues?: Record<string, unknown> | null;
-    ipAddress?: string | null; userAgent?: string | null;
+    userId?: string | null;
+    action: string;
+    entityType: string;
+    entityId?: string | null;
+    oldValues?: Record<string, unknown> | null;
+    newValues?: Record<string, unknown> | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
   }) {
     const log = this.auditLogRepo.create({
       userId: params.userId ?? null,

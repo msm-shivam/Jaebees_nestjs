@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, MoreThan, Not } from 'typeorm';
 import { Product, ProductStatus } from '../../products/entities/product.entity';
-import { ProductVariant, VariantStatus } from '../../product-variants/entities/product-variant.entity';
+import {
+  ProductVariant,
+  VariantStatus,
+} from '../../product-variants/entities/product-variant.entity';
 import { OrderItem } from '../../orders/entities/order-item.entity';
 import { ProductView } from '../entities/product-view.entity';
 import { WishlistItem } from '../../wishlist/entities/wishlist-item.entity';
@@ -50,10 +53,10 @@ export class DiscoveryService {
       .andWhere('p.deleted_at IS NULL')
       .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
       .andWhere('p.is_active = :isActive', { isActive: true })
-      .andWhere(
-        '(p.category_id = :catId OR p.brand_id = :brandId)',
-        { catId: product.categoryId, brandId: product.brandId },
-      )
+      .andWhere('(p.category_id = :catId OR p.brand_id = :brandId)', {
+        catId: product.categoryId,
+        brandId: product.brandId,
+      })
       .orderBy(
         `CASE WHEN p.category_id = :catId2 AND p.brand_id = :brandId2 THEN 0 WHEN p.category_id = :catId3 THEN 1 ELSE 2 END`,
         'ASC',
@@ -84,7 +87,10 @@ export class DiscoveryService {
       order: { createdAt: 'DESC' },
       take: limit * 2,
     });
-    const productIds = [...new Set(otherViews.map((v) => v.productId))].slice(0, limit);
+    const productIds = [...new Set(otherViews.map((v) => v.productId))].slice(
+      0,
+      limit,
+    );
     return this.findProducts(productIds);
   }
 
@@ -120,9 +126,21 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
-      .leftJoin('product_views', 'pv', 'pv.product_id = p.id AND pv.created_at > :since')
-      .leftJoin('order_items', 'oi', 'oi.product_id = p.id AND oi.created_at > :since2')
-      .leftJoin('wishlist_items', 'wi', 'wi.product_id = p.id AND wi.created_at > :since3')
+      .leftJoin(
+        'product_views',
+        'pv',
+        'pv.product_id = p.id AND pv.created_at > :since',
+      )
+      .leftJoin(
+        'order_items',
+        'oi',
+        'oi.product_id = p.id AND oi.created_at > :since2',
+      )
+      .leftJoin(
+        'wishlist_items',
+        'wi',
+        'wi.product_id = p.id AND wi.created_at > :since3',
+      )
       .where('p.deleted_at IS NULL')
       .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
       .andWhere('p.is_active = :isActive', { isActive: true })
@@ -132,7 +150,10 @@ export class DiscoveryService {
       .groupBy('p.id')
       .addGroupBy('brand.id')
       .addGroupBy('category.id')
-      .addSelect('COUNT(DISTINCT pv.id) + COUNT(DISTINCT oi.id) + COUNT(DISTINCT wi.id)', 'trending_score')
+      .addSelect(
+        'COUNT(DISTINCT pv.id) + COUNT(DISTINCT oi.id) + COUNT(DISTINCT wi.id)',
+        'trending_score',
+      )
       .orderBy('"trending_score"', 'DESC')
       .take(limit)
       .getMany();
@@ -198,7 +219,9 @@ export class DiscoveryService {
         .groupBy('p.category_id')
         .orderBy('COUNT(*)', 'DESC')
         .getRawMany();
-      const topCategoryIds = categories.map((c: any) => c.p_category_id).filter(Boolean);
+      const topCategoryIds = categories
+        .map((c: any) => c.p_category_id)
+        .filter(Boolean);
       if (topCategoryIds.length > 0) {
         return this.productRepo
           .createQueryBuilder('p')
@@ -208,7 +231,9 @@ export class DiscoveryService {
           .where('p.deleted_at IS NULL')
           .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
           .andWhere('p.is_active = :isActive', { isActive: true })
-          .andWhere('p.id NOT IN (:...excludeIds)', { excludeIds: viewedProductIds })
+          .andWhere('p.id NOT IN (:...excludeIds)', {
+            excludeIds: viewedProductIds,
+          })
           .andWhere('p.category_id IN (:...catIds)', { catIds: topCategoryIds })
           .orderBy('p.average_rating', 'DESC')
           .take(limit)
@@ -250,8 +275,16 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
-      .leftJoin('product_views', 'pv', 'pv.product_id = p.id AND pv.created_at > :since')
-      .leftJoin('order_items', 'oi', 'oi.product_id = p.id AND oi.created_at > :since2')
+      .leftJoin(
+        'product_views',
+        'pv',
+        'pv.product_id = p.id AND pv.created_at > :since',
+      )
+      .leftJoin(
+        'order_items',
+        'oi',
+        'oi.product_id = p.id AND oi.created_at > :since2',
+      )
       .where('p.deleted_at IS NULL')
       .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
       .andWhere('p.is_active = :isActive', { isActive: true })
@@ -260,7 +293,10 @@ export class DiscoveryService {
       .groupBy('p.id')
       .addGroupBy('brand.id')
       .addGroupBy('category.id')
-      .addSelect('COUNT(DISTINCT pv.id) + COUNT(DISTINCT oi.id)', 'trending_score')
+      .addSelect(
+        'COUNT(DISTINCT pv.id) + COUNT(DISTINCT oi.id)',
+        'trending_score',
+      )
       .orderBy('"trending_score"', 'DESC')
       .take(limit)
       .getMany();
@@ -282,14 +318,20 @@ export class DiscoveryService {
       seasonKeywords = ['winter', 'snow', 'indoor'];
     }
 
-    const conditions = seasonKeywords.map((_, i) =>
-      `(LOWER(p.name) LIKE :kw${i} OR LOWER(p.description) LIKE :kw${i} OR LOWER(p.short_description) LIKE :kw${i} OR LOWER(p.meta_keywords) LIKE :kw${i})`,
-    ).join(' OR ');
+    const conditions = seasonKeywords
+      .map(
+        (_, i) =>
+          `(LOWER(p.name) LIKE :kw${i} OR LOWER(p.description) LIKE :kw${i} OR LOWER(p.short_description) LIKE :kw${i} OR LOWER(p.meta_keywords) LIKE :kw${i})`,
+      )
+      .join(' OR ');
 
-    const params = seasonKeywords.reduce((acc, kw, i) => {
-      acc[`kw${i}`] = `%${kw}%`;
-      return acc;
-    }, {} as Record<string, string>);
+    const params = seasonKeywords.reduce(
+      (acc, kw, i) => {
+        acc[`kw${i}`] = `%${kw}%`;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
     return this.productRepo
       .createQueryBuilder('p')
@@ -305,7 +347,10 @@ export class DiscoveryService {
       .getMany();
   }
 
-  async recordView(userId: string | undefined, productId: string): Promise<void> {
+  async recordView(
+    userId: string | undefined,
+    productId: string,
+  ): Promise<void> {
     if (!userId) return;
     const existing = await this.productViewRepo.findOne({
       where: { userId, productId },

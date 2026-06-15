@@ -17,7 +17,11 @@ export class EmailLog extends BaseEntity {
   @Column({ type: 'varchar', length: 100 })
   provider: string;
 
-  @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.PENDING,
+  })
   status: NotificationStatus;
 
   @Column({ name: 'error_message', type: 'text', nullable: true })

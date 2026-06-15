@@ -21,7 +21,12 @@ export class ExpenseRecord extends BaseEntity {
   @Column({ name: 'vendor_name', type: 'varchar', length: 255, nullable: true })
   vendorName: string | null;
 
-  @Column({ name: 'invoice_number', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'invoice_number',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   invoiceNumber: string | null;
 
   @Column({ name: 'created_by', type: 'uuid', nullable: true })

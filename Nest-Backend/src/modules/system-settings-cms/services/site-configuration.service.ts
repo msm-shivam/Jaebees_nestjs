@@ -11,7 +11,10 @@ export class SiteConfigurationService {
   ) {}
 
   async find(): Promise<SiteConfiguration | null> {
-    const records = await this.configRepo.find({ take: 1, order: { createdAt: 'DESC' } });
+    const records = await this.configRepo.find({
+      take: 1,
+      order: { createdAt: 'DESC' },
+    });
     return records[0] ?? null;
   }
 

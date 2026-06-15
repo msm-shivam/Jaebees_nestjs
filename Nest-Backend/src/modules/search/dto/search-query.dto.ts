@@ -1,4 +1,15 @@
-import { IsOptional, IsString, IsUUID, IsNumber, Min, Max, IsBoolean, IsEnum, IsArray, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsNumber,
+  Min,
+  Max,
+  IsBoolean,
+  IsEnum,
+  IsArray,
+  IsDateString,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
 
@@ -31,70 +42,93 @@ export class SearchQueryDto {
   @IsOptional()
   @IsUUID('4', { each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   categoryIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsUUID('4', { each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   brandIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsUUID('4', { each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   collectionIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsUUID('4', { each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   attributeValueIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   sizes?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   colors?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   materials?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   genders?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   sports?: string[];
 
-  @ApiPropertyOptional({ description: 'Comma-separated price bucket labels (e.g. 0-500,500-1000,1000-2000,2000+)' })
+  @ApiPropertyOptional({
+    description:
+      'Comma-separated price bucket labels (e.g. 0-500,500-1000,1000-2000,2000+)',
+  })
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   priceBuckets?: string[];
 
   @ApiPropertyOptional()
@@ -106,7 +140,9 @@ export class SearchQueryDto {
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   tags?: string[];
 
   @ApiPropertyOptional()
@@ -205,21 +241,27 @@ export class SearchQueryDto {
   @IsOptional()
   @IsUUID('4', { each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   sellerIds?: string[];
 
   @ApiPropertyOptional({ description: 'Future inventory-aware search' })
   @IsOptional()
   @IsUUID('4', { each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   warehouseIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
   @IsArray()
-  @Transform(({ value }) => (typeof value === 'string' ? value.split(',') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
   countryOfOrigin?: string[];
 
   @ApiPropertyOptional({ enum: SortOption, default: SortOption.RELEVANCE })
