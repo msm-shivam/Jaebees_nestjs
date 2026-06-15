@@ -41,10 +41,12 @@ import { SystemSettingsCmsModule } from './modules/system-settings-cms/system-se
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { ImagesModule } from './modules/images';
 
 @Module({
   imports: [
     ConfigModule,
+    
     DatabaseModule,
     AuthModule,
     UsersModule,
@@ -82,6 +84,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     SecurityComplianceModule,
     CatalogModule,
     SystemSettingsCmsModule,
+    ImagesModule
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

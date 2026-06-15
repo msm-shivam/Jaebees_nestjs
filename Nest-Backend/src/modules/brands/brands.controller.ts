@@ -10,10 +10,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -28,6 +32,8 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @ApiTags('Admin — Brands')
 @ApiBearerAuth('JWT')
@@ -37,12 +43,22 @@ export class BrandsController {
   constructor(private readonly brandsService: BrandsService) {}
 
   @Post()
+    @UseInterceptors(  FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/brands',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),)
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ description: 'Create a brand with optional image upload', type: CreateBrandDto })
   @HttpCode(HttpStatus.CREATED)
   @Permissions(DefaultPermissions.BRAND_CREATE)
   @ApiOperation({ summary: 'Create a new brand' })
   @ApiResponse({ status: 201, description: 'Brand created.' })
-  async create(@Body() dto: CreateBrandDto) {
-    return this.brandsService.create(dto);
+  async create(@Body() dto: CreateBrandDto, @UploadedFile() image: Express.Multer.File,) {
+    return this.brandsService.create(dto, image);
   }
 
   @Get()
@@ -69,6 +85,16 @@ export class BrandsController {
   }
 
   @Patch(':id')
+   @UseInterceptors(  FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/brands',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),)
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ description: 'Update a brand with optional image upload', type: UpdateBrandDto })
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.BRAND_UPDATE)
   @ApiOperation({ summary: 'Update a brand' })
@@ -76,8 +102,9 @@ export class BrandsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBrandDto,
+    @UploadedFile() image?: Express.Multer.File
   ) {
-    return this.brandsService.update(id, dto);
+    return this.brandsService.update(id, dto, image);
   }
 
   @Delete(':id')

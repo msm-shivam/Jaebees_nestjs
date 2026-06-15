@@ -20,6 +20,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiBody,
 } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -32,6 +33,7 @@ import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @ApiTags('Admin — Categories')
 @ApiBearerAuth('JWT')
@@ -41,16 +43,22 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-@UseInterceptors(FileInterceptor('image'))
-
-@ApiConsumes('multipart/form-data')
+  @UseInterceptors(  FileInterceptor('image', {
+    storage: diskStorage({
+      destination: './uploads/categories',
+      filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+      },
+    }),
+  }),)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Create a category with optional image upload', type: CreateCategoryDto })
   @HttpCode(HttpStatus.CREATED)
   @Permissions(DefaultPermissions.CATEGORY_CREATE)
-
   @ApiOperation({ summary: 'Create a new category' })
   @ApiResponse({ status: 201, description: 'Category created.' })
-  async create(@Body() dto: CreateCategoryDto, @UploadedFile() image: Express.Multer.File,) {
-    
+  async create(@Body() dto: CreateCategoryDto, @UploadedFile() image: Express.Multer.File) {
+;
     return this.categoriesService.create(dto,image);
   }
 
@@ -78,16 +86,24 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @HttpCode(HttpStatus.OK)
-  @Permissions(DefaultPermissions.CATEGORY_UPDATE)
-  @ApiOperation({ summary: 'Update a category' })
-  @ApiResponse({ status: 200, description: 'Category updated.' })
-  async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateCategoryDto,
-  ) {
-    return this.categoriesService.update(id, dto);
-  }
+@UseInterceptors(
+  FileInterceptor('image', {
+    storage: diskStorage({
+      destination: './uploads/categories',
+      filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+      },
+    }),
+  }),
+)
+@ApiConsumes('multipart/form-data')
+async update(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Body() dto: UpdateCategoryDto,
+  @UploadedFile() image?: Express.Multer.File,
+) {
+  return this.categoriesService.update(id, dto, image);
+}
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)

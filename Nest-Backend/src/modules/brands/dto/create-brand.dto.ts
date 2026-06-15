@@ -27,13 +27,12 @@ export class CreateBrandDto {
   })
   slug?: string;
 
+ @IsOptional()
   @ApiPropertyOptional({
-    example: 'https://cdn.sport.com/brands/nike-logo.png',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  logo?: string;
+  type: 'string',
+  format: 'binary',
+})
+image?: any;
 
   @ApiPropertyOptional({ example: 'Just Do It' })
   @IsOptional()
@@ -41,9 +40,6 @@ export class CreateBrandDto {
   @MaxLength(2000)
   description?: string;
 
-  @ApiPropertyOptional({ example: true, default: true })
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  
   
 }

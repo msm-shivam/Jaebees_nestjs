@@ -43,14 +43,5 @@ image?: any;
   @MaxLength(2000)
   description?: string;
 
-  @ApiPropertyOptional({ example: 0, default: 0 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  sortOrder?: number;
-
-  @ApiPropertyOptional({ example: true, default: true })
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  
 }
