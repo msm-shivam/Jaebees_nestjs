@@ -43,6 +43,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ImagesModule } from './modules/images';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { ImagesModule } from './modules/images';
     CatalogModule,
     SystemSettingsCmsModule,
     ImagesModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
