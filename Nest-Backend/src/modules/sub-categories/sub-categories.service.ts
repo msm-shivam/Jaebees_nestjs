@@ -27,7 +27,9 @@ export class SubCategoriesService {
   async create(
     dto: CreateSubCategoryDto,
   ): Promise<{ message: string; data: SubCategoryResponseDto }> {
-    await this.categoriesService.findByIdOrFail(dto.categoryId);
+    const category = await this.categoriesService.findByIdOrFail(
+      dto.categoryId,
+    );
 
     const slug = dto.slug ?? toSlug(dto.name);
     await this.ensureSlugUnique(slug);
@@ -43,6 +45,7 @@ export class SubCategoriesService {
     });
 
     const saved = await this.subCategoryRepo.save(subCategory);
+    saved.category = category;
     return {
       message: 'Sub category created successfully.',
       data: this.toResponse(saved),
@@ -60,6 +63,7 @@ export class SubCategoriesService {
 
     const [items, total] = await this.subCategoryRepo.findAndCount({
       where,
+      relations: { category: true },
       order: { sortOrder: 'ASC', name: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -103,6 +107,7 @@ export class SubCategoriesService {
     if (dto.isActive !== undefined) subCategory.isActive = dto.isActive;
 
     const saved = await this.subCategoryRepo.save(subCategory);
+    saved.category = subCategory.category;
     return {
       message: 'Sub category updated successfully.',
       data: this.toResponse(saved),
@@ -116,7 +121,10 @@ export class SubCategoriesService {
   }
 
   private async findByIdOrFail(id: string): Promise<SubCategory> {
-    const subCategory = await this.subCategoryRepo.findOne({ where: { id } });
+    const subCategory = await this.subCategoryRepo.findOne({
+      where: { id },
+      relations: { category: true },
+    });
     if (!subCategory) {
       throw new NotFoundException(CatalogMessages.SUB_CATEGORY_NOT_FOUND);
     }
@@ -134,8 +142,10 @@ export class SubCategoriesService {
   }
 
   private toResponse(subCategory: SubCategory): SubCategoryResponseDto {
-    return plainToInstance(SubCategoryResponseDto, subCategory, {
-      excludeExtraneousValues: true,
-    });
+    return plainToInstance(
+      SubCategoryResponseDto,
+      { ...subCategory, categoryName: subCategory.category?.name ?? null },
+      { excludeExtraneousValues: true },
+    );
   }
 }

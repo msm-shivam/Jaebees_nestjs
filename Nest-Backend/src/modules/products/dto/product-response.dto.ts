@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { ProductStatus } from '../entities/product.entity';
+import { ProductImageResponseDto } from './product-image-response.dto';
 
 export class ProductResponseDto {
   @Expose()
@@ -12,8 +13,16 @@ export class ProductResponseDto {
   brandId: string;
 
   @Expose()
+  @ApiProperty({ example: 'Nike' })
+  brandName: string;
+
+  @Expose()
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   categoryId: string;
+
+  @Expose()
+  @ApiProperty({ example: 'Running Shoes' })
+  categoryName: string;
 
   @Expose()
   @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -76,6 +85,11 @@ export class ProductResponseDto {
   @Expose()
   @ApiProperty({ example: true, description: 'Whether the product is active' })
   isActive: boolean;
+
+  @Expose()
+  @ApiProperty({ type: [ProductImageResponseDto], description: 'Product images' })
+  @Type(() => ProductImageResponseDto)
+  images: ProductImageResponseDto[];
 
   @Expose()
   @ApiProperty({ example: '2024-01-15T10:30:00Z' })

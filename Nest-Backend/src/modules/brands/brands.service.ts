@@ -4,9 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Brand } from './entities/brand.entity';
+import { Category } from '../categories/entities/category.entity';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { BrandQueryDto } from './dto/brand-query.dto';
@@ -20,6 +21,8 @@ export class BrandsService {
   constructor(
     @InjectRepository(Brand)
     private readonly brandRepo: Repository<Brand>,
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
   ) {}
 
   async create(
@@ -29,12 +32,23 @@ export class BrandsService {
     const slug = dto.slug ?? toSlug(dto.name);
     await this.ensureSlugUnique(slug);
 
+    let categories: Category[] = [];
+    if (dto.categoryIds && dto.categoryIds.length > 0) {
+      categories = await this.categoryRepo.find({
+        where: { id: In(dto.categoryIds) },
+      });
+      if (categories.length !== dto.categoryIds.length) {
+        throw new BadRequestException('One or more categories not found.');
+      }
+    }
+
     const brand = this.brandRepo.create({
       name: dto.name,
       slug,
       logo: image ? `/uploads/brands/${image.filename}` : null,
       description: dto.description ?? null,
       isActive: true,
+      categories,
     });
 
     const saved = await this.brandRepo.save(brand);
@@ -54,6 +68,7 @@ export class BrandsService {
 
     const [items, total] = await this.brandRepo.findAndCount({
       where,
+      relations: { categories: true },
       order: { name: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -97,6 +112,18 @@ export class BrandsService {
     if (image?.filename) {
       brand.logo = `/uploads/brands/${image.filename}`;
     }
+
+    // Replace category links if provided
+    if (dto.categoryIds !== undefined) {
+      const categories = await this.categoryRepo.find({
+        where: { id: In(dto.categoryIds) },
+      });
+      if (categories.length !== dto.categoryIds.length) {
+        throw new BadRequestException('One or more categories not found.');
+      }
+      brand.categories = categories;
+    }
+
     const saved = await this.brandRepo.save(brand);
     return {
       message: 'Brand updated successfully.',
@@ -110,8 +137,16 @@ export class BrandsService {
     return { message: 'Brand deleted successfully.' };
   }
 
+  async findBrandCategories(id: string) {
+    const brand = await this.findByIdOrFail(id);
+    return brand.categories;
+  }
+
   private async findByIdOrFail(id: string): Promise<Brand> {
-    const brand = await this.brandRepo.findOne({ where: { id } });
+    const brand = await this.brandRepo.findOne({
+      where: { id },
+      relations: { categories: true },
+    });
     if (!brand) throw new NotFoundException(CatalogMessages.BRAND_NOT_FOUND);
     return brand;
   }

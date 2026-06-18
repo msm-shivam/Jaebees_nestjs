@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   MaxLength,
 } from 'class-validator';
@@ -39,4 +41,14 @@ export class CreateBrandDto {
   @IsString()
   @MaxLength(2000)
   description?: string;
+
+  @ApiPropertyOptional({
+    example: ['96a36a37-7be7-44b3-9cb2-d318e3d196f4'],
+    description: 'Category IDs to link this brand to',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @IsNotEmpty({ each: true })
+  categoryIds?: string[];
 }

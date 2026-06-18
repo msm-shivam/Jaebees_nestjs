@@ -5,6 +5,7 @@ import { Exclude, Expose } from 'class-transformer';
 export class SubCategoryResponseDto {
   @Expose() @ApiProperty() id: string;
   @Expose() @ApiProperty() categoryId: string;
+  @Expose() @ApiProperty() categoryName: string;
   @Expose() @ApiProperty() name: string;
   @Expose() @ApiProperty() slug: string;
   @Expose() @ApiPropertyOptional() image: string | null;

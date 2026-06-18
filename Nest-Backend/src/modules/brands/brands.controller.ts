@@ -78,6 +78,22 @@ export class BrandsController {
     return this.brandsService.findAll(query);
   }
 
+  @Get(':id/categories')
+  @HttpCode(HttpStatus.OK)
+  @Permissions(DefaultPermissions.BRAND_VIEW)
+  @ApiOperation({
+    summary: 'Get all categories linked to a brand',
+    description: 'Returns all categories associated with the given brand ID.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Categories returned.',
+  })
+  @ApiResponse({ status: 404, description: 'Brand not found.' })
+  async findBrandCategories(@Param('id', ParseUUIDPipe) id: string) {
+    return this.brandsService.findBrandCategories(id);
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.BRAND_VIEW)

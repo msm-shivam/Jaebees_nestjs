@@ -1,5 +1,14 @@
-import { Column, DeleteDateColumn, Entity, Index } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  JoinTable,
+  ManyToMany,
+} from 'typeorm';
+import { Expose } from 'class-transformer';
 import { BaseEntity } from '../../../shared/entities/base.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('brands')
 @Index(['slug'], { unique: true })
@@ -22,4 +31,15 @@ export class Brand extends BaseEntity {
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
+
+  @Expose()
+  @ManyToMany(() => Category, (category) => category.brands, {
+    cascade: false,
+  })
+  @JoinTable({
+    name: 'brand_categories',
+    joinColumn: { name: 'brand_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
+  })
+  categories: Category[];
 }

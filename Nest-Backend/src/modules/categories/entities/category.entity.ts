@@ -1,5 +1,14 @@
-import { Column, DeleteDateColumn, Entity, Index, OneToMany } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  ManyToMany,
+  OneToMany,
+} from 'typeorm';
+import { Expose } from 'class-transformer';
 import { BaseEntity } from '../../../shared/entities/base.entity';
+import { Brand } from '../../brands/entities/brand.entity';
 import { SubCategory } from '../../sub-categories/entities/sub-category.entity';
 
 @Entity('categories')
@@ -27,6 +36,10 @@ export class Category extends BaseEntity {
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
+
+  @Expose()
+  @ManyToMany(() => Brand, (brand) => brand.categories)
+  brands: Brand[];
 
   @OneToMany(() => SubCategory, (sub) => sub.category)
   subCategories: SubCategory[];

@@ -1,5 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
+
+class LinkedBrand {
+  @Expose() @ApiProperty() id: string;
+  @Expose() @ApiProperty() name: string;
+}
 
 @Exclude()
 export class CategoryResponseDto {
@@ -10,6 +15,9 @@ export class CategoryResponseDto {
   @Expose() @ApiPropertyOptional() description: string | null;
   @Expose() @ApiProperty() sortOrder: number;
   @Expose() @ApiProperty() isActive: boolean;
+  @Expose() @ApiProperty({ type: [LinkedBrand], description: 'Linked brands' })
+  @Type(() => LinkedBrand)
+  brands: LinkedBrand[];
   @Expose() @ApiProperty() createdAt: Date;
   @Expose() @ApiProperty() updatedAt: Date;
 }

@@ -117,4 +117,12 @@ export class CreateProductDto {
   })
   @IsOptional()
   tagIds?: string[];
+
+  @ApiPropertyOptional({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    description: 'Product images to upload (max 5)',
+  })
+  @IsOptional()
+  images?: any[];
 }

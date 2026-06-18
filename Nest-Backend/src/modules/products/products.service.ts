@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Product, ProductStatus } from './entities/product.entity';
 import { ProductImage } from './entities/product-image.entity';
@@ -44,6 +44,7 @@ export class ProductsService {
 
   async create(
     dto: CreateProductDto,
+    files?: Express.Multer.File[],
   ): Promise<{ message: string; data: ProductResponseDto }> {
     // Validate Brand
     const brand = await this.brandRepo.findOne({ where: { id: dto.brandId } });
@@ -101,9 +102,23 @@ export class ProductsService {
       await this.assignTags(saved.id, dto.tagIds);
     }
 
+    // Save uploaded images
+    if (files && files.length > 0) {
+      const images = files.map((file, index) =>
+        this.productImageRepo.create({
+          productId: saved.id,
+          imageUrl: `/uploads/products/${file.filename}`,
+          sortOrder: index,
+          isPrimary: index === 0,
+        }),
+      );
+      await this.productImageRepo.save(images);
+    }
+
+    const result = await this.findByIdOrFail(saved.id);
     return {
       message: 'Product created successfully.',
-      data: this.toResponse(saved),
+      data: this.toResponse(result),
     };
   }
 
@@ -113,7 +128,11 @@ export class ProductsService {
     const sortBy = query.sortBy ?? 'name';
     const sortOrder = query.sortOrder ?? 'ASC';
 
-    const queryBuilder = this.productRepo.createQueryBuilder('product');
+    const queryBuilder = this.productRepo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.images', 'images');
 
     // Search filter
     if (query.search) {
@@ -176,7 +195,9 @@ export class ProductsService {
     const [items, total] = await queryBuilder.getManyAndCount();
 
     return paginate(
-      items.map((item) => this.toResponse(item)),
+      items.map((item) =>
+        this.toResponse(item, item.brand?.name, item.category?.name),
+      ),
       total,
       page,
       limit,
@@ -191,9 +212,43 @@ export class ProductsService {
   async update(
     id: string,
     dto: UpdateProductDto,
+    files?: Express.Multer.File[],
   ): Promise<{ message: string; data: ProductResponseDto }> {
     const product = await this.findByIdOrFail(id);
 
+    if (dto.brandId !== undefined) {
+      const brand = await this.brandRepo.findOne({ where: { id: dto.brandId } });
+      if (!brand) throw new BadRequestException('Brand not found.');
+      product.brandId = dto.brandId;
+    }
+    if (dto.categoryId !== undefined) {
+      const category = await this.categoryRepo.findOne({
+        where: { id: dto.categoryId },
+      });
+      if (!category) throw new BadRequestException('Category not found.');
+      product.categoryId = dto.categoryId;
+    }
+    if (dto.subCategoryId !== undefined) {
+      if (dto.subCategoryId) {
+        const subCategory = await this.subCategoryRepo.findOne({
+          where: { id: dto.subCategoryId },
+        });
+        if (!subCategory)
+          throw new BadRequestException('Sub Category not found.');
+        if (subCategory.categoryId !== (dto.categoryId ?? product.categoryId)) {
+          throw new BadRequestException(
+            'Sub Category does not belong to the specified Category.',
+          );
+        }
+        product.subCategoryId = dto.subCategoryId;
+      } else {
+        product.subCategoryId = null;
+      }
+    }
+    if (dto.slug !== undefined && dto.slug !== product.slug) {
+      const slug = await this.generateUniqueSlug(dto.slug);
+      product.slug = slug;
+    }
     if (dto.name !== undefined) product.name = dto.name;
     if (dto.skuPrefix !== undefined) product.skuPrefix = dto.skuPrefix;
     if (dto.shortDescription !== undefined)
@@ -207,10 +262,49 @@ export class ProductsService {
     if (dto.isFeatured !== undefined) product.isFeatured = dto.isFeatured;
     if (dto.isActive !== undefined) product.isActive = dto.isActive;
 
-    const saved = await this.productRepo.save(product);
+    await this.productRepo.save(product);
+
+    // Replace collections if provided
+    if (dto.collectionIds !== undefined) {
+      await this.productCollectionRepo.delete({ productId: id });
+      if (dto.collectionIds.length > 0) {
+        const mappings = dto.collectionIds.map((collectionId) =>
+          this.productCollectionRepo.create({ productId: id, collectionId }),
+        );
+        await this.productCollectionRepo.save(mappings);
+      }
+    }
+
+    // Replace tags if provided
+    if (dto.tagIds !== undefined) {
+      await this.productTagMappingRepo.delete({ productId: id });
+      if (dto.tagIds.length > 0) {
+        const mappings = dto.tagIds.map((tagId) =>
+          this.productTagMappingRepo.create({ productId: id, tagId }),
+        );
+        await this.productTagMappingRepo.save(mappings);
+      }
+    }
+
+    // Save uploaded images (adds to existing images)
+    if (files && files.length > 0) {
+      const lastSortOrder = await this.productImageRepo.maximum('sortOrder', {
+        productId: id,
+      });
+      const images = files.map((file, index) =>
+        this.productImageRepo.create({
+          productId: id,
+          imageUrl: `/uploads/products/${file.filename}`,
+          sortOrder: (lastSortOrder ?? 0) + index + 1,
+        }),
+      );
+      await this.productImageRepo.save(images);
+    }
+
+    const result = await this.findByIdOrFail(id);
     return {
       message: 'Product updated successfully.',
-      data: this.toResponse(saved),
+      data: this.toResponse(result),
     };
   }
 
@@ -218,6 +312,17 @@ export class ProductsService {
     const product = await this.findByIdOrFail(id);
     await this.productRepo.softRemove(product);
     return { message: 'Product deleted successfully.' };
+  }
+
+  async bulkRemove(ids: string[]): Promise<{ message: string }> {
+    const products = await this.productRepo.find({
+      where: { id: In(ids) },
+    });
+    if (!products.length) {
+      throw new NotFoundException('No products found for the given IDs.');
+    }
+    await this.productRepo.softRemove(products);
+    return { message: `${products.length} product(s) deleted successfully.` };
   }
 
   async publish(
@@ -429,7 +534,10 @@ export class ProductsService {
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   private async findByIdOrFail(id: string): Promise<Product> {
-    const product = await this.productRepo.findOne({ where: { id } });
+    const product = await this.productRepo.findOne({
+      where: { id },
+      relations: { brand: true, category: true, images: true },
+    });
     if (!product) throw new NotFoundException('Product not found.');
     return product;
   }
@@ -449,10 +557,19 @@ export class ProductsService {
     return slug;
   }
 
-  private toResponse(product: Product): ProductResponseDto {
-    return plainToInstance(ProductResponseDto, product, {
-      excludeExtraneousValues: true,
-    });
+  private toResponse(
+    product: Product,
+    brandName?: string,
+    categoryName?: string,
+  ): ProductResponseDto {
+    const images = (product.images ?? []).map((img) =>
+      this.imageToResponse(img),
+    );
+    return plainToInstance(
+      ProductResponseDto,
+      { ...product, images, brandName: brandName ?? product.brand?.name ?? null, categoryName: categoryName ?? product.category?.name ?? null },
+      { excludeExtraneousValues: true },
+    );
   }
 
   private imageToResponse(image: ProductImage): ProductImageResponseDto {

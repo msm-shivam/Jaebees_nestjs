@@ -4,9 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Category } from './entities/category.entity';
+import { Brand } from '../brands/entities/brand.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryQueryDto } from './dto/category-query.dto';
@@ -20,6 +21,8 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+    @InjectRepository(Brand)
+    private readonly brandRepo: Repository<Brand>,
   ) {}
 
   async create(
@@ -29,6 +32,16 @@ export class CategoriesService {
     const slug = dto.slug ?? toSlug(dto.name);
     await this.ensureSlugUnique(slug);
 
+    let brands: Brand[] = [];
+    if (dto.brandIds && dto.brandIds.length > 0) {
+      brands = await this.brandRepo.find({
+        where: { id: In(dto.brandIds) },
+      });
+      if (brands.length !== dto.brandIds.length) {
+        throw new BadRequestException('One or more brands not found.');
+      }
+    }
+
     const category = this.categoryRepo.create({
       name: dto.name,
       slug,
@@ -36,6 +49,7 @@ export class CategoriesService {
       description: dto.description ?? null,
       sortOrder: 0,
       isActive: true,
+      brands,
     });
 
     const saved = await this.categoryRepo.save(category);
@@ -55,6 +69,7 @@ export class CategoriesService {
 
     const [items, total] = await this.categoryRepo.findAndCount({
       where,
+      relations: { brands: true },
       order: { sortOrder: 'ASC', name: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -98,6 +113,17 @@ export class CategoriesService {
     if (dto.description !== undefined) category.description = dto.description;
     if (dto.isActive !== undefined) category.isActive = dto.isActive;
 
+    // Replace brand links if provided
+    if (dto.brandIds !== undefined) {
+      const brands = await this.brandRepo.find({
+        where: { id: In(dto.brandIds) },
+      });
+      if (brands.length !== dto.brandIds.length) {
+        throw new BadRequestException('One or more brands not found.');
+      }
+      category.brands = brands;
+    }
+
     const saved = await this.categoryRepo.save(category);
     return {
       message: 'Category updated successfully.',
@@ -112,7 +138,10 @@ export class CategoriesService {
   }
 
   async findByIdOrFail(id: string): Promise<Category> {
-    const category = await this.categoryRepo.findOne({ where: { id } });
+    const category = await this.categoryRepo.findOne({
+      where: { id },
+      relations: { brands: true },
+    });
     if (!category)
       throw new NotFoundException(CatalogMessages.CATEGORY_NOT_FOUND);
     return category;

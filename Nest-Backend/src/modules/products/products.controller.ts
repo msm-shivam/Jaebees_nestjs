@@ -10,10 +10,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -23,6 +27,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
+import { BulkDeleteDto } from './dto/bulk-delete.dto';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
 import { UpdateProductImageDto } from './dto/update-product-image.dto';
 import { ProductImageResponseDto } from './dto/product-image-response.dto';
@@ -31,6 +36,8 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @ApiTags('Admin — Products')
 @ApiBearerAuth('JWT')
@@ -42,13 +49,25 @@ export class ProductsController {
   // ─── Product CRUD ──────────────────────────────────────────────────────────
 
   @Post()
+  @UseInterceptors(
+    FilesInterceptor('images', 5, {
+      storage: diskStorage({
+        destination: './uploads/products',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @HttpCode(HttpStatus.CREATED)
   @Permissions(DefaultPermissions.PRODUCT_CREATE)
   @ApiOperation({
     summary: 'Create a new product',
     description:
-      'Creates a new product with optional collections and tags. Slug is auto-generated from name if not provided.',
+      'Creates a new product with optional collections, tags, and up to 5 image uploads. Slug is auto-generated from name if not provided.',
   })
+  @ApiBody({ type: CreateProductDto })
   @ApiResponse({
     status: 201,
     description: 'Product created successfully.',
@@ -58,8 +77,11 @@ export class ProductsController {
     status: 400,
     description: 'Invalid input or validation error.',
   })
-  async create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  async create(
+    @Body() dto: CreateProductDto,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ) {
+    return this.productsService.create(dto, files);
   }
 
   @Get()
@@ -86,13 +108,25 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(
+    FilesInterceptor('images', 5, {
+      storage: diskStorage({
+        destination: './uploads/products',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.PRODUCT_UPDATE)
   @ApiOperation({
     summary: 'Update a product',
     description:
-      'Update product details. Does not modify collections, tags, or images.',
+      'Update product details and optionally upload up to 5 images (adds to existing images). Does not modify collections or tags.',
   })
+  @ApiBody({ type: UpdateProductDto })
   @ApiResponse({
     status: 200,
     description: 'Product updated successfully.',
@@ -102,8 +136,26 @@ export class ProductsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductDto,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.productsService.update(id, dto);
+    return this.productsService.update(id, dto, files);
+  }
+
+  @Delete('bulk')
+  @HttpCode(HttpStatus.OK)
+  @Permissions(DefaultPermissions.PRODUCT_DELETE)
+  @ApiOperation({
+    summary: 'Bulk delete products',
+    description: 'Soft deletes multiple products by their IDs.',
+  })
+  @ApiBody({ type: BulkDeleteDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Products deleted successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid IDs.' })
+  async bulkRemove(@Body() dto: BulkDeleteDto) {
+    return this.productsService.bulkRemove(dto.ids);
   }
 
   @Delete(':id')
