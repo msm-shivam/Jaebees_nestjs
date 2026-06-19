@@ -19,6 +19,7 @@ export enum EmailTemplateCode {
   WISHLIST_BACK_IN_STOCK = 'wishlist_back_in_stock',
   PRICE_DROP_ALERT = 'price_drop_alert',
   REVIEW_REMINDER = 'review_reminder',
+  LOW_STOCK_ALERT = 'low_stock_alert',
 }
 
 @Entity('email_templates')

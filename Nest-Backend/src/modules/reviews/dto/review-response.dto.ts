@@ -1,69 +1,59 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Exclude, Expose, Type } from 'class-transformer';
 
+@Exclude()
 class ReviewUserDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  firstName: string;
-
-  @ApiProperty()
-  lastName: string;
+  @Expose() @ApiProperty() id: string;
+  @Expose() @ApiProperty() firstName: string;
+  @Expose() @ApiProperty() lastName: string;
 }
 
+@Exclude()
 class ReviewProductDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  name: string;
-
-  @ApiProperty()
-  slug: string;
+  @Expose() @ApiProperty() id: string;
+  @Expose() @ApiProperty() name: string;
+  @Expose() @ApiProperty() slug: string;
 }
 
+@Exclude()
 class ReviewImageDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  imageUrl: string;
-
-  @ApiProperty()
-  sortOrder: number;
+  @Expose() @ApiProperty() id: string;
+  @Expose() @ApiProperty() imageUrl: string;
+  @Expose() @ApiProperty() sortOrder: number;
 }
 
+@Exclude()
 export class ReviewResponseDto {
-  @ApiProperty()
-  id: string;
+  @Expose() @ApiProperty() id: string;
+  @Expose() @ApiProperty() rating: number;
+  @Expose() @ApiPropertyOptional() title?: string;
+  @Expose() @ApiPropertyOptional() comment?: string;
+  @Expose() @ApiProperty() status: string;
+  @Expose() @ApiProperty() isVerifiedPurchase: boolean;
+  @Expose() @ApiProperty() helpfulCount: number;
 
-  @ApiProperty()
-  rating: number;
+  @Expose()
+  @ApiProperty({ example: 'John Doe' })
+  userName: string;
 
-  @ApiPropertyOptional()
-  title?: string;
+  @Expose()
+  @ApiProperty({ example: 'Nike Air Zoom Pegasus 41' })
+  productName: string;
 
-  @ApiPropertyOptional()
-  comment?: string;
-
-  @ApiProperty()
-  status: string;
-
-  @ApiProperty()
-  isVerifiedPurchase: boolean;
-
-  @ApiProperty()
-  helpfulCount: number;
-
-  @ApiProperty()
+  @Expose()
+  @ApiProperty({ type: ReviewUserDto })
+  @Type(() => ReviewUserDto)
   user: ReviewUserDto;
 
-  @ApiProperty()
+  @Expose()
+  @ApiProperty({ type: ReviewProductDto })
+  @Type(() => ReviewProductDto)
   product: ReviewProductDto;
 
+  @Expose()
   @ApiProperty({ type: [ReviewImageDto] })
+  @Type(() => ReviewImageDto)
   images: ReviewImageDto[];
 
-  @ApiProperty()
-  createdAt: Date;
+  @Expose() @ApiProperty() createdAt: Date;
 }

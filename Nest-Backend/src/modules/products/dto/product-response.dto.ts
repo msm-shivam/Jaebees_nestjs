@@ -87,6 +87,38 @@ export class ProductResponseDto {
   isActive: boolean;
 
   @Expose()
+  @ApiProperty({ example: 4.5, description: 'Average rating based on approved reviews' })
+  averageRating: number;
+
+  @Expose()
+  @ApiProperty({ example: 42, description: 'Total number of ratings' })
+  totalRatings: number;
+
+  @Expose()
+  @ApiProperty({ example: 42, description: 'Total number of reviews' })
+  totalReviews: number;
+
+  @Expose()
+  @ApiProperty({ example: 20, description: 'Count of 5-star ratings' })
+  fiveStarCount: number;
+
+  @Expose()
+  @ApiProperty({ example: 10, description: 'Count of 4-star ratings' })
+  fourStarCount: number;
+
+  @Expose()
+  @ApiProperty({ example: 7, description: 'Count of 3-star ratings' })
+  threeStarCount: number;
+
+  @Expose()
+  @ApiProperty({ example: 3, description: 'Count of 2-star ratings' })
+  twoStarCount: number;
+
+  @Expose()
+  @ApiProperty({ example: 2, description: 'Count of 1-star ratings' })
+  oneStarCount: number;
+
+  @Expose()
   @ApiProperty({ type: [ProductImageResponseDto], description: 'Product images' })
   @Type(() => ProductImageResponseDto)
   images: ProductImageResponseDto[];

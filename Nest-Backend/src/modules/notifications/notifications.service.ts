@@ -258,6 +258,25 @@ export class NotificationsService {
     });
   }
 
+  async sendLowStockAlert(options: {
+    to: string;
+    sku: string;
+    productName: string;
+    currentQuantity: number;
+    threshold: number;
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      to: options.to,
+      templateCode: EmailTemplateCode.LOW_STOCK_ALERT,
+      context: {
+        sku: options.sku,
+        productName: options.productName,
+        currentQuantity: options.currentQuantity,
+        threshold: options.threshold,
+      },
+    });
+  }
+
   async sendTestEmail(recipient: string, templateCode: string): Promise<void> {
     return this.sendTemplatedEmail({
       to: recipient,

@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { Inventory } from './entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
@@ -13,6 +13,12 @@ import { AdjustInventoryDto } from './dto/adjust-inventory.dto';
 import { ReserveInventoryDto } from './dto/reserve-inventory.dto';
 import { ReleaseInventoryDto } from './dto/release-inventory.dto';
 import { InventoryResponseDto } from './dto/inventory-response.dto';
+import {
+  InventoryQueryDto,
+  InventoryFilterStatus,
+} from './dto/inventory-query.dto';
+import { plainToInstance } from 'class-transformer';
+import { ProductVariantResponseDto } from '../product-variants/dto/product-variant-response.dto';
 
 @Injectable()
 export class InventoryService {
@@ -24,9 +30,26 @@ export class InventoryService {
   ) {}
 
   async create(dto: CreateInventoryDto) {
+    let variantId = dto.variantId;
+
+    // Resolve variant: by ID or by SKU
+    if (!variantId && dto.variantSku) {
+      const variantBySku = await this.variantRepo.findOne({
+        where: { sku: dto.variantSku },
+      });
+      if (!variantBySku) {
+        throw new NotFoundException(`Variant with SKU "${dto.variantSku}" not found`);
+      }
+      variantId = variantBySku.id;
+    }
+
+    if (!variantId) {
+      throw new BadRequestException('Either variantId or variantSku is required');
+    }
+
     // Validate variant exists
     const variant = await this.variantRepo.findOne({
-      where: { id: dto.variantId },
+      where: { id: variantId },
     });
     if (!variant) {
       throw new NotFoundException('Variant not found');
@@ -34,7 +57,7 @@ export class InventoryService {
 
     // Check if inventory already exists for this variant
     const existingInventory = await this.inventoryRepo.findOne({
-      where: { variantId: dto.variantId },
+      where: { variantId },
     });
 
     if (existingInventory) {
@@ -45,23 +68,76 @@ export class InventoryService {
 
     // Create inventory
     const inventory = this.inventoryRepo.create({
-      variantId: dto.variantId,
+      variantId,
       quantity: dto.quantity,
       reservedQuantity: dto.reservedQuantity || 0,
       availableQuantity: dto.quantity - (dto.reservedQuantity || 0),
-      lowStockThreshold: dto.lowStockThreshold || 5,
+      lowStockThreshold: dto.lowStockThreshold ?? 5,
+      reorderPoint: dto.reorderPoint ?? 10,
+      reorderQuantity: dto.reorderQuantity ?? 50,
     });
 
     const savedInventory = await this.inventoryRepo.save(inventory);
     return this.toResponse(savedInventory);
   }
 
-  async findAll() {
-    const inventories = await this.inventoryRepo.find({
-      relations: { variant: true },
-    });
+  async findAll(query: InventoryQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
 
-    return inventories.map((inv) => this.toResponse(inv));
+    const qb = this.inventoryRepo
+      .createQueryBuilder('inv')
+      .leftJoinAndSelect('inv.variant', 'variant');
+
+    // Search by variant SKU
+    if (query.search) {
+      qb.andWhere('variant.sku ILIKE :search', {
+        search: `%${query.search}%`,
+      });
+    }
+
+    // Filter by stock status
+    if (query.status && query.status !== InventoryFilterStatus.ALL) {
+      if (query.status === InventoryFilterStatus.LOW_STOCK) {
+        qb.andWhere(
+          'inv.availableQuantity > 0 AND inv.availableQuantity <= inv.low_stock_threshold',
+        );
+      } else if (query.status === InventoryFilterStatus.OUT_OF_STOCK) {
+        qb.andWhere('inv.availableQuantity = 0');
+      } else if (query.status === InventoryFilterStatus.IN_STOCK) {
+        qb.andWhere('inv.availableQuantity > 0');
+      }
+    }
+
+    qb.skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('inv.createdAt', 'DESC');
+
+    const [items, total] = await qb.getManyAndCount();
+
+    return {
+      items: items.map((inv) => this.toResponse(inv)),
+      total,
+    };
+  }
+
+  async findVariants(search?: string) {
+    const where = search
+      ? [{ sku: ILike(`%${search}%`) }, { barcode: ILike(`%${search}%`) }]
+      : undefined;
+    const variants = await this.variantRepo.find({
+      where,
+      relations: { product: true },
+      take: 20,
+      order: { sku: 'ASC' },
+    });
+    return variants.map((v) =>
+      plainToInstance(
+        ProductVariantResponseDto,
+        { ...v, productName: v.product?.name ?? '' },
+        { excludeExtraneousValues: true },
+      ),
+    );
   }
 
   async findOne(id: string) {
@@ -88,6 +164,15 @@ export class InventoryService {
     }
 
     return this.toResponse(inventory);
+  }
+
+  async remove(id: string): Promise<{ message: string }> {
+    const inventory = await this.inventoryRepo.findOne({ where: { id } });
+    if (!inventory) {
+      throw new NotFoundException('Inventory not found');
+    }
+    await this.inventoryRepo.remove(inventory);
+    return { message: 'Inventory deleted successfully' };
   }
 
   async update(id: string, dto: UpdateInventoryDto) {
@@ -188,6 +273,7 @@ export class InventoryService {
     return {
       id: inventory.id,
       variantId: inventory.variantId,
+      variantSku: inventory.variant?.sku ?? '',
       quantity: inventory.quantity,
       reservedQuantity: inventory.reservedQuantity,
       availableQuantity: inventory.availableQuantity,

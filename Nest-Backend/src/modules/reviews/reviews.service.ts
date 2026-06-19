@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import { Review } from './entities/review.entity';
 import { ReviewImage } from './entities/review-image.entity';
 import { ReviewStatus } from './enums/review-status.enum';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { ReviewResponseDto } from './dto/review-response.dto';
 import { Order } from '../orders/entities/order.entity';
 import { OrderItem } from '../orders/entities/order-item.entity';
 import { Product } from '../products/entities/product.entity';
@@ -31,7 +33,7 @@ export class ReviewsService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  async create(userId: string, dto: CreateReviewDto): Promise<Review> {
+  async create(userId: string, dto: CreateReviewDto) {
     const order = await this.orderRepository.findOne({
       where: { id: dto.orderId, userId },
     });
@@ -71,31 +73,35 @@ export class ReviewsService {
       rating: dto.rating,
       title: dto.title,
       comment: dto.comment,
-      status: ReviewStatus.PENDING,
+      status: ReviewStatus.APPROVED,
       isVerifiedPurchase: true,
+      approvedBy: userId,
+      approvedAt: new Date(),
     });
     const saved = await this.reviewRepository.save(review);
     await this.recalculateProductRating(dto.productId);
-    return saved;
+    return this.toResponse(saved);
   }
 
-  async findByProduct(productId: string): Promise<Review[]> {
-    return this.reviewRepository.find({
+  async findByProduct(productId: string) {
+    const reviews = await this.reviewRepository.find({
       where: { productId, status: ReviewStatus.APPROVED },
-      relations: { user: true, images: true },
+      relations: { user: true, product: true, images: true },
       order: { createdAt: 'DESC' },
     });
+    return reviews.map((r) => this.toResponse(r));
   }
 
-  async findByUser(userId: string): Promise<Review[]> {
-    return this.reviewRepository.find({
+  async findByUser(userId: string) {
+    const reviews = await this.reviewRepository.find({
       where: { userId },
       relations: { product: true, images: true },
       order: { createdAt: 'DESC' },
     });
+    return reviews.map((r) => this.toResponse(r));
   }
 
-  async findById(id: string): Promise<Review> {
+  async findById(id: string) {
     const review = await this.reviewRepository.findOne({
       where: { id },
       relations: { user: true, product: true, images: true },
@@ -103,27 +109,29 @@ export class ReviewsService {
     if (!review) {
       throw new NotFoundException('Review not found');
     }
-    return review;
+    return this.toResponse(review);
   }
 
-  async findAll(): Promise<Review[]> {
-    return this.reviewRepository.find({
+  async findAll() {
+    const reviews = await this.reviewRepository.find({
       relations: { user: true, product: true, images: true },
       order: { createdAt: 'DESC' },
     });
+    return reviews.map((r) => this.toResponse(r));
   }
 
   async update(
     id: string,
     userId: string,
     dto: UpdateReviewDto,
-  ): Promise<Review> {
-    const review = await this.findById(id);
+  ) {
+    const review = await this.reviewRepository.findOne({
+      where: { id },
+      relations: { user: true, product: true, images: true },
+    });
+    if (!review) throw new NotFoundException('Review not found');
     if (review.userId !== userId) {
       throw new ForbiddenException('You can only edit your own reviews');
-    }
-    if (review.status === ReviewStatus.APPROVED) {
-      throw new BadRequestException('Cannot edit an approved review');
     }
     const now = new Date().getTime();
     const createdAt = new Date(review.createdAt).getTime();
@@ -134,11 +142,11 @@ export class ReviewsService {
     Object.assign(review, dto);
     const saved = await this.reviewRepository.save(review);
     await this.recalculateProductRating(review.productId);
-    return saved;
+    return this.toResponse(saved);
   }
 
   async remove(id: string, userId?: string): Promise<void> {
-    const review = await this.findById(id);
+    const review = await this.findByIdOrFail(id);
     if (userId && review.userId !== userId) {
       throw new ForbiddenException('You can only delete your own reviews');
     }
@@ -146,32 +154,41 @@ export class ReviewsService {
     await this.recalculateProductRating(review.productId);
   }
 
-  async approve(id: string, adminId: string): Promise<Review> {
-    const review = await this.findById(id);
+  async approve(id: string, adminId: string) {
+    const review = await this.findByIdOrFail(id);
     review.status = ReviewStatus.APPROVED;
     review.approvedBy = adminId;
     review.approvedAt = new Date();
     const saved = await this.reviewRepository.save(review);
     await this.recalculateProductRating(review.productId);
-    return saved;
+    return this.toResponse(saved);
   }
 
-  async reject(id: string, _adminId: string): Promise<Review> {
-    const review = await this.findById(id);
+  async reject(id: string, _adminId: string) {
+    const review = await this.findByIdOrFail(id);
     review.status = ReviewStatus.REJECTED;
     const saved = await this.reviewRepository.save(review);
     await this.recalculateProductRating(review.productId);
-    return saved;
+    return this.toResponse(saved);
   }
 
-  async hide(id: string, adminId: string): Promise<Review> {
-    const review = await this.findById(id);
+  async hide(id: string, adminId: string) {
+    const review = await this.findByIdOrFail(id);
     review.status = ReviewStatus.HIDDEN;
     review.approvedBy = adminId;
     review.approvedAt = new Date();
     const saved = await this.reviewRepository.save(review);
     await this.recalculateProductRating(review.productId);
-    return saved;
+    return this.toResponse(saved);
+  }
+
+  private async findByIdOrFail(id: string): Promise<Review> {
+    const review = await this.reviewRepository.findOne({
+      where: { id },
+      relations: { user: true, product: true, images: true },
+    });
+    if (!review) throw new NotFoundException('Review not found');
+    return review;
   }
 
   async recalculateProductRating(productId: string): Promise<void> {
@@ -214,5 +231,17 @@ export class ReviewsService {
       twoStarCount: twoStar,
       oneStarCount: oneStar,
     });
+  }
+
+  private toResponse(review: Review): ReviewResponseDto {
+    const userName = review.user
+      ? `${review.user.firstName} ${review.user.lastName}`
+      : '';
+    const productName = review.product?.name ?? '';
+    return plainToInstance(
+      ReviewResponseDto,
+      { ...review, userName, productName },
+      { excludeExtraneousValues: true },
+    );
   }
 }

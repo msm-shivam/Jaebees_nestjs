@@ -3,8 +3,11 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
+import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
 
 @Entity('stock_alerts')
 @Index(['variantId'])
@@ -13,6 +16,10 @@ import {
 export class StockAlert {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ManyToOne(() => ProductVariant)
+  @JoinColumn({ name: 'variant_id' })
+  variant: ProductVariant;
 
   @Column({ name: 'variant_id', type: 'uuid' })
   variantId: string;

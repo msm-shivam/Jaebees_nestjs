@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class InventoryResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -6,6 +6,9 @@ export class InventoryResponseDto {
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   variantId: string;
+
+  @ApiProperty({ example: 'NIKE-PEGASUS-41-RED-9' })
+  variantSku: string;
 
   @ApiProperty({ example: 100 })
   quantity: number;

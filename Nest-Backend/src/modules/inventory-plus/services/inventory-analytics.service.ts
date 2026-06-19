@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Inventory } from '../../inventory/entities/inventory.entity';
 import { StockAlert } from '../entities/stock-alert.entity';
 import { InventoryAudit } from '../entities/inventory-audit.entity';
@@ -82,6 +82,26 @@ export class InventoryAnalyticsService {
       .limit(limit)
       .getRawMany();
 
+    // Attach variant SKUs
+    const variantIds = result.map((r) => r.variantId).filter(Boolean);
+    if (variantIds.length) {
+      const variants = await this.inventoryRepository.find({
+        where: { variantId: In(variantIds) },
+        relations: { variant: { product: true } },
+      });
+      const variantMap = new Map(
+        variants.map((inv) => [
+          inv.variantId,
+          { sku: inv.variant?.sku ?? '', productName: inv.variant?.product?.name ?? '' },
+        ]),
+      );
+      for (const r of result) {
+        const info = variantMap.get(r.variantId);
+        r.variantSku = info?.sku ?? '';
+        r.productName = info?.productName ?? '';
+      }
+    }
+
     return result;
   }
 
@@ -90,7 +110,7 @@ export class InventoryAnalyticsService {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const inventories = await this.inventoryRepository.find({
-      relations: { variant: true },
+      relations: { variant: { product: true } },
       where: {},
     });
 
@@ -107,6 +127,8 @@ export class InventoryAnalyticsService {
       if (!recentMovement || recentMovement.createdAt < thirtyDaysAgo) {
         result.push({
           variantId: inv.variantId,
+          variantSku: inv.variant?.sku ?? '',
+          productName: inv.variant?.product?.name ?? '',
           currentStock: inv.quantity,
           lastMovementDate: recentMovement?.createdAt || null,
           daysWithoutSale: recentMovement

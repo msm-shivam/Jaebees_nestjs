@@ -22,6 +22,7 @@ import { Cart } from '../cart/entities/cart.entity';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
+import { StockAlert } from '../inventory-plus/entities/stock-alert.entity';
 import { AddressesService } from '../addresses/addresses.service';
 import { WarehousesService } from '../warehouses/warehouses.service';
 import { DeliverySettingsService } from '../delivery-settings/delivery-settings.service';
@@ -44,6 +45,8 @@ export class OrdersService {
     private readonly inventoryRepo: Repository<Inventory>,
     @InjectRepository(ProductVariant)
     private readonly variantRepo: Repository<ProductVariant>,
+    @InjectRepository(StockAlert)
+    private readonly alertRepo: Repository<StockAlert>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly addressesService: AddressesService,
@@ -183,6 +186,37 @@ export class OrdersService {
       if (inventory) {
         inventory.availableQuantity -= cartItem.quantity;
         await this.inventoryRepo.save(inventory);
+
+        // Auto-create alert if stock falls to or below threshold
+        const threshold =
+          inventory.reorderPoint > 0
+            ? inventory.reorderPoint
+            : inventory.lowStockThreshold;
+        if (inventory.availableQuantity <= threshold) {
+          const existing = await this.alertRepo.findOne({
+            where: {
+              variantId: inventory.variantId,
+              isResolved: false,
+              alertType:
+                inventory.availableQuantity <= 0
+                  ? 'OUT_OF_STOCK'
+                  : 'LOW_STOCK',
+            },
+          });
+          if (!existing) {
+            await this.alertRepo.save(
+              this.alertRepo.create({
+                variantId: inventory.variantId,
+                thresholdQuantity: threshold,
+                currentQuantity: inventory.availableQuantity,
+                alertType:
+                  inventory.availableQuantity <= 0
+                    ? 'OUT_OF_STOCK'
+                    : 'LOW_STOCK',
+              }),
+            );
+          }
+        }
       }
     }
     await this.orderItemRepo.save(orderItems);
@@ -196,7 +230,7 @@ export class OrdersService {
 
     const result = (await this.orderRepo.findOne({
       where: { id: savedOrder.id },
-      relations: { items: true },
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
     })) as Order;
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -224,6 +258,7 @@ export class OrdersService {
 
     const [items, total] = await this.orderRepo.findAndCount({
       where,
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -240,7 +275,7 @@ export class OrdersService {
   async getMyOrder(userId: string, orderId: string): Promise<OrderResponseDto> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId, userId },
-      relations: { items: true },
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
     });
     if (!order) throw new NotFoundException('Order not found.');
     return this.toResponse(order);
@@ -258,7 +293,7 @@ export class OrdersService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
-      relations: { items: true },
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
     });
 
     return paginate(
@@ -272,7 +307,7 @@ export class OrdersService {
   async getOrder(orderId: string): Promise<OrderResponseDto> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
-      relations: { items: true },
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
     });
     if (!order) throw new NotFoundException('Order not found.');
     return this.toResponse(order);
@@ -284,7 +319,7 @@ export class OrdersService {
   ): Promise<{ message: string; data: OrderResponseDto }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
-      relations: { items: true },
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
     });
     if (!order) throw new NotFoundException('Order not found.');
 
@@ -304,7 +339,7 @@ export class OrdersService {
   ): Promise<{ message: string; data: OrderResponseDto }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
-      relations: { items: true },
+      relations: { items: { product: { images: true }, variant: { attributes: { attribute: true, attributeValue: true } } }, user: true },
     });
     if (!order) throw new NotFoundException('Order not found.');
 
@@ -385,15 +420,34 @@ export class OrdersService {
   }
 
   private toResponse(order: Order): OrderResponseDto {
+    const userName = order.user
+      ? `${order.user.firstName} ${order.user.lastName}`
+      : '';
     return plainToInstance(
       OrderResponseDto,
       {
         ...order,
-        items: (order.items ?? []).map((item) =>
-          plainToInstance(OrderItemResponseDto, item, {
-            excludeExtraneousValues: true,
-          }),
-        ),
+        userName,
+        items: (order.items ?? []).map((item) => {
+          let imageUrl: string | undefined;
+          if (item.product?.images?.length) {
+            const primary = item.product.images.find(
+              (img) => img.isPrimary,
+            );
+            imageUrl = primary
+              ? primary.imageUrl
+              : item.product.images[0].imageUrl;
+          }
+          const variantName = item.variant?.attributes
+            ?.map((a) => a.attributeValue?.value ?? '')
+            .filter(Boolean)
+            .join(' / ');
+          return plainToInstance(
+            OrderItemResponseDto,
+            { ...item, imageUrl, variantName },
+            { excludeExtraneousValues: true },
+          );
+        }),
       },
       { excludeExtraneousValues: true },
     );

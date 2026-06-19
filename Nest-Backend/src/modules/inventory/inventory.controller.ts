@@ -3,12 +3,14 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
@@ -16,6 +18,7 @@ import { AdjustInventoryDto } from './dto/adjust-inventory.dto';
 import { ReserveInventoryDto } from './dto/reserve-inventory.dto';
 import { ReleaseInventoryDto } from './dto/release-inventory.dto';
 import { InventoryResponseDto } from './dto/inventory-response.dto';
+import { InventoryQueryDto } from './dto/inventory-query.dto';
 import { AdminJwtGuard } from '../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
@@ -28,13 +31,29 @@ import { UseGuards } from '@nestjs/common';
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Get('variants')
+  @HttpCode(HttpStatus.OK)
+  @Permissions(DefaultPermissions.INVENTORY_VIEW)
+  @ApiOperation({
+    summary: 'Search variants for inventory creation',
+    description: 'Search variants by SKU or barcode to easily select when creating inventory.',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search term for variant SKU or barcode',
+  })
+  async findVariants(@Query('search') search?: string) {
+    return this.inventoryService.findVariants(search);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Permissions(DefaultPermissions.INVENTORY_CREATE)
   @ApiOperation({
     summary: 'Create inventory record',
     description:
-      'Creates an inventory record for a variant. Only one inventory per variant allowed.',
+      'Creates an inventory record for a variant. Only one inventory per variant allowed. Accepts variantId or variantSku.',
   })
   @ApiResponse({
     status: 201,
@@ -53,13 +72,13 @@ export class InventoryController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.INVENTORY_VIEW)
-  @ApiOperation({ summary: 'List all inventory records' })
+  @ApiOperation({ summary: 'List inventory records with pagination' })
   @ApiResponse({
     status: 200,
     description: 'Inventory records retrieved successfully.',
   })
-  async findAll() {
-    return this.inventoryService.findAll();
+  async findAll(@Query() query: InventoryQueryDto) {
+    return this.inventoryService.findAll(query);
   }
 
   @Get(':id')
@@ -92,6 +111,16 @@ export class InventoryController {
   @ApiResponse({ status: 404, description: 'Inventory not found.' })
   async update(@Param('id') id: string, @Body() dto: UpdateInventoryDto) {
     return this.inventoryService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Permissions(DefaultPermissions.INVENTORY_UPDATE)
+  @ApiOperation({ summary: 'Delete inventory record' })
+  @ApiResponse({ status: 200, description: 'Inventory deleted successfully.' })
+  @ApiResponse({ status: 404, description: 'Inventory not found.' })
+  async remove(@Param('id') id: string) {
+    return this.inventoryService.remove(id);
   }
 
   @Patch(':id/adjust')

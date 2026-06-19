@@ -7,6 +7,7 @@ import { Cart } from '../cart/entities/cart.entity';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
+import { StockAlert } from '../inventory-plus/entities/stock-alert.entity';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { AdminOrdersController } from './admin-orders.controller';
@@ -26,6 +27,7 @@ import { ShipmentsModule } from '../shipments/shipments.module';
       Inventory,
       ProductVariant,
       User,
+      StockAlert,
     ]),
     AddressesModule,
     WarehousesModule,

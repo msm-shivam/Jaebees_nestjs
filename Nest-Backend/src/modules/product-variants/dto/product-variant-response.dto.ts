@@ -12,6 +12,10 @@ export class ProductVariantResponseDto {
   productId: string;
 
   @Expose()
+  @ApiPropertyOptional({ example: 'Nike Air Max 90' })
+  productName?: string;
+
+  @Expose()
   @ApiProperty({ example: 'NIKE-PEGASUS-41-BLK-10' })
   sku: string;
 
