@@ -61,6 +61,9 @@ export class OrdersService {
     userId: string,
     dto: CreateOrderDto,
   ): Promise<{ message: string; data: OrderResponseDto }> {
+    if (!userId) {
+      throw new BadRequestException('User ID is missing or invalid.');
+    }
     const cart = await this.cartRepo.findOne({
       where: { userId },
       relations: { items: true },

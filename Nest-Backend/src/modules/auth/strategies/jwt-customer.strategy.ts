@@ -25,7 +25,7 @@ export class JwtCustomerStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: JwtPayload): Promise<User> {
+  async validate(payload: JwtPayload): Promise<User & { sub: string }> {
     const user = await this.userRepo.findOne({
       where: { id: payload.sub },
       withDeleted: false,
@@ -35,6 +35,8 @@ export class JwtCustomerStrategy extends PassportStrategy(
       throw new UnauthorizedException(AuthMessages.ACCOUNT_DISABLED);
     }
 
-    return user;
+    Object.assign(user, { sub: user.id });
+    return user as User & { sub: string };
   }
 }
+

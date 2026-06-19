@@ -14,6 +14,7 @@ import { AppDataSource } from '../data-source';
 import { Permission } from '../../modules/rbac/entities/permission.entity';
 import { Role } from '../../modules/rbac/entities/role.entity';
 import { AdminUser } from '../../modules/admin/entities/admin-user.entity';
+import { User } from '../../modules/users/entities/user.entity';
 import {
   DefaultPermissions,
   DefaultRoles,
@@ -374,6 +375,41 @@ async function seed() {
   }
 
   await adminRepo.save(superAdmin);
+
+  // ─── Dummy Users ────────────────────────────────────────────────────────────
+  const userRepo = AppDataSource.getRepository(User);
+  const userPasswordHash = await bcrypt.hash('User@123', 12);
+  const dummyUsers = [
+    {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      mobile: '1234567890',
+      passwordHash: userPasswordHash,
+      isEmailVerified: true,
+      isActive: true,
+    },
+    {
+      firstName: 'Jane',
+      lastName: 'Smith',
+      email: 'jane.smith@example.com',
+      mobile: '0987654321',
+      passwordHash: userPasswordHash,
+      isEmailVerified: true,
+      isActive: true,
+    },
+  ];
+
+  console.log('\n👤 Seeding dummy users...');
+  for (const u of dummyUsers) {
+    const existingUser = await userRepo.findOne({ where: { email: u.email } });
+    if (!existingUser) {
+      await userRepo.save(userRepo.create(u));
+      console.log(`  ✅ Created dummy user: ${u.email}`);
+    } else {
+      console.log(`  ⏭  Dummy user already exists: ${u.email}`);
+    }
+  }
 
   await AppDataSource.destroy();
 
