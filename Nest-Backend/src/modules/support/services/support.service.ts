@@ -27,6 +27,7 @@ import { plainToInstance } from 'class-transformer';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
+import { AdminUser } from '../../admin/entities/admin-user.entity';
 
 @Injectable()
 export class SupportService {
@@ -53,6 +54,8 @@ export class SupportService {
     private readonly orderRepo: Repository<Order>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(AdminUser)
+    private readonly adminUserRepo: Repository<AdminUser>,
     private readonly dataSource: DataSource,
     private readonly notificationsService: NotificationsService,
   ) {}
@@ -241,6 +244,13 @@ export class SupportService {
       throw new BadRequestException('Cannot assign closed ticket');
     if (ticket.status === TicketStatus.RESOLVED)
       throw new BadRequestException('Cannot assign resolved ticket');
+
+    const adminUser = await this.adminUserRepo.findOne({
+      where: { id: dto.assignedTo },
+    });
+    if (!adminUser) {
+      throw new NotFoundException('Assigned admin user not found');
+    }
 
     const previousAssignee = ticket.assignedTo;
     const previousStatus = ticket.status;
@@ -447,7 +457,10 @@ export class SupportService {
   }
 
   async getTags(ticketId: string): Promise<TicketTagResponseDto[]> {
-    const tags = await this.tagRepo.find({ where: { ticketId }, order: { tag: 'ASC' } });
+    const tags = await this.tagRepo.find({
+      where: { ticketId },
+      order: { tag: 'ASC' },
+    });
     return plainToInstance(TicketTagResponseDto, tags);
   }
 

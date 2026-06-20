@@ -11,6 +11,7 @@ import { TicketRating } from './entities/ticket-rating.entity';
 import { TicketTag } from './entities/ticket-tag.entity';
 import { Order } from '../orders/entities/order.entity';
 import { User } from '../users/entities/user.entity';
+import { AdminUser } from '../admin/entities/admin-user.entity';
 import { SupportService } from './services/support.service';
 import { TicketAssignmentService } from './services/ticket-assignment.service';
 import { SlaMonitoringService } from './services/sla-monitoring.service';
@@ -33,6 +34,7 @@ import { AdminSupportAnalyticsController } from './controllers/admin-support-ana
       TicketTag,
       Order,
       User,
+      AdminUser,
     ]),
   ],
   controllers: [

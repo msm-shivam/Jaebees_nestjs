@@ -2948,3 +2948,34 @@ Create a Delivery Charges module with audit history, charge calculation logic in
 - [x] Zero TypeScript build errors
 
 
+
+---
+
+## Layer 25 — Store Information & General Settings Module (Phase 25)
+
+**Started:** 2026-06-20  
+**Completed:** 2026-06-20  
+**Status:** ✅ Complete
+
+### Objective
+Create a Store Information & General Settings Module to manage centralized store configurations, social links, email templates, and business information under a singleton `StoreSetting` entity.
+
+### Files Created
+- `src/modules/system-settings-cms/entities/store-setting.entity.ts`
+- `src/modules/system-settings-cms/dto/store-settings.dto.ts`
+- `src/modules/system-settings-cms/services/store-settings.service.ts`
+- `src/modules/system-settings-cms/controllers/admin-store-settings.controller.ts`
+- `src/database/migrations/1791865863920-Phase25StoreSettings.ts`
+
+### Deliverables
+- [x] StoreSetting Entity (singleton with all store info, social links, email, and business details)
+- [x] DTOs for StoreSettings, SocialLinks, EmailConfig, BusinessInfo
+- [x] StoreSettingsService implementation
+- [x] AdminStoreSettingsController implementation
+- [x] File uploads for Logo and Favicon
+- [x] Migration execution and seed defaults
+- [x] Zero TypeScript build errors
+
+
+
+

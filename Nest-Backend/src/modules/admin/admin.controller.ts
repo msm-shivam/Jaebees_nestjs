@@ -61,8 +61,7 @@ export class AdminController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(DefaultRoles.SUPER_ADMIN)
-  @Permissions(DefaultPermissions.ADMIN_UPDATE)
+  @Permissions(DefaultPermissions.ADMIN_UPDATE, DefaultPermissions.SUPPORT_ASSIGN)
   @ApiOperation({ summary: 'List all admin users' })
   @ApiResponse({ status: 200, description: 'Admin users returned.' })
   async findAll() {
