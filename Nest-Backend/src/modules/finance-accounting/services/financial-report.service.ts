@@ -85,7 +85,12 @@ export class FinancialReportService {
 
     qb.groupBy("DATE_TRUNC('day', t.transaction_date)").orderBy('date', 'DESC');
 
-    return qb.getRawMany();
+    const raw = await qb.getRawMany();
+    return raw.map((r) => ({
+      date: r.date,
+      revenue: parseFloat(r.revenue),
+      transactions: parseInt(r.transactions, 10),
+    }));
   }
 
   async getExpenseReport(dateFrom?: string, dateTo?: string) {
@@ -100,7 +105,12 @@ export class FinancialReportService {
 
     qb.groupBy('e.category').orderBy('total', 'DESC');
 
-    return qb.getRawMany();
+    const raw = await qb.getRawMany();
+    return raw.map((r) => ({
+      category: r.category,
+      total: parseFloat(r.total),
+      count: parseInt(r.count, 10),
+    }));
   }
 
   async getSettlementReport(dateFrom?: string, dateTo?: string) {
@@ -115,7 +125,12 @@ export class FinancialReportService {
 
     qb.groupBy('s.status');
 
-    return qb.getRawMany();
+    const raw = await qb.getRawMany();
+    return raw.map((r) => ({
+      status: r.status,
+      total: parseFloat(r.total),
+      count: parseInt(r.count, 10),
+    }));
   }
 
   async getDashboard() {

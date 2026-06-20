@@ -17,12 +17,15 @@ import { AdminReportsController } from './controllers/admin-reports.controller';
 import { AdminDashboardController } from './controllers/admin-dashboard.controller';
 import { AdminSavedReportController } from './controllers/admin-saved-report.controller';
 
+import { AdminUser } from '../admin/entities/admin-user.entity';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       DashboardSnapshot,
       ReportExecutionLog,
       SavedReport,
+      AdminUser,
     ]),
   ],
   controllers: [
