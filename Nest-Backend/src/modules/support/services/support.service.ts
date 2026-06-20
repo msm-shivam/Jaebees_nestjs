@@ -21,6 +21,8 @@ import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { ReplyTicketDto } from '../dto/reply-ticket.dto';
 import { AssignTicketDto } from '../dto/assign-ticket.dto';
 import { TicketQueryDto } from '../dto/ticket-query.dto';
+import { TicketResponseDto } from '../dto/ticket-response.dto';
+import { plainToInstance } from 'class-transformer';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
@@ -224,7 +226,12 @@ export class SupportService {
       .take(limit)
       .getManyAndCount();
 
-    return { data, total, page, limit };
+    return {
+      data: plainToInstance(TicketResponseDto, data),
+      total,
+      page,
+      limit,
+    };
   }
 
   async assign(ticketId: string, adminId: string, dto: AssignTicketDto) {

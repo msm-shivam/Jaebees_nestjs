@@ -12,7 +12,7 @@ export class ProductReportService {
         'p.id as "productId"',
         'p.name as "productName"',
         'COALESCE(SUM(oi.quantity), 0) as "totalSold"',
-        'COALESCE(SUM(oi.subtotal), 0) as "totalRevenue"',
+        'COALESCE(SUM(oi.total_price), 0) as "totalRevenue"',
         'COUNT(DISTINCT o.id) as "orderCount"',
       ])
       .from('products', 'p')
@@ -48,7 +48,7 @@ export class ProductReportService {
         'c.id as "categoryId"',
         'c.name as "categoryName"',
         'COALESCE(SUM(oi.quantity), 0) as "totalSold"',
-        'COALESCE(SUM(oi.subtotal), 0) as "totalRevenue"',
+        'COALESCE(SUM(oi.total_price), 0) as "totalRevenue"',
         'COUNT(DISTINCT o.id) as "orderCount"',
       ])
       .from('categories', 'c')
@@ -85,7 +85,7 @@ export class ProductReportService {
         'b.id as "brandId"',
         'b.name as "brandName"',
         'COALESCE(SUM(oi.quantity), 0) as "totalSold"',
-        'COALESCE(SUM(oi.subtotal), 0) as "totalRevenue"',
+        'COALESCE(SUM(oi.total_price), 0) as "totalRevenue"',
         'COUNT(DISTINCT o.id) as "orderCount"',
       ])
       .from('brands', 'b')

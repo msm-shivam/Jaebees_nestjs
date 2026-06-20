@@ -152,6 +152,18 @@ async function bootstrap() {
       'Public — Content',
       'Publicly accessible CMS pages, homepage sections, and contact info',
     )
+    .addTag(
+      'Admin — Customers',
+      'Customer list, search, filters, and statistics',
+    )
+    .addTag(
+      'Admin — Wishlist',
+      'Admin view of any customer wishlist',
+    )
+    .addTag(
+      'Admin — Support',
+      'Admin support ticket management, assignment, and resolution',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

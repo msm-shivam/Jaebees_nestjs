@@ -190,4 +190,9 @@ export enum DefaultPermissions {
   // Catalog
   CATALOG_VIEW = 'catalog.view',
   CATALOG_MANAGE = 'catalog.manage',
+  // Customer Management
+  CUSTOMER_VIEW = 'customer.view',
+  CUSTOMER_STATS = 'customer.stats',
+  // Admin Wishlist View
+  WISHLIST_ADMIN_VIEW = 'wishlist.admin_view',
 }

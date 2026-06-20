@@ -10,6 +10,7 @@ import { CartItem } from '../cart/entities/cart-item.entity';
 import { CartModule } from '../cart/cart.module';
 import { WishlistService } from './wishlist.service';
 import { WishlistController } from './wishlist.controller';
+import { AdminWishlistController } from './admin-wishlist.controller';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { WishlistController } from './wishlist.controller';
     ]),
     CartModule,
   ],
-  controllers: [WishlistController],
+  controllers: [WishlistController, AdminWishlistController],
   providers: [WishlistService],
   exports: [WishlistService],
 })

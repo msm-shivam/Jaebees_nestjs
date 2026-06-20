@@ -933,7 +933,57 @@ The Product List API (`GET /products`) supports advanced filtering and sorting:
 - [x] Swagger documentation (all endpoints documented with ApiTags, ApiOperation, ApiBearerAuth)
 - [x] RBAC integration (AdminJwtGuard + PermissionsGuard + DefaultPermissions enum)
 - [x] Zero TypeScript build errors
-- [x] Zero new lint errors
+
+---
+
+## Layer 25 — Admin Customer Management & Wishlist View
+
+**Started:** 2026-06-20  
+**Completed:** 2026-06-20  
+**Status:** ✅ Complete
+
+### Objective
+Create admin-facing endpoints for customer list/group management and the ability for admins to view any customer's wishlist.
+
+### Files Created/Modified
+- `src/modules/users/admin-customers.controller.ts` — New admin controller for customer list & stats
+- `src/modules/users/dto/admin-customer-query.dto.ts` — Query DTO with search, filters, pagination
+- `src/modules/wishlist/admin-wishlist.controller.ts` — New admin controller to view customer wishlist
+
+### Files Modified
+- `src/modules/users/users.service.ts` — Added `findAllCustomers()` and `getCustomerStats()` methods
+- `src/modules/users/users.module.ts` — Registered `AdminCustomersController`
+- `src/modules/wishlist/wishlist.service.ts` — Added `getWishlistByUserId()` method for admin access
+- `src/modules/wishlist/wishlist.module.ts` — Registered `AdminWishlistController`
+- `src/common/constants/roles.constants.ts` — Added `CUSTOMER_VIEW`, `CUSTOMER_STATS`, `WISHLIST_ADMIN_VIEW` permissions
+- `src/common/constants/permissions-data.constant.ts` — Added seed entries for new permissions
+
+### New API Endpoints
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| `GET` | `/admin/customers` | `customer.view` | List all customers with search, status filter, date range, pagination |
+| `GET` | `/admin/customers/stats` | `customer.stats` | Customer statistics (total, active, verified, new this month, new today) |
+| `GET` | `/admin/wishlist/:userId` | `wishlist.admin_view` | View any customer's wishlist (user info + items + total count) |
+
+### Permissions Added
+
+| Permission | Slug | Module |
+|------------|------|--------|
+| View Customers | `customer.view` | customer |
+| View Customer Stats | `customer.stats` | customer |
+| Admin View Wishlist | `wishlist.admin_view` | wishlist |
+
+SUPER_ADMIN gets all new permissions automatically via `Object.values(DefaultPermissions)`.
+
+### Business Rules
+- Admin customer list supports: search (by name), isActive filter, isEmailVerified filter, date range, sorting, pagination
+- Customer stats returns: totalCustomers, activeCustomers, verifiedCustomers, newThisMonth, newToday
+- Admin wishlist view returns customer info (id, name, email) + totalItems + full items list with product/variant details
+
+### Zero TypeScript Build Errors
+- [x] `npm run build` passes
+
 
 ### Business Rules Implemented
 

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, ILike } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { User } from './entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -81,5 +81,69 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { email: email.toLowerCase() } });
+  }
+
+  async findAllCustomers(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isActive?: boolean;
+    isEmailVerified?: boolean;
+    dateFrom?: string;
+    dateTo?: string;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<{ data: UserResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { page = 1, limit = 20, search, isActive, isEmailVerified, dateFrom, dateTo, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+
+    const where: any = {};
+
+    if (search) {
+      where.firstName = ILike(`%${search}%`);
+    }
+    if (isActive !== undefined) where.isActive = isActive;
+    if (isEmailVerified !== undefined) where.isEmailVerified = isEmailVerified;
+    if (dateFrom && dateTo) {
+      where.createdAt = Between(new Date(dateFrom), new Date(dateTo));
+    } else if (dateFrom) {
+      where.createdAt = MoreThanOrEqual(new Date(dateFrom));
+    } else if (dateTo) {
+      where.createdAt = LessThanOrEqual(new Date(dateTo));
+    }
+
+    const [users, total] = await this.userRepo.findAndCount({
+      where,
+      order: { [sortBy]: sortOrder },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const data = users.map((u) =>
+      plainToInstance(UserResponseDto, u, { excludeExtraneousValues: true }),
+    );
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getCustomerStats(): Promise<{
+    totalCustomers: number;
+    activeCustomers: number;
+    verifiedCustomers: number;
+    newThisMonth: number;
+    newToday: number;
+  }> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [totalCustomers, activeCustomers, verifiedCustomers, newThisMonth, newToday] = await Promise.all([
+      this.userRepo.count(),
+      this.userRepo.count({ where: { isActive: true } }),
+      this.userRepo.count({ where: { isEmailVerified: true } }),
+      this.userRepo.count({ where: { createdAt: MoreThanOrEqual(startOfMonth) } }),
+      this.userRepo.count({ where: { createdAt: MoreThanOrEqual(startOfToday) } }),
+    ]);
+
+    return { totalCustomers, activeCustomers, verifiedCustomers, newThisMonth, newToday };
   }
 }

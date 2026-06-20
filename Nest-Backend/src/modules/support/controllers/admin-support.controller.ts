@@ -18,6 +18,8 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../common/decorators/current-user.decorator';
 import { SupportService } from '../services/support.service';
 import { TicketQueryDto } from '../dto/ticket-query.dto';
+import { TicketResponseDto } from '../dto/ticket-response.dto';
+import { plainToInstance } from 'class-transformer';
 import { ReplyTicketDto } from '../dto/reply-ticket.dto';
 import { AssignTicketDto } from '../dto/assign-ticket.dto';
 import { AddNoteDto } from '../dto/add-note.dto';
@@ -40,7 +42,8 @@ export class AdminSupportController {
   @Get(':id')
   @Permissions(DefaultPermissions.SUPPORT_VIEW)
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.supportService.findOne(id);
+    const ticket = await this.supportService.findOne(id);
+    return plainToInstance(TicketResponseDto, ticket);
   }
 
   @Post(':id/assign')

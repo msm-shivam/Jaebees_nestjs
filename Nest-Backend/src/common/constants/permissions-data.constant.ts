@@ -676,4 +676,19 @@ export const ALL_PERMISSIONS: PermissionDef[] = [
     name: 'Manage Catalog',
     module: 'catalog',
   },
+  {
+    slug: DefaultPermissions.CUSTOMER_VIEW,
+    name: 'View Customers',
+    module: 'customer',
+  },
+  {
+    slug: DefaultPermissions.CUSTOMER_STATS,
+    name: 'View Customer Stats',
+    module: 'customer',
+  },
+  {
+    slug: DefaultPermissions.WISHLIST_ADMIN_VIEW,
+    name: 'Admin View Wishlist',
+    module: 'wishlist',
+  },
 ];

@@ -17,6 +17,7 @@ import { Inventory } from '../inventory/entities/inventory.entity';
 import { CartService } from '../cart/cart.service';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { Cart } from '../cart/entities/cart.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateWishlistItemDto } from './dto/create-wishlist-item.dto';
 
 @Injectable()
@@ -238,5 +239,17 @@ export class WishlistService {
     if (wishlist) {
       await this.wishlistRepository.softRemove(wishlist);
     }
+  }
+
+  async getWishlistByUserId(userId: string): Promise<{ user: { id: string; firstName: string; lastName: string; email: string }; totalItems: number; items: WishlistItem[] }> {
+    const user = await this.wishlistRepository.manager.getRepository(User).findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const wishlist = await this.getOrCreateWishlist(userId);
+    return {
+      user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
+      totalItems: wishlist.totalItems,
+      items: wishlist.items || [],
+    };
   }
 }
