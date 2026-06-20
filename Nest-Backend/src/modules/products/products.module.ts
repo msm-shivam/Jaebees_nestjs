@@ -9,6 +9,7 @@ import { ProductCollection } from '../collections/entities/product-collection.en
 import { ProductTagMapping } from '../product-tags/entities/product-tag-mapping.entity';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
+import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProductsController } from './products.controller';
       ProductCollection,
       ProductTagMapping,
     ]),
+    SecurityComplianceModule
   ],
   controllers: [ProductsController],
   providers: [ProductsService],

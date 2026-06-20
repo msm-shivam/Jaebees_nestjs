@@ -16,6 +16,7 @@ import { CategoryResponseDto } from '../categories/dto/category-response.dto';
 import { toSlug } from '../../common/utils/slug.util';
 import { paginate } from '../../common/utils/pagination.util';
 import { CatalogMessages } from '../../common/constants/messages.constants';
+import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
 export class BrandsService {
@@ -24,10 +25,12 @@ export class BrandsService {
     private readonly brandRepo: Repository<Brand>,
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(
     dto: CreateBrandDto,
+    adminId:string,
     image?: Express.Multer.File,
   ): Promise<{ message: string; data: BrandResponseDto }> {
     const slug = dto.slug ?? toSlug(dto.name);
@@ -53,6 +56,20 @@ export class BrandsService {
     });
 
     const saved = await this.brandRepo.save(brand);
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'CREATE',
+      entityType: 'BRAND',
+      entityId: saved.id,
+      newValues: {
+        name: saved.name,
+        slug: saved.slug,
+        logo: saved.logo,
+        description: saved.description,
+        isActive: saved.isActive,
+        categories: saved.categories,
+      },
+    });
     return {
       message: 'Brand created successfully.',
       data: this.toResponse(saved),
@@ -75,6 +92,7 @@ export class BrandsService {
       take: limit,
     });
 
+    
     return paginate(
       items.map((item) => this.toResponse(item)),
       total,
@@ -91,6 +109,7 @@ export class BrandsService {
   async update(
     id: string,
     dto: UpdateBrandDto,
+    adminId:string,
     image?: Express.Multer.File,
   ): Promise<{ message: string; data: BrandResponseDto }> {
     const brand = await this.findByIdOrFail(id);
@@ -126,15 +145,43 @@ export class BrandsService {
     }
 
     const saved = await this.brandRepo.save(brand);
+   await this.auditLogService.log({
+      userId: adminId,
+      action: 'UPDATE',
+      entityType: 'BRAND',
+      entityId: brand.id,
+      newValues: {
+        name: brand.name,
+        slug: brand.slug,
+        logo: brand.logo,
+        description: brand.description,
+        isActive: brand.isActive,
+        categories: brand.categories,
+      },
+    });
     return {
       message: 'Brand updated successfully.',
       data: this.toResponse(saved),
     };
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string,adminId:string): Promise<{ message: string }> {
     const brand = await this.findByIdOrFail(id);
     await this.brandRepo.softRemove(brand);
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'DELETE',
+      entityType: 'BRAND',
+      entityId: brand.id,
+      newValues: {
+        name: brand.name,
+        slug: brand.slug,
+        logo: brand.logo,
+        description: brand.description,
+        isActive: brand.isActive,
+        categories: brand.categories,
+      },
+    });
     return { message: 'Brand deleted successfully.' };
   }
 

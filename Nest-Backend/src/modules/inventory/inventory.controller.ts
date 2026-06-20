@@ -24,6 +24,7 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { UseGuards } from '@nestjs/common';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Inventory')
 @UseGuards(AdminJwtGuard, PermissionsGuard)
@@ -66,8 +67,8 @@ export class InventoryController {
     description: 'Invalid input or inventory already exists.',
   })
   @ApiResponse({ status: 404, description: 'Variant not found.' })
-  async create(@Body() dto: CreateInventoryDto) {
-    return this.inventoryService.create(dto);
+  async create(@Body() dto: CreateInventoryDto,@CurrentAdmin() admin: any,) {
+    return this.inventoryService.create(dto,admin.sub);
   }
 
   @Get()

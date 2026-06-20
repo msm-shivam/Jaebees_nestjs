@@ -498,11 +498,7 @@ export class ReturnService {
       status: ReverseShipmentStatus.PICKED_UP,
       pickupDate: new Date(dto.pickupDate),
     });
-    await this.shipmentRepo.save(shipment);
-    const d = await this.shipmentRepo.find({
-      where: { returnRequestId: returnId },
-    });
-    console.log('((_(_()(', d, returnId);
+ 
 
     returnRequest.status = ReturnRequestStatus.PICKUP_SCHEDULED;
     await this.returnRepo.save(returnRequest);

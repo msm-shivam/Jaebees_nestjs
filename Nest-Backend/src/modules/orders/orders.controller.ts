@@ -26,6 +26,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/decorators/current-user.decorator';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Customer — Orders')
 @ApiBearerAuth('JWT')
@@ -109,7 +110,8 @@ export class OrdersController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CancelOrderDto,
+    @CurrentAdmin() admin: any
   ) {
-    return this.ordersService.cancelOrder(id, dto, false);
+    return this.ordersService.cancelOrder(id,admin.sub, dto, false);
   }
 }

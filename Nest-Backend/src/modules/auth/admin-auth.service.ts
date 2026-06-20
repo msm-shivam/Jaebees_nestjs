@@ -17,6 +17,7 @@ import {
   AdminJwtPayload,
   RefreshTokenPayload,
 } from './interfaces/jwt-payload.interface';
+import { AuditLogService } from '../security-compliance/services/audit-log.service';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const dayjs = require('dayjs');
 
@@ -34,6 +35,8 @@ export class AdminAuthService {
     private readonly adminSessionRepo: Repository<AdminSession>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async login(
@@ -58,6 +61,13 @@ export class AdminAuthService {
     await this.adminRepo.update(admin.id, { lastLoginAt: new Date() });
 
     const tokens = await this.generateAdminTokens(admin, ipAddress, userAgent);
+     await this.auditLogService.log({
+      userId: admin.id,
+      action: 'LOGIN',
+      entityType: 'ADMIN',
+      entityId: admin.id,
+      newValues: { lastLoginAt: admin.lastLoginAt,email:admin.email,name:admin.name },
+    });
     return { message: AuthMessages.LOGIN_SUCCESS, data: tokens };
   }
 

@@ -14,16 +14,19 @@ import { AttributeResponseDto } from './dto/attribute-response.dto';
 import { toSlug } from '../../common/utils/slug.util';
 import { paginate } from '../../common/utils/pagination.util';
 import { CatalogMessages } from '../../common/constants/messages.constants';
+import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
 export class AttributesService {
   constructor(
     @InjectRepository(Attribute)
     private readonly attributeRepo: Repository<Attribute>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(
     dto: CreateAttributeDto,
+    adminId:string
   ): Promise<{ message: string; data: AttributeResponseDto }> {
     const slug = dto.slug ?? toSlug(dto.name);
     await this.ensureSlugUnique(slug);
@@ -37,6 +40,14 @@ export class AttributesService {
     });
 
     const saved = await this.attributeRepo.save(attribute);
+
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'CREATE',
+      entityType: 'ATTRIBUTE',
+      entityId: saved.id,
+      newValues:{ name:saved.name,slug:saved.slug,isFilterable:saved.isFilterable,isRequired:saved.isRequired,sortOrder:saved.sortOrder }
+    });
     return {
       message: 'Attribute created successfully.',
       data: this.toResponse(saved),
@@ -75,6 +86,7 @@ export class AttributesService {
   async update(
     id: string,
     dto: UpdateAttributeDto,
+    adminId:string
   ): Promise<{ message: string; data: AttributeResponseDto }> {
     const attribute = await this.findByIdOrFail(id);
 
@@ -96,15 +108,35 @@ export class AttributesService {
     if (dto.sortOrder !== undefined) attribute.sortOrder = dto.sortOrder;
 
     const saved = await this.attributeRepo.save(attribute);
+       await this.auditLogService.log({
+      userId: adminId,
+      action: 'UPDATE',
+      entityType: 'ATTRIBUTE',
+      entityId: saved.id,
+      newValues:{ name:saved.name,slug:saved.slug,isFilterable:saved.isFilterable,isRequired:saved.isRequired,sortOrder:saved.sortOrder }
+    });
     return {
       message: 'Attribute updated successfully.',
       data: this.toResponse(saved),
     };
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, adminId: string): Promise<{ message: string }> {
     const attribute = await this.findByIdOrFail(id);
     await this.attributeRepo.remove(attribute);
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'DELETE',
+      entityType: 'ATTRIBUTE',
+      entityId: attribute.id,
+      newValues: {
+        name: attribute.name,
+        slug: attribute.slug,
+        isFilterable: attribute.isFilterable,
+        isRequired: attribute.isRequired,
+        sortOrder: attribute.sortOrder,
+      },
+    });
     return { message: 'Attribute deleted successfully.' };
   }
 

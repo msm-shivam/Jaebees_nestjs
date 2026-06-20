@@ -19,6 +19,7 @@ import {
 } from './dto/inventory-query.dto';
 import { plainToInstance } from 'class-transformer';
 import { ProductVariantResponseDto } from '../product-variants/dto/product-variant-response.dto';
+import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
 export class InventoryService {
@@ -27,9 +28,10 @@ export class InventoryService {
     private readonly inventoryRepo: Repository<Inventory>,
     @InjectRepository(ProductVariant)
     private readonly variantRepo: Repository<ProductVariant>,
+    private readonly auditLogService :AuditLogService
   ) {}
 
-  async create(dto: CreateInventoryDto) {
+  async create(dto: CreateInventoryDto,adminId:string) {
     let variantId = dto.variantId;
 
     // Resolve variant: by ID or by SKU
@@ -82,6 +84,18 @@ export class InventoryService {
     });
 
     const savedInventory = await this.inventoryRepo.save(inventory);
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'create',
+      entityType: 'Inventory',
+      newValues: {  variantId,
+      quantity: dto.quantity,
+      reservedQuantity: dto.reservedQuantity || 0,
+      availableQuantity: dto.quantity - (dto.reservedQuantity || 0),
+      lowStockThreshold: dto.lowStockThreshold ?? 5,
+      reorderPoint: dto.reorderPoint ?? 10,
+      reorderQuantity: dto.reorderQuantity ?? 50, },
+    });
     return this.toResponse(savedInventory);
   }
 

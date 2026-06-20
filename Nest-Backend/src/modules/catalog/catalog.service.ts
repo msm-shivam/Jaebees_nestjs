@@ -115,12 +115,7 @@ export class CatalogService {
       ),
     ]);
 
-    await this.auditLogService.log({
-      userId: adminId,
-      action: 'ANALYTICS_GENERATED',
-      entityType: 'CATALOG',
-      newValues: { report: 'catalog-analytics' },
-    });
+  
 
     return {
       data: {

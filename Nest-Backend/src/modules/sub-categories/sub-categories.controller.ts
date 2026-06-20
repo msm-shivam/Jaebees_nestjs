@@ -28,6 +28,7 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Admin — Sub Categories')
 @ApiBearerAuth('JWT')
@@ -41,8 +42,8 @@ export class SubCategoriesController {
   @Permissions(DefaultPermissions.CATEGORY_CREATE)
   @ApiOperation({ summary: 'Create a new sub category' })
   @ApiResponse({ status: 201, description: 'Sub category created.' })
-  async create(@Body() dto: CreateSubCategoryDto) {
-    return this.subCategoriesService.create(dto);
+  async create(@Body() dto: CreateSubCategoryDto, @CurrentAdmin() admin: any) {
+    return this.subCategoriesService.create(dto,admin.sub);
   }
 
   @Get()
@@ -76,8 +77,9 @@ export class SubCategoriesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSubCategoryDto,
+     @CurrentAdmin() admin: any
   ) {
-    return this.subCategoriesService.update(id, dto);
+    return this.subCategoriesService.update(id, dto,admin.sub);
   }
 
   @Delete(':id')
@@ -85,7 +87,7 @@ export class SubCategoriesController {
   @Permissions(DefaultPermissions.CATEGORY_DELETE)
   @ApiOperation({ summary: 'Soft delete a sub category' })
   @ApiResponse({ status: 200, description: 'Sub category deleted.' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.subCategoriesService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string, @CurrentAdmin() admin: any) {
+    return this.subCategoriesService.remove(id,admin.sub);
   }
 }

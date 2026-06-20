@@ -29,6 +29,7 @@ import { DeliverySettingsService } from '../delivery-settings/delivery-settings.
 import { DeliveryChargesService } from '../delivery-charges/delivery-charges.service';
 import { ShipmentsService } from '../shipments/shipments.service';
 import { paginate } from '../../common/utils/pagination.util';
+import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
 export class OrdersService {
@@ -55,7 +56,8 @@ export class OrdersService {
     private readonly deliveryChargesService: DeliveryChargesService,
     private readonly shipmentsService: ShipmentsService,
     private readonly notificationsService: NotificationsService,
-  ) {}
+    private readonly auditLogService: AuditLogService
+  ) { }
 
   async createOrder(
     userId: string,
@@ -347,6 +349,7 @@ export class OrdersService {
   async updateStatus(
     orderId: string,
     dto: UpdateOrderStatusDto,
+    adminId: string
   ): Promise<{ message: string; data: OrderResponseDto }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
@@ -362,7 +365,13 @@ export class OrdersService {
 
     order.status = dto.status;
     const saved = await this.orderRepo.save(order);
-
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'UPDATE',
+      entityType: 'ORDER',
+      entityId: saved.id,
+      newValues: { status: saved.status, notes: saved.notes, orderNumber: saved.orderNumber }
+    });
     return {
       message: 'Order status updated successfully.',
       data: this.toResponse(saved),
@@ -371,8 +380,10 @@ export class OrdersService {
 
   async cancelOrder(
     orderId: string,
+    adminId: string,
     dto?: CancelOrderDto,
     isAdmin = false,
+
   ): Promise<{ message: string; data: OrderResponseDto }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
@@ -411,6 +422,13 @@ export class OrdersService {
         await this.inventoryRepo.save(inventory);
       }
     }
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'CANCEL',
+      entityType: 'ORDER',
+      entityId: saved.id,
+      newValues: { status: saved.status, notes: saved.notes, orderNumber: saved.orderNumber }
+    });
 
     return {
       message: 'Order cancelled successfully.',
@@ -430,9 +448,9 @@ export class OrdersService {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(this.toRad(lat1)) *
-        Math.cos(this.toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(this.toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return Math.round(R * c * 100) / 100;
   }

@@ -182,14 +182,23 @@ export class ShipmentsService {
     };
   }
   async findOne(id: string) {
-    const shipment = await this.shipmentRepo.findOne({
-      where: { id },
-      relations: { trackingLogs: true, warehouse: true },
-    });
-    if (!shipment) throw new NotFoundException('Shipment not found');
-    return shipment;
-  }
+  const shipment = await this.shipmentRepo
+    .createQueryBuilder('shipment')
+    .leftJoinAndSelect('shipment.order', 'order')
+    .leftJoinAndSelect('order.user', 'customer')
+    .leftJoinAndSelect('shipment.warehouse', 'warehouse')
+    .leftJoinAndSelect('shipment.trackingLogs', 'trackingLogs')
+    .where('shipment.id = :id', { id })
+    .orderBy('trackingLogs.createdAt', 'DESC')
+    .getOne();
 
+  if (!shipment) {
+    throw new NotFoundException('Shipment not found');
+  }
+  console.log("{}{}{}{}{}{}",shipment)
+
+  return shipment;
+}
   async updateStatus(
     id: string,
     dto: UpdateShipmentStatusDto,

@@ -16,6 +16,7 @@ import { WarehousesModule } from '../warehouses/warehouses.module';
 import { DeliverySettingsModule } from '../delivery-settings/delivery-settings.module';
 import { DeliveryChargesModule } from '../delivery-charges/delivery-charges.module';
 import { ShipmentsModule } from '../shipments/shipments.module';
+import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ShipmentsModule } from '../shipments/shipments.module';
       User,
       StockAlert,
     ]),
+    SecurityComplianceModule,
     AddressesModule,
     WarehousesModule,
     DeliverySettingsModule,

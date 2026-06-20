@@ -34,6 +34,7 @@ import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Admin — Categories')
 @ApiBearerAuth('JWT')
@@ -65,8 +66,9 @@ export class CategoriesController {
   async create(
     @Body() dto: CreateCategoryDto,
     @UploadedFile() image: Express.Multer.File,
+      @CurrentAdmin() admin: any
   ) {
-    return this.categoriesService.create(dto, image);
+    return this.categoriesService.create(dto, image,admin.sub);
   }
 
   @Get()
@@ -107,9 +109,10 @@ export class CategoriesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
+    @CurrentAdmin() admin: any,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.categoriesService.update(id, dto, image);
+    return this.categoriesService.update(id, dto, admin.sub,image);
   }
 
   @Delete(':id')
@@ -117,7 +120,7 @@ export class CategoriesController {
   @Permissions(DefaultPermissions.CATEGORY_DELETE)
   @ApiOperation({ summary: 'Soft delete a category' })
   @ApiResponse({ status: 200, description: 'Category deleted.' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.categoriesService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string, @CurrentAdmin() admin: any) {
+    return this.categoriesService.remove(id,admin.sub);
   }
 }

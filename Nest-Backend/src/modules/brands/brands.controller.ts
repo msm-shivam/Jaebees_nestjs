@@ -34,6 +34,7 @@ import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Admin — Brands')
 @ApiBearerAuth('JWT')
@@ -64,9 +65,10 @@ export class BrandsController {
   @ApiResponse({ status: 201, description: 'Brand created.' })
   async create(
     @Body() dto: CreateBrandDto,
+    @CurrentAdmin() admin: any,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    return this.brandsService.create(dto, image);
+    return this.brandsService.create(dto,admin.sub, image);
   }
 
   @Get()
@@ -131,9 +133,10 @@ export class BrandsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBrandDto,
+    @CurrentAdmin() admin: any,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.brandsService.update(id, dto, image);
+    return this.brandsService.update(id, dto,admin.sub, image);
   }
 
   @Delete(':id')
@@ -141,7 +144,7 @@ export class BrandsController {
   @Permissions(DefaultPermissions.BRAND_DELETE)
   @ApiOperation({ summary: 'Soft delete a brand' })
   @ApiResponse({ status: 200, description: 'Brand deleted.' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.brandsService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string,@CurrentAdmin() admin: any,) {
+    return this.brandsService.remove(id,admin.sub);
   }
 }

@@ -28,6 +28,7 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Admin — Attributes')
 @ApiBearerAuth('JWT')
@@ -41,8 +42,8 @@ export class AttributesController {
   @Permissions(DefaultPermissions.ATTRIBUTE_CREATE)
   @ApiOperation({ summary: 'Create a new attribute' })
   @ApiResponse({ status: 201, description: 'Attribute created.' })
-  async create(@Body() dto: CreateAttributeDto) {
-    return this.attributesService.create(dto);
+  async create(@Body() dto: CreateAttributeDto,@CurrentAdmin() admin: any,) {
+    return this.attributesService.create(dto,admin.sub);
   }
 
   @Get()
@@ -76,8 +77,9 @@ export class AttributesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAttributeDto,
+    @CurrentAdmin() admin: any
   ) {
-    return this.attributesService.update(id, dto);
+    return this.attributesService.update(id, dto, admin.sub);
   }
 
   @Delete(':id')
@@ -85,7 +87,7 @@ export class AttributesController {
   @Permissions(DefaultPermissions.ATTRIBUTE_DELETE)
   @ApiOperation({ summary: 'Delete an attribute' })
   @ApiResponse({ status: 200, description: 'Attribute deleted.' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.attributesService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string, @CurrentAdmin() admin: any) {
+    return this.attributesService.remove(id, admin.sub);
   }
 }

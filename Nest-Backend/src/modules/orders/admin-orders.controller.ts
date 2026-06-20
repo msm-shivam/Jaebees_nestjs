@@ -26,6 +26,7 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Admin — Orders')
 @ApiBearerAuth('JWT')
@@ -81,8 +82,10 @@ export class AdminOrdersController {
   async updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
+    @CurrentAdmin() admin: any,
+
   ) {
-    return this.ordersService.updateStatus(id, dto);
+    return this.ordersService.updateStatus(id, dto,admin.sub);
   }
 
   @Patch(':id/cancel')
@@ -101,8 +104,9 @@ export class AdminOrdersController {
   @ApiResponse({ status: 404, description: 'Order not found.' })
   async cancelOrder(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentAdmin() admin: any,
     @Body() dto: CancelOrderDto,
   ) {
-    return this.ordersService.cancelOrder(id, dto, true);
+    return this.ordersService.cancelOrder(id,admin.sub, dto, true);
   }
 }

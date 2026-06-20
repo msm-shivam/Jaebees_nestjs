@@ -38,6 +38,7 @@ import { DefaultPermissions } from '../../common/constants/roles.constants';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { CurrentAdmin } from 'src/common/decorators/current-admin.decorator';
 
 @ApiTags('Admin — Products')
 @ApiBearerAuth('JWT')
@@ -79,9 +80,10 @@ export class ProductsController {
   })
   async create(
     @Body() dto: CreateProductDto,
-    @UploadedFiles() files?: Express.Multer.File[],
+    @CurrentAdmin() admin: any,
+    @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    return this.productsService.create(dto, files);
+    return this.productsService.create(dto, admin.sub,files);
   }
 
   @Get()
@@ -136,9 +138,10 @@ export class ProductsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductDto,
+    @CurrentAdmin() admin: any,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.productsService.update(id, dto, files);
+    return this.productsService.update(id, dto, admin.sub,files);
   }
 
   @Delete('bulk')
@@ -154,8 +157,8 @@ export class ProductsController {
     description: 'Products deleted successfully.',
   })
   @ApiResponse({ status: 400, description: 'Invalid IDs.' })
-  async bulkRemove(@Body() dto: BulkDeleteDto) {
-    return this.productsService.bulkRemove(dto.ids);
+  async bulkRemove(@Body() dto: BulkDeleteDto ,@CurrentAdmin() admin: any) {
+    return this.productsService.bulkRemove(dto.ids,admin.sub);
   }
 
   @Delete(':id')
@@ -167,8 +170,9 @@ export class ProductsController {
   })
   @ApiResponse({ status: 200, description: 'Product deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productsService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string,
+    @CurrentAdmin() admin: any) {
+    return this.productsService.remove(id,admin.sub);
   }
 
   // ─── Product Status ────────────────────────────────────────────────────────

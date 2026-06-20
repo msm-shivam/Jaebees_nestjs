@@ -4,9 +4,10 @@ import { Inventory } from './entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
+import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Inventory, ProductVariant])],
+  imports: [TypeOrmModule.forFeature([Inventory, ProductVariant]),SecurityComplianceModule],
   controllers: [InventoryController],
   providers: [InventoryService],
   exports: [InventoryService],

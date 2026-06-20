@@ -15,6 +15,7 @@ import { CategoryResponseDto } from './dto/category-response.dto';
 import { toSlug } from '../../common/utils/slug.util';
 import { paginate } from '../../common/utils/pagination.util';
 import { CatalogMessages } from '../../common/constants/messages.constants';
+import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
 export class CategoriesService {
@@ -23,11 +24,14 @@ export class CategoriesService {
     private readonly categoryRepo: Repository<Category>,
     @InjectRepository(Brand)
     private readonly brandRepo: Repository<Brand>,
+    
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(
     dto: CreateCategoryDto,
     image: Express.Multer.File,
+      adminId: string,
   ): Promise<{ message: string; data: CategoryResponseDto }> {
     const slug = dto.slug ?? toSlug(dto.name);
     await this.ensureSlugUnique(slug);
@@ -53,6 +57,20 @@ export class CategoriesService {
     });
 
     const saved = await this.categoryRepo.save(category);
+     await this.auditLogService.log({
+      userId: adminId,
+      action: 'CREATE',
+      entityType: 'CATEGORY',
+      entityId: saved.id,
+      newValues: {
+        name: saved.name,
+        slug: saved.slug,
+        image: saved.image,
+        description: saved.description,
+        isActive: saved.isActive,
+        brands: saved.brands,
+      },
+    });
     return {
       message: 'Category created successfully.',
       data: this.toResponse(saved),
@@ -87,10 +105,11 @@ export class CategoriesService {
     const category = await this.findByIdOrFail(id);
     return this.toResponse(category);
   }
-
   async update(
+
     id: string,
     dto: UpdateCategoryDto,
+    adminId: string,
     image?: Express.Multer.File,
   ): Promise<{ message: string; data: CategoryResponseDto }> {
     const category = await this.findByIdOrFail(id);
@@ -125,15 +144,43 @@ export class CategoriesService {
     }
 
     const saved = await this.categoryRepo.save(category);
+     await this.auditLogService.log({
+      userId: adminId,
+      action: 'UPDATED',
+      entityType: 'CATEGORY',
+      entityId: saved.id,
+      newValues: {
+        name: saved.name,
+        slug: saved.slug,
+        image: saved.image,
+        description: saved.description,
+        isActive: saved.isActive,
+        brands: saved.brands,
+      },
+    });
     return {
       message: 'Category updated successfully.',
       data: this.toResponse(saved),
     };
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string,adminId:string): Promise<{ message: string }> {
     const category = await this.findByIdOrFail(id);
     await this.categoryRepo.softRemove(category);
+     await this.auditLogService.log({
+      userId: adminId,
+      action: 'DELETE',
+      entityType: 'CATEGORY',
+      entityId: category.id,
+      newValues: {
+        name: category.name,
+        slug: category.slug,
+        image: category.image,
+        description: category.description,
+        isActive: category.isActive,
+        brands: category.brands,
+      },
+    });
     return { message: 'Category deleted successfully.' };
   }
 
