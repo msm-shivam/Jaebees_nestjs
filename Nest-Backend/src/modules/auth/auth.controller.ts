@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -48,6 +49,7 @@ export class AuthController {
   @Public()
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({
     summary: 'Verify customer email with OTP — returns tokens (auto-login)',
   })
@@ -63,6 +65,7 @@ export class AuthController {
   @Public()
   @Post('resend-otp')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 2, ttl: 60000 } })
   @ApiOperation({
     summary: 'Resend OTP',
     description:
@@ -78,6 +81,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Customer login — returns access + refresh tokens' })
   @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })

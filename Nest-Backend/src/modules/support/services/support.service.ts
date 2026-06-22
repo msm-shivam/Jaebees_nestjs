@@ -28,6 +28,7 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
 import { AdminUser } from '../../admin/entities/admin-user.entity';
+import { DefaultPermissions, DefaultRoles } from '../../../common/constants/roles.constants';
 
 @Injectable()
 export class SupportService {
@@ -187,12 +188,17 @@ export class SupportService {
     return { message: 'Ticket closed' };
   }
 
-  async findAll(query: TicketQueryDto) {
+  async findAll(query: TicketQueryDto, adminId?: string) {
     const qb = this.ticketRepo
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.messages', 'messages')
       .leftJoinAndSelect('t.customer', 'customer')
       .leftJoinAndSelect('t.assignedAdmin', 'assignedAdmin');
+
+    // Agents without SUPPORT_ASSIGN only see their assigned tickets
+    if (adminId && !query.assignedTo && !(await this.canViewAllTickets(adminId))) {
+      qb.andWhere('t.assigned_to = :assignedTo', { assignedTo: adminId });
+    }
 
     if (query.status)
       qb.andWhere('t.status = :status', { status: query.status });
@@ -508,5 +514,17 @@ export class SupportService {
 
   private minutesSince(date: Date): number {
     return Math.round((Date.now() - new Date(date).getTime()) / 60000);
+  }
+
+  private async canViewAllTickets(adminId: string): Promise<boolean> {
+    const admin = await this.adminUserRepo.findOne({
+      where: { id: adminId },
+      relations: { roles: { permissions: true } },
+    });
+    if (!admin) return false;
+    return admin.roles?.some((r) =>
+      r.slug === DefaultRoles.SUPER_ADMIN ||
+      r.permissions?.some((p) => p.slug === DefaultPermissions.SUPPORT_ASSIGN),
+    ) ?? false;
   }
 }

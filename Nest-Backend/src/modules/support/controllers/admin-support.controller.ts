@@ -36,8 +36,11 @@ export class AdminSupportController {
 
   @Get()
   @Permissions(DefaultPermissions.SUPPORT_VIEW)
-  async findAll(@Query(AppValidationPipe) query: TicketQueryDto) {
-    return this.supportService.findAll(query);
+  async findAll(
+    @CurrentUser() admin: JwtPayload,
+    @Query(AppValidationPipe) query: TicketQueryDto,
+  ) {
+    return this.supportService.findAll(query, admin.sub);
   }
 
   @Get(':id')

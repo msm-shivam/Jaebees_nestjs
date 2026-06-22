@@ -45,14 +45,41 @@ export class AdminProfileController {
   }
 
   @Patch()
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './uploads/avatars',
+        filename: (req, file, cb) => {
+          const ext = extname(file.originalname);
+          cb(null, `admin-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+        },
+      }),
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Admin name' },
+        email: { type: 'string', format: 'email', description: 'Admin email' },
+        avatar: { type: 'string', format: 'binary', description: 'Avatar image (max 2MB)' },
+      },
+    },
+  })
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update own admin profile (name, email)' })
+  @ApiOperation({ summary: 'Update own admin profile (name, email, avatar)' })
   @ApiResponse({ status: 200, description: 'Profile updated.' })
   @ApiResponse({ status: 400, description: 'Email already taken.' })
   async updateProfile(
     @CurrentAdmin() admin: AdminJwtPayload,
     @Body() dto: UpdateAdminDto,
+    @UploadedFile() avatar?: Express.Multer.File,
   ) {
+    if (avatar) {
+      dto.avatar = `/uploads/avatars/${avatar.filename}`;
+    }
     return this.adminService.update(admin.sub, dto);
   }
 

@@ -142,77 +142,57 @@ export class AuditLogService {
     };
   }
 
-async findOne(id: string) {
-  const log = await this.auditLogRepo.findOne({
-    where: { id },
-  });
-
-  if (!log) {
-    throw new NotFoundException('Audit log not found');
-  }
-
-  let user:any = null;
-
-  if (log.userId) {
-    const admin = await this.adminUserRepo.findOne({
-      where: { id: log.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
+  async findOne(id: string) {
+    const log = await this.auditLogRepo.findOne({
+      where: { id },
     });
 
-    if (admin) {
-      user = admin;
-    } else {
-      const customer = await this.userRepo.findOne({
+    if (!log) {
+      throw new NotFoundException('Audit log not found');
+    }
+
+    let user: { id: string; name: string; email: string } | null = null;
+
+    if (log.userId) {
+      const admin = await this.adminUserRepo.findOne({
         where: { id: log.userId },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+        select: { id: true, name: true, email: true },
       });
 
-      if (customer) {
-        user = {
-          id: customer.id,
-          name: `${customer.firstName} ${customer.lastName}`,
-          email: customer.email,
-        };
+      if (admin) {
+        user = { id: admin.id, name: admin.name, email: admin.email };
+      } else {
+        const customer = await this.userRepo.findOne({
+          where: { id: log.userId },
+          select: { id: true, firstName: true, lastName: true, email: true },
+        });
+
+        if (customer) {
+          user = {
+            id: customer.id,
+            name: `${customer.firstName} ${customer.lastName}`,
+            email: customer.email,
+          };
+        }
       }
     }
+
+    return {
+      id: log.id,
+      timestamp: log.createdAt,
+      user,
+      action: log.action,
+      module: log.entityType,
+      entityId: log.entityId,
+      severity: log.severity,
+      ipAddress: log.ipAddress,
+      userAgent: log.userAgent,
+      oldValues: log.oldValues,
+      newValues: log.newValues,
+      createdAt: log.createdAt,
+      updatedAt: log.updatedAt,
+    };
   }
-
-  return {
-    id: log.id,
-    timestamp: log.createdAt,
-
-    user,
-
-    action: log.action,
-
-    module: log.entityType,
-
-    entityId: log.entityId,
-
-    severity: log.severity,
-
-    ipAddress: log.ipAddress,
-
-    userAgent: log.userAgent,
-
-    oldValues: log.oldValues,
-
-    newValues: log.newValues,
-
-    createdAt: log.createdAt,
-
-    updatedAt: log.updatedAt,
-  };
-}
 
   async findByEntity(entityType: string, entityId: string) {
     return this.auditLogRepo.findOne({

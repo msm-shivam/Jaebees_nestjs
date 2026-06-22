@@ -1,6 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { plainToInstance } from 'class-transformer';
 import { Shipment } from './entities/shipment.entity';
@@ -25,7 +25,6 @@ export class ShipmentsService {
     private readonly orderRepo: Repository<Order>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    private readonly dataSource: DataSource,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -227,6 +226,30 @@ export class ShipmentsService {
     return shipment;
   }
 
+  private readonly validTransitions: Record<ShipmentStatus, ShipmentStatus[]> = {
+    [ShipmentStatus.PENDING]: [ShipmentStatus.PACKED, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.PACKED]: [ShipmentStatus.READY_FOR_DISPATCH, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.READY_FOR_DISPATCH]: [ShipmentStatus.OUT_FOR_DELIVERY, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.OUT_FOR_DELIVERY]: [ShipmentStatus.DELIVERED, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.DELIVERED]: [],
+    [ShipmentStatus.FAILED_DELIVERY]: [ShipmentStatus.OUT_FOR_DELIVERY],
+  };
+
+  private validateStatusTransition(
+    currentStatus: ShipmentStatus,
+    newStatus: ShipmentStatus,
+  ): void {
+    if (currentStatus === newStatus) {
+      throw new BadRequestException(`Shipment is already ${currentStatus}`);
+    }
+    const allowed = this.validTransitions[currentStatus];
+    if (!allowed || !allowed.includes(newStatus)) {
+      throw new BadRequestException(
+        `Cannot transition from ${currentStatus} to ${newStatus}`,
+      );
+    }
+  }
+
   async updateStatus(
     id: string,
     dto: UpdateShipmentStatusDto,
@@ -235,6 +258,7 @@ export class ShipmentsService {
     const shipment = await this.findEntity(id);
 
     if (dto.status) {
+      this.validateStatusTransition(shipment.status, dto.status);
       shipment.status = dto.status;
 
       if (dto.status === ShipmentStatus.OUT_FOR_DELIVERY && !shipment.dispatchedAt) {
@@ -248,7 +272,8 @@ export class ShipmentsService {
         shipment.deliveredAt = null;
       }
 
-      await this.createLog(id, dto.status, dto.notes ?? null, changedBy);
+      const log = await this.createLog(id, dto.status, dto.notes ?? null, changedBy);
+      shipment.trackingLogs = [...(shipment.trackingLogs ?? []), log];
     }
 
     if (dto.notes) {
@@ -354,11 +379,13 @@ export class ShipmentsService {
     status: ShipmentStatus,
     note: string | null,
     changedBy: string | null,
-  ) {
-    await this.dataSource.query(
-      `INSERT INTO shipment_tracking_logs (id, shipment_id, status, note, changed_by, created_at, updated_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW(), NOW())`,
-      [shipmentId, status, note, changedBy],
-    );
+  ): Promise<ShipmentTrackingLog> {
+    const log = this.logRepo.create({
+      shipmentId,
+      status,
+      note,
+      changedBy,
+    });
+    return this.logRepo.save(log);
   }
 }

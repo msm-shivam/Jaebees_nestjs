@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean, IsInt, Min, IsEnum, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsInt, Min, IsEnum, IsDateString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class AdminCustomerQueryDto {
   @ApiPropertyOptional({ example: 1 })
@@ -24,14 +24,12 @@ export class AdminCustomerQueryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
+  @Transform(({ value }) => value === undefined ? undefined : value === 'true' || value === true)
   isActive?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
+  @Transform(({ value }) => value === undefined ? undefined : value === 'true' || value === true)
   isEmailVerified?: boolean;
 
   @ApiPropertyOptional({ example: '2026-01-01' })
