@@ -338,6 +338,18 @@ export class ProductsService {
       await this.productImageRepo.save(images);
     }
 
+    // Set primary image by existing image ID
+    if (dto.primaryImageId) {
+      await this.productImageRepo.update(
+        { productId: id, isPrimary: true },
+        { isPrimary: false },
+      );
+      await this.productImageRepo.update(
+        { id: dto.primaryImageId, productId: id },
+        { isPrimary: true },
+      );
+    }
+
     const result = await this.findByIdOrFail(id);
     // await this.auditLogService.log({
     //   userId: adminId,

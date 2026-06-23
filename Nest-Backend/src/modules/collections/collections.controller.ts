@@ -10,10 +10,16 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -37,12 +43,24 @@ export class CollectionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
   @Post()
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/collections',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Create collection with optional banner image', type: CreateCollectionDto })
   @HttpCode(HttpStatus.CREATED)
   @Permissions(DefaultPermissions.COLLECTION_CREATE)
   @ApiOperation({ summary: 'Create a new collection' })
   @ApiResponse({ status: 201, description: 'Collection created.' })
-  async create(@Body() dto: CreateCollectionDto) {
-    return this.collectionsService.create(dto);
+  async create(@Body() dto: CreateCollectionDto, @UploadedFile() image?: Express.Multer.File) {
+    return this.collectionsService.create(dto, image);
   }
 
   @Get()
@@ -69,6 +87,18 @@ export class CollectionsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/collections',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Update collection with optional banner image', type: UpdateCollectionDto })
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.COLLECTION_UPDATE)
   @ApiOperation({ summary: 'Update a collection' })
@@ -76,8 +106,9 @@ export class CollectionsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCollectionDto,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.collectionsService.update(id, dto);
+    return this.collectionsService.update(id, dto, image);
   }
 
   @Delete(':id')

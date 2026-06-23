@@ -24,6 +24,7 @@ export class CollectionsService {
 
   async create(
     dto: CreateCollectionDto,
+    image?: Express.Multer.File,
   ): Promise<{ message: string; data: CollectionResponseDto }> {
     const slug = dto.slug ?? toSlug(dto.name);
     await this.ensureSlugUnique(slug);
@@ -31,7 +32,7 @@ export class CollectionsService {
     const collection = this.collectionRepo.create({
       name: dto.name,
       slug,
-      bannerImage: dto.bannerImage ?? null,
+      image: image?.filename ? `/uploads/collections/${image.filename}` : (dto.image ?? null),
       description: dto.description ?? null,
       isActive: dto.isActive ?? true,
     });
@@ -74,6 +75,7 @@ export class CollectionsService {
   async update(
     id: string,
     dto: UpdateCollectionDto,
+    image?: Express.Multer.File,
   ): Promise<{ message: string; data: CollectionResponseDto }> {
     const collection = await this.findByIdOrFail(id);
 
@@ -89,7 +91,8 @@ export class CollectionsService {
     }
 
     if (dto.name !== undefined) collection.name = dto.name;
-    if (dto.bannerImage !== undefined) collection.bannerImage = dto.bannerImage;
+    if (image?.filename) collection.image = `/uploads/collections/${image.filename}`;
+    else if (dto.image !== undefined) collection.image = dto.image;
     if (dto.description !== undefined) collection.description = dto.description;
     if (dto.isActive !== undefined) collection.isActive = dto.isActive;
 

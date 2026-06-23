@@ -17,7 +17,7 @@ export class Collection extends BaseEntity {
     length: 500,
     nullable: true,
   })
-  bannerImage: string | null;
+  image: string | null;
 
   @Column({ type: 'text', nullable: true })
   description: string | null;

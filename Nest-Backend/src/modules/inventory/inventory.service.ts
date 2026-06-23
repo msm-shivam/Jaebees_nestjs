@@ -34,7 +34,7 @@ export class InventoryService {
   async create(dto: CreateInventoryDto,adminId:string) {
     let variantId = dto.variantId;
 
-    // Resolve variant: by ID or by SKU
+    // Resolve variant: by SKU if no variantId provided
     if (!variantId && dto.variantSku) {
       const variantBySku = await this.variantRepo.findOne({
         where: { sku: dto.variantSku },
@@ -54,9 +54,21 @@ export class InventoryService {
     }
 
     // Validate variant exists
-    const variant = await this.variantRepo.findOne({
+    let variant = await this.variantRepo.findOne({
       where: { id: variantId },
     });
+
+    // Fallback: if variantId not found but SKU provided, try by SKU
+    if (!variant && dto.variantSku) {
+      const variantBySku = await this.variantRepo.findOne({
+        where: { sku: dto.variantSku },
+      });
+      if (variantBySku) {
+        variant = variantBySku;
+        variantId = variantBySku.id;
+      }
+    }
+
     if (!variant) {
       throw new NotFoundException('Variant not found');
     }
