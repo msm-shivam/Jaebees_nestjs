@@ -34,13 +34,9 @@ export class CreateSubCategoryDto {
   })
   slug?: string;
 
-  @ApiPropertyOptional({
-    example: 'https://cdn.sport.com/sub-categories/running.jpg',
-  })
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
   @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  image?: string;
+  image?: any;
 
   @ApiPropertyOptional({ example: 'High-performance running footwear' })
   @IsOptional()

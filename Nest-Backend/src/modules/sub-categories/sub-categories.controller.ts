@@ -10,10 +10,16 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -38,12 +44,24 @@ export class SubCategoriesController {
   constructor(private readonly subCategoriesService: SubCategoriesService) {}
 
   @Post()
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/sub-categories',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Create sub category with optional image', type: CreateSubCategoryDto })
   @HttpCode(HttpStatus.CREATED)
   @Permissions(DefaultPermissions.CATEGORY_CREATE)
   @ApiOperation({ summary: 'Create a new sub category' })
   @ApiResponse({ status: 201, description: 'Sub category created.' })
-  async create(@Body() dto: CreateSubCategoryDto, @CurrentAdmin() admin: any) {
-    return this.subCategoriesService.create(dto,admin.sub);
+  async create(@Body() dto: CreateSubCategoryDto, @CurrentAdmin() admin: any, @UploadedFile() image?: Express.Multer.File) {
+    return this.subCategoriesService.create(dto, admin.sub, image);
   }
 
   @Get()
@@ -70,6 +88,18 @@ export class SubCategoriesController {
   }
 
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/sub-categories',
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Update sub category with optional image', type: UpdateSubCategoryDto })
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.CATEGORY_UPDATE)
   @ApiOperation({ summary: 'Update a sub category' })
@@ -77,9 +107,10 @@ export class SubCategoriesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSubCategoryDto,
-     @CurrentAdmin() admin: any
+    @CurrentAdmin() admin: any,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.subCategoriesService.update(id, dto,admin.sub);
+    return this.subCategoriesService.update(id, dto, admin.sub, image);
   }
 
   @Delete(':id')

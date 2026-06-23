@@ -29,6 +29,7 @@ export class SubCategoriesService {
   async create(
     dto: CreateSubCategoryDto,
     adminId: string,
+    image?: Express.Multer.File,
   ): Promise<{ message: string; data: SubCategoryResponseDto }> {
     const category = await this.categoriesService.findByIdOrFail(
       dto.categoryId,
@@ -41,7 +42,7 @@ export class SubCategoriesService {
       categoryId: dto.categoryId,
       name: dto.name,
       slug,
-      image: dto.image ?? null,
+      image: image?.filename ? `/uploads/sub-categories/${image.filename}` : (dto.image ?? null),
       description: dto.description ?? null,
       sortOrder: dto.sortOrder ?? 0,
       isActive: dto.isActive ?? true,
@@ -103,7 +104,8 @@ export class SubCategoriesService {
   async update(
     id: string,
     dto: UpdateSubCategoryDto,
-    adminId:string
+    adminId: string,
+    image?: Express.Multer.File,
   ): Promise<{ message: string; data: SubCategoryResponseDto }> {
     const subCategory = await this.findByIdOrFail(id);
 
@@ -119,7 +121,8 @@ export class SubCategoriesService {
     }
 
     if (dto.name !== undefined) subCategory.name = dto.name;
-    if (dto.image !== undefined) subCategory.image = dto.image;
+    if (image?.filename) subCategory.image = `/uploads/sub-categories/${image.filename}`;
+    else if (dto.image !== undefined) subCategory.image = dto.image;
     if (dto.description !== undefined)
       subCategory.description = dto.description;
     if (dto.sortOrder !== undefined) subCategory.sortOrder = dto.sortOrder;

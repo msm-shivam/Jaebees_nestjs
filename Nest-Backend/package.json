@@ -24,8 +24,9 @@
     "migration:revert": "npm run typeorm -- -d src/database/data-source.ts migration:revert",
     "migration:show": "npm run typeorm -- -d src/database/data-source.ts migration:show",
     "seed": "ts-node -r tsconfig-paths/register src/database/seeds/seed.ts",
-    "seed:data": "ts-node -r tsconfig-paths/register src/database/seeds/seed-data.ts",
-    "seed:real": "ts-node -r tsconfig-paths/register src/database/seeds/seed-real-data.ts"
+    "seed:users": "ts-node -r tsconfig-paths/register src/database/seeds/seed-users.ts",
+    "seed:orders": "ts-node -r tsconfig-paths/register src/database/seeds/seed-orders.ts",
+    "seed:all": "npm run seed && npm run seed:users && npm run seed:orders"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.4",
