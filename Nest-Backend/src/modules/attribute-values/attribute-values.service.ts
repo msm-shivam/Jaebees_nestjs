@@ -124,12 +124,15 @@ export class AttributeValuesService {
   ): Promise<void> {
     const existing = await this.attributeValueRepo.findOne({
       where: { attributeId, slug },
+      withDeleted: true,
     });
-    if (existing && existing.id !== excludeId) {
-      throw new BadRequestException(
-        CatalogMessages.ATTRIBUTE_VALUE_SLUG_EXISTS,
-      );
+    if (!existing) return;
+    if (existing.id === excludeId) return;
+    if (existing.deletedAt) {
+      await this.attributeValueRepo.remove(existing);
+      return;
     }
+    throw new BadRequestException(CatalogMessages.ATTRIBUTE_VALUE_SLUG_EXISTS);
   }
 
   private toResponse(

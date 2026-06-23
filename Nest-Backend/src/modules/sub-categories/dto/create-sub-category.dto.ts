@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type, Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
@@ -14,6 +15,7 @@ import {
 export class CreateSubCategoryDto {
   @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
   @IsUUID('4')
+  @Type(() => String)
   categoryId: string;
 
   @ApiProperty({ example: 'Running Shoes' })
@@ -46,12 +48,14 @@ export class CreateSubCategoryDto {
 
   @ApiPropertyOptional({ example: 0, default: 0 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   sortOrder?: number;
 
   @ApiPropertyOptional({ example: true, default: true })
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isActive?: boolean;
 }

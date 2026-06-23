@@ -120,6 +120,10 @@ export class SubCategoriesService {
       }
     }
 
+    if (dto.categoryId !== undefined) {
+      subCategory.category = await this.categoriesService.findByIdOrFail(dto.categoryId);
+      subCategory.categoryId = dto.categoryId;
+    }
     if (dto.name !== undefined) subCategory.name = dto.name;
     if (image?.filename) subCategory.image = `/uploads/sub-categories/${image.filename}`;
     else if (dto.image !== undefined) subCategory.image = dto.image;
@@ -187,10 +191,14 @@ export class SubCategoriesService {
     slug: string,
     excludeId?: string,
   ): Promise<void> {
-    const existing = await this.subCategoryRepo.findOne({ where: { slug } });
-    if (existing && existing.id !== excludeId) {
-      throw new BadRequestException(CatalogMessages.SUB_CATEGORY_SLUG_EXISTS);
+    const existing = await this.subCategoryRepo.findOne({ where: { slug }, withDeleted: true });
+    if (!existing) return;
+    if (existing.id === excludeId) return;
+    if (existing.deletedAt) {
+      await this.subCategoryRepo.remove(existing);
+      return;
     }
+    throw new BadRequestException(CatalogMessages.SUB_CATEGORY_SLUG_EXISTS);
   }
 
   private toResponse(subCategory: SubCategory): SubCategoryResponseDto {

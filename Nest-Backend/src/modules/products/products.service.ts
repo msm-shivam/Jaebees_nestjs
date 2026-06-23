@@ -632,8 +632,13 @@ export class ProductsService {
     let counter = 1;
 
     while (true) {
-      const existing = await this.productRepo.findOne({ where: { slug } });
+      const existing = await this.productRepo.findOne({ where: { slug }, withDeleted: true });
       if (!existing) break;
+
+      if (existing.deletedAt) {
+        await this.productRepo.remove(existing);
+        break;
+      }
 
       slug = `${baseSlug}-${counter}`;
       counter++;

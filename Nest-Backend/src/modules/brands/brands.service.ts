@@ -207,10 +207,14 @@ export class BrandsService {
     slug: string,
     excludeId?: string,
   ): Promise<void> {
-    const existing = await this.brandRepo.findOne({ where: { slug } });
-    if (existing && existing.id !== excludeId) {
-      throw new BadRequestException(CatalogMessages.BRAND_SLUG_EXISTS);
+    const existing = await this.brandRepo.findOne({ where: { slug }, withDeleted: true });
+    if (!existing) return;
+    if (existing.id === excludeId) return;
+    if (existing.deletedAt) {
+      await this.brandRepo.remove(existing);
+      return;
     }
+    throw new BadRequestException(CatalogMessages.BRAND_SLUG_EXISTS);
   }
 
   private toResponse(brand: Brand): BrandResponseDto {

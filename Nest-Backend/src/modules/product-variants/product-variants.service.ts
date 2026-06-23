@@ -44,9 +44,14 @@ export class ProductVariantsService {
     // Validate SKU uniqueness
     const existingSku = await this.variantRepo.findOne({
       where: { sku: dto.sku },
+      withDeleted: true,
     });
     if (existingSku) {
-      throw new ConflictException('SKU already exists');
+      if (existingSku.deletedAt) {
+        await this.variantRepo.remove(existingSku);
+      } else {
+        throw new ConflictException('SKU already exists');
+      }
     }
 
     // If setting as default, unset other defaults
@@ -150,9 +155,14 @@ export class ProductVariantsService {
     if (dto.sku && dto.sku !== variant.sku) {
       const existingSku = await this.variantRepo.findOne({
         where: { sku: dto.sku },
+        withDeleted: true,
       });
       if (existingSku) {
-        throw new ConflictException('SKU already exists');
+        if (existingSku.deletedAt) {
+          await this.variantRepo.remove(existingSku);
+        } else {
+          throw new ConflictException('SKU already exists');
+        }
       }
     }
 

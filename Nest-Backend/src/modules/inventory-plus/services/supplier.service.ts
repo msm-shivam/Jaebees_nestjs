@@ -20,9 +20,14 @@ export class SupplierService {
   async create(dto: CreateSupplierDto): Promise<Supplier> {
     const existing = await this.supplierRepository.findOne({
       where: { code: dto.code },
+      withDeleted: true,
     });
     if (existing) {
-      throw new ConflictException(`Supplier code "${dto.code}" already exists`);
+      if (existing.deletedAt) {
+        await this.supplierRepository.remove(existing);
+      } else {
+        throw new ConflictException(`Supplier code "${dto.code}" already exists`);
+      }
     }
     const supplier = this.supplierRepository.create(dto);
     return this.supplierRepository.save(supplier);
@@ -61,11 +66,14 @@ export class SupplierService {
     if (dto.code) {
       const existing = await this.supplierRepository.findOne({
         where: { code: dto.code },
+        withDeleted: true,
       });
       if (existing && existing.id !== id) {
-        throw new ConflictException(
-          `Supplier code "${dto.code}" already exists`,
-        );
+        if (existing.deletedAt) {
+          await this.supplierRepository.remove(existing);
+        } else {
+          throw new ConflictException(`Supplier code "${dto.code}" already exists`);
+        }
       }
     }
     await this.supplierRepository.update(id, dto);

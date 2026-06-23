@@ -118,10 +118,14 @@ export class CollectionsService {
     slug: string,
     excludeId?: string,
   ): Promise<void> {
-    const existing = await this.collectionRepo.findOne({ where: { slug } });
-    if (existing && existing.id !== excludeId) {
-      throw new BadRequestException(CatalogMessages.COLLECTION_SLUG_EXISTS);
+    const existing = await this.collectionRepo.findOne({ where: { slug }, withDeleted: true });
+    if (!existing) return;
+    if (existing.id === excludeId) return;
+    if (existing.deletedAt) {
+      await this.collectionRepo.remove(existing);
+      return;
     }
+    throw new BadRequestException(CatalogMessages.COLLECTION_SLUG_EXISTS);
   }
 
   private toResponse(collection: Collection): CollectionResponseDto {

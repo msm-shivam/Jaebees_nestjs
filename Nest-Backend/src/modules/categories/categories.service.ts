@@ -198,10 +198,14 @@ export class CategoriesService {
     slug: string,
     excludeId?: string,
   ): Promise<void> {
-    const existing = await this.categoryRepo.findOne({ where: { slug } });
-    if (existing && existing.id !== excludeId) {
-      throw new BadRequestException(CatalogMessages.CATEGORY_SLUG_EXISTS);
+    const existing = await this.categoryRepo.findOne({ where: { slug }, withDeleted: true });
+    if (!existing) return;
+    if (existing.id === excludeId) return;
+    if (existing.deletedAt) {
+      await this.categoryRepo.remove(existing);
+      return;
     }
+    throw new BadRequestException(CatalogMessages.CATEGORY_SLUG_EXISTS);
   }
 
   private toResponse(category: Category): CategoryResponseDto {
