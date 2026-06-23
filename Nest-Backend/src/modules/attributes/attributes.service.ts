@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Attribute } from './entities/attribute.entity';
+import { AttributeValue } from '../attribute-values/entities/attribute-value.entity';
 import { CreateAttributeDto } from './dto/create-attribute.dto';
 import { UpdateAttributeDto } from './dto/update-attribute.dto';
 import { AttributeQueryDto } from './dto/attribute-query.dto';
@@ -21,6 +22,8 @@ export class AttributesService {
   constructor(
     @InjectRepository(Attribute)
     private readonly attributeRepo: Repository<Attribute>,
+    @InjectRepository(AttributeValue)
+    private readonly attributeValueRepo: Repository<AttributeValue>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -41,13 +44,19 @@ export class AttributesService {
 
     const saved = await this.attributeRepo.save(attribute);
 
-    // await this.auditLogService.log({
-    //   userId: adminId,
-    //   action: 'CREATE',
-    //   entityType: 'ATTRIBUTE',
-    //   entityId: saved.id,
-    //   newValues:{ name:saved.name,slug:saved.slug,isFilterable:saved.isFilterable,isRequired:saved.isRequired,sortOrder:saved.sortOrder }
-    // });
+    // Create attribute values inline if provided
+    if (dto.values && dto.values.length > 0) {
+      const valueEntities = dto.values.map((val, i) =>
+        this.attributeValueRepo.create({
+          attributeId: saved.id,
+          value: val,
+          slug: toSlug(val),
+          sortOrder: i,
+        }),
+      );
+      await this.attributeValueRepo.save(valueEntities);
+    }
+
     return {
       message: 'Attribute created successfully.',
       data: this.toResponse(saved),
@@ -141,7 +150,11 @@ export class AttributesService {
   }
 
   async findByIdOrFail(id: string): Promise<Attribute> {
-    const attribute = await this.attributeRepo.findOne({ where: { id } });
+    const attribute = await this.attributeRepo.findOne({
+      where: { id },
+      relations: { values: true },
+      order: { values: { sortOrder: 'ASC' } },
+    });
     if (!attribute) {
       throw new NotFoundException(CatalogMessages.ATTRIBUTE_NOT_FOUND);
     }

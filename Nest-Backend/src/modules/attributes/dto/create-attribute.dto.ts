@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsNumber,
@@ -7,8 +8,11 @@ import {
   IsString,
   Matches,
   MaxLength,
+  Max,
   Min,
+  ArrayMaxSize,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateAttributeDto {
   @ApiProperty({ example: 'Color' })
@@ -44,4 +48,23 @@ export class CreateAttributeDto {
   @IsNumber()
   @Min(0)
   sortOrder?: number;
+
+  @ApiPropertyOptional({
+    example: ['Red', 'Black', 'White'],
+    description: 'Attribute values to create inline (max 10). Send as JSON string in multipart form-data.',
+    maxLength: 10,
+  })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try { return JSON.parse(value); } catch { return []; }
+    }
+    return value;
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @MaxLength(150, { each: true })
+  @IsNotEmpty({ each: true })
+  values?: string[];
 }

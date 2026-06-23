@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -22,6 +23,8 @@ import { Category } from '../categories/entities/category.entity';
 import { SubCategory } from '../sub-categories/entities/sub-category.entity';
 import { ProductCollection } from '../collections/entities/product-collection.entity';
 import { ProductTagMapping } from '../product-tags/entities/product-tag-mapping.entity';
+import { ProductVariant } from '../product-variants/entities/product-variant.entity';
+import { ProductVariantAttribute } from '../product-variants/entities/product-variant-attribute.entity';
 import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
@@ -41,6 +44,10 @@ export class ProductsService {
     private readonly productCollectionRepo: Repository<ProductCollection>,
     @InjectRepository(ProductTagMapping)
     private readonly productTagMappingRepo: Repository<ProductTagMapping>,
+    @InjectRepository(ProductVariant)
+    private readonly variantRepo: Repository<ProductVariant>,
+    @InjectRepository(ProductVariantAttribute)
+    private readonly variantAttributeRepo: Repository<ProductVariantAttribute>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -117,6 +124,11 @@ export class ProductsService {
         }),
       );
       await this.productImageRepo.save(images);
+    }
+
+    // Create variants if provided
+    if (dto.variants && dto.variants.length > 0) {
+      await this.createVariants(saved.id, dto.variants);
     }
 
     const result = await this.findByIdOrFail(saved.id);
@@ -348,6 +360,11 @@ export class ProductsService {
         { id: dto.primaryImageId, productId: id },
         { isPrimary: true },
       );
+    }
+
+    // Create variants if provided (adds to existing variants)
+    if (dto.variants && dto.variants.length > 0) {
+      await this.createVariants(id, dto.variants);
     }
 
     const result = await this.findByIdOrFail(id);
@@ -637,6 +654,43 @@ export class ProductsService {
     });
     if (!product) throw new NotFoundException('Product not found.');
     return product;
+  }
+
+  private async createVariants(productId: string, variants: Array<{ sku: string; price: number; compareAtPrice?: number; costPrice?: number; isDefault?: boolean; attributes?: Array<{ attributeId: string; attributeValueId: string }> }>) {
+    for (const v of variants) {
+      const existingSku = await this.variantRepo.findOne({
+        where: { sku: v.sku },
+        withDeleted: true,
+      });
+      if (existingSku) {
+        if (existingSku.deletedAt) {
+          await this.variantRepo.remove(existingSku);
+        } else {
+          throw new ConflictException(`SKU "${v.sku}" already exists`);
+        }
+      }
+
+      const variant = this.variantRepo.create({
+        productId,
+        sku: v.sku,
+        price: v.price,
+        compareAtPrice: v.compareAtPrice,
+        costPrice: v.costPrice,
+        isDefault: v.isDefault || false,
+      });
+      const saved = await this.variantRepo.save(variant);
+
+      if (v.attributes && v.attributes.length > 0) {
+        const mappings = v.attributes.map((a) =>
+          this.variantAttributeRepo.create({
+            variantId: saved.id,
+            attributeId: a.attributeId,
+            attributeValueId: a.attributeValueId,
+          }),
+        );
+        await this.variantAttributeRepo.save(mappings);
+      }
+    }
   }
 
   private async generateUniqueSlug(baseSlug: string): Promise<string> {

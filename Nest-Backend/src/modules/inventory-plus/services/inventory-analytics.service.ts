@@ -133,13 +133,11 @@ export class InventoryAnalyticsService {
           variantSku: inv.variant?.sku ?? '',
           productName: inv.variant?.product?.name ?? '',
           currentStock: inv.quantity,
-          lastMovementDate: recentMovement?.createdAt || null,
-          daysWithoutSale: recentMovement
-            ? Math.floor(
-                (Date.now() - recentMovement.createdAt.getTime()) /
-                  (1000 * 60 * 60 * 24),
-              )
-            : 999,
+          lastMovementDate: recentMovement?.createdAt || inv.createdAt,
+          daysWithoutSale: Math.floor(
+            (Date.now() - (recentMovement?.createdAt || inv.createdAt).getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
         });
       }
     }

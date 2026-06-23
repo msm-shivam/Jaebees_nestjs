@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -9,8 +9,10 @@ import {
   IsString,
   IsUUID,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
 import { ProductStatus } from '../entities/product.entity';
+import { VariantInputDto } from './variant-input.dto';
 
 export class UpdateProductDto {
   @ApiPropertyOptional({ example: '20000001-0000-4000-8000-000000000002' })
@@ -176,4 +178,21 @@ export class UpdateProductDto {
   @IsOptional()
   @IsUUID()
   primaryImageId?: string;
+
+  @ApiPropertyOptional({
+    example: [{ sku: 'NIKE-SHIRT-BLK-M', price: 129.99, attributes: [{ attributeId: '...', attributeValueId: '...' }] }],
+    description: 'Variants to create with the product (send as JSON string in multipart form-data)',
+    type: [VariantInputDto],
+  })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try { return JSON.parse(value); } catch { return []; }
+    }
+    return value;
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VariantInputDto)
+  variants?: VariantInputDto[];
 }
