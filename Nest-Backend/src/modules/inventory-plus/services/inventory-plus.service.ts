@@ -153,6 +153,8 @@ export class InventoryPlusService {
         variantId: m.variantId,
         variantSku: variantMap.get(m.variantId) ?? '',
         actionType: m.actionType,
+        direction: m.afterQuantity > m.beforeQuantity ? 'UP' : m.afterQuantity < m.beforeQuantity ? 'DOWN' : 'SAME',
+        change: m.afterQuantity - m.beforeQuantity,
         beforeQuantity: m.beforeQuantity,
         afterQuantity: m.afterQuantity,
         referenceType: m.referenceType,
