@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { Inventory } from './entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
+import { InventoryAudit } from '../inventory-plus/entities/inventory-audit.entity';
+import { AuditActionType } from '../inventory-plus/enums/audit-action-type.enum';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { AdjustInventoryDto } from './dto/adjust-inventory.dto';
@@ -28,6 +30,8 @@ export class InventoryService {
     private readonly inventoryRepo: Repository<Inventory>,
     @InjectRepository(ProductVariant)
     private readonly variantRepo: Repository<ProductVariant>,
+    @InjectRepository(InventoryAudit)
+    private readonly auditRepo: Repository<InventoryAudit>,
     private readonly auditLogService :AuditLogService
   ) {}
 
@@ -289,32 +293,62 @@ export class InventoryService {
     return this.toResponse(updatedInventory);
   }
 
-  async adjust(id: string, dto: AdjustInventoryDto) {
+  async adjust(id: string, dto: AdjustInventoryDto, adminId?: string) {
     const inventory = await this.inventoryRepo.findOne({ where: { id } });
     if (!inventory) {
       throw new NotFoundException('Inventory not found');
     }
 
+    const beforeQty = inventory.quantity;
     const newQuantity = inventory.quantity + dto.quantity;
 
     if (newQuantity < 0) {
       throw new BadRequestException('Cannot reduce quantity below zero');
     }
 
+    const newAvailable = newQuantity - inventory.reservedQuantity;
+    if (newAvailable < 0) {
+      throw new BadRequestException(
+        `Cannot reduce quantity below reserved quantity (${inventory.reservedQuantity}). Release reserved stock first.`,
+      );
+    }
+
     inventory.quantity = newQuantity;
-    inventory.availableQuantity =
-      inventory.quantity - inventory.reservedQuantity;
+    inventory.availableQuantity = newAvailable;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
+
+    await this.auditRepo.save(
+      this.auditRepo.create({
+        variantId: inventory.variantId,
+        actionType: dto.quantity >= 0 ? AuditActionType.STOCK_IN : AuditActionType.STOCK_OUT,
+        beforeQuantity: beforeQty,
+        afterQuantity: newQuantity,
+        referenceType: 'manual_adjustment',
+        performedBy: adminId ?? undefined,
+        notes: dto.quantity >= 0 ? `Added ${dto.quantity} units` : `Removed ${Math.abs(dto.quantity)} units`,
+      }),
+    );
+
+    await this.auditLogService.log({
+      userId: adminId,
+      action: dto.quantity >= 0 ? 'STOCK_ADJUST_ADD' : 'STOCK_ADJUST_REMOVE',
+      entityType: 'inventory',
+      entityId: id,
+      newValues: { quantity: newQuantity, availableQuantity: newAvailable },
+      oldValues: { quantity: beforeQty },
+    });
+
     return this.toResponse(updatedInventory);
   }
 
-  async reserve(id: string, dto: ReserveInventoryDto) {
+  async reserve(id: string, dto: ReserveInventoryDto, adminId?: string) {
     const inventory = await this.inventoryRepo.findOne({ where: { id } });
     if (!inventory) {
       throw new NotFoundException('Inventory not found');
     }
 
+    const beforeReserved = inventory.reservedQuantity;
     const newReservedQuantity = inventory.reservedQuantity + dto.quantity;
 
     if (newReservedQuantity > inventory.quantity) {
@@ -326,15 +360,38 @@ export class InventoryService {
       inventory.quantity - inventory.reservedQuantity;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
+
+    await this.auditRepo.save(
+      this.auditRepo.create({
+        variantId: inventory.variantId,
+        actionType: AuditActionType.RESERVATION,
+        beforeQuantity: beforeReserved,
+        afterQuantity: newReservedQuantity,
+        referenceType: 'order_reservation',
+        performedBy: adminId ?? undefined,
+        notes: `Reserved ${dto.quantity} units`,
+      }),
+    );
+
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'STOCK_RESERVE',
+      entityType: 'inventory',
+      entityId: id,
+      newValues: { reservedQuantity: newReservedQuantity, availableQuantity: inventory.quantity - newReservedQuantity },
+      oldValues: { reservedQuantity: beforeReserved },
+    });
+
     return this.toResponse(updatedInventory);
   }
 
-  async release(id: string, dto: ReleaseInventoryDto) {
+  async release(id: string, dto: ReleaseInventoryDto, adminId?: string) {
     const inventory = await this.inventoryRepo.findOne({ where: { id } });
     if (!inventory) {
       throw new NotFoundException('Inventory not found');
     }
 
+    const beforeReserved = inventory.reservedQuantity;
     const newReservedQuantity = inventory.reservedQuantity - dto.quantity;
 
     if (newReservedQuantity < 0) {
@@ -348,6 +405,28 @@ export class InventoryService {
       inventory.quantity - inventory.reservedQuantity;
 
     const updatedInventory = await this.inventoryRepo.save(inventory);
+
+    await this.auditRepo.save(
+      this.auditRepo.create({
+        variantId: inventory.variantId,
+        actionType: AuditActionType.RELEASE,
+        beforeQuantity: beforeReserved,
+        afterQuantity: newReservedQuantity,
+        referenceType: 'order_release',
+        performedBy: adminId ?? undefined,
+        notes: `Released ${dto.quantity} units from reservation`,
+      }),
+    );
+
+    await this.auditLogService.log({
+      userId: adminId,
+      action: 'STOCK_RELEASE',
+      entityType: 'inventory',
+      entityId: id,
+      newValues: { reservedQuantity: newReservedQuantity, availableQuantity: inventory.quantity - newReservedQuantity },
+      oldValues: { reservedQuantity: beforeReserved },
+    });
+
     return this.toResponse(updatedInventory);
   }
 

@@ -58,12 +58,14 @@ export class InventoryPlusService {
   }
 
   async findOutOfStock(page = 1, limit = 20) {
-    const [items, total] = await this.inventoryRepository.findAndCount({
-      where: { availableQuantity: 0 },
-      relations: { variant: true },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const qb = this.inventoryRepository
+      .createQueryBuilder('inv')
+      .leftJoinAndSelect('inv.variant', 'variant')
+      .where('inv.available_quantity <= 0')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('inv.available_quantity', 'ASC');
+    const [items, total] = await qb.getManyAndCount();
     return {
       items: items.map((i) => this.inventoryToPlain(i)),
       total,

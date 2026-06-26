@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Inventory } from './entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
+import { InventoryAudit } from '../inventory-plus/entities/inventory-audit.entity';
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
 import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Inventory, ProductVariant]),SecurityComplianceModule],
+  imports: [TypeOrmModule.forFeature([Inventory, ProductVariant, InventoryAudit]),SecurityComplianceModule],
   controllers: [InventoryController],
   providers: [InventoryService],
   exports: [InventoryService],

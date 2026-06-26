@@ -353,6 +353,15 @@ export class OrdersService {
   ): Promise<{ message: string; data: OrderResponseDto }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
+      relations: { user: true },
+    });
+    if (!order) throw new NotFoundException('Order not found.');
+
+    order.status = dto.status;
+    const saved = await this.orderRepo.save(order);
+    // Reload with full relations for response
+    const result = await this.orderRepo.findOne({
+      where: { id: orderId },
       relations: {
         items: {
           product: { images: true },
@@ -361,20 +370,9 @@ export class OrdersService {
         user: true,
       },
     });
-    if (!order) throw new NotFoundException('Order not found.');
-
-    order.status = dto.status;
-    const saved = await this.orderRepo.save(order);
-    // await this.auditLogService.log({
-    //   userId: adminId,
-    //   action: 'UPDATE',
-    //   entityType: 'ORDER',
-    //   entityId: saved.id,
-    //   newValues: { status: saved.status, notes: saved.notes, orderNumber: saved.orderNumber }
-    // });
     return {
       message: 'Order status updated successfully.',
-      data: this.toResponse(saved),
+      data: this.toResponse(result!),
     };
   }
 
@@ -496,6 +494,9 @@ export class OrdersService {
             imageUrl = primary
               ? primary.imageUrl
               : item.product.images[0].imageUrl;
+          }
+          if (!imageUrl) {
+            imageUrl = 'https://placehold.co/200x200?text=No+Image';
           }
           const variantName = item.variant?.attributes
             ?.map((a) => a.attributeValue?.value ?? '')

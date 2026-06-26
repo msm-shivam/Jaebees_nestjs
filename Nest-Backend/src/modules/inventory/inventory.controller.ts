@@ -139,8 +139,8 @@ export class InventoryController {
   })
   @ApiResponse({ status: 400, description: 'Invalid adjustment amount.' })
   @ApiResponse({ status: 404, description: 'Inventory not found.' })
-  async adjust(@Param('id') id: string, @Body() dto: AdjustInventoryDto) {
-    return this.inventoryService.adjust(id, dto);
+  async adjust(@Param('id') id: string, @Body() dto: AdjustInventoryDto, @CurrentAdmin() admin: any) {
+    return this.inventoryService.adjust(id, dto, admin?.sub);
   }
 
   @Patch(':id/reserve')
@@ -157,8 +157,8 @@ export class InventoryController {
   })
   @ApiResponse({ status: 400, description: 'Insufficient stock available.' })
   @ApiResponse({ status: 404, description: 'Inventory not found.' })
-  async reserve(@Param('id') id: string, @Body() dto: ReserveInventoryDto) {
-    return this.inventoryService.reserve(id, dto);
+  async reserve(@Param('id') id: string, @Body() dto: ReserveInventoryDto, @CurrentAdmin() admin: any) {
+    return this.inventoryService.reserve(id, dto, admin?.sub);
   }
 
   @Patch(':id/release')
@@ -178,7 +178,7 @@ export class InventoryController {
     description: 'Cannot release more than reserved.',
   })
   @ApiResponse({ status: 404, description: 'Inventory not found.' })
-  async release(@Param('id') id: string, @Body() dto: ReleaseInventoryDto) {
-    return this.inventoryService.release(id, dto);
+  async release(@Param('id') id: string, @Body() dto: ReleaseInventoryDto, @CurrentAdmin() admin: any) {
+    return this.inventoryService.release(id, dto, admin?.sub);
   }
 }
