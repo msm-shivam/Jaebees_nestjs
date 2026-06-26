@@ -4,11 +4,14 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { ProductStatus } from '../entities/product.entity';
@@ -168,6 +171,35 @@ export class CreateProductDto {
   })
   @IsOptional()
   primaryImageIndex?: number;
+
+  @ApiPropertyOptional({
+    example: 'NIKE-SHIRT-BLK-M',
+    description: 'SKU for the default variant. Auto-creates a default variant + inventory if provided without "variants" array.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  sku?: string;
+
+  @ApiPropertyOptional({
+    example: 129.99,
+    description: 'Price for the default variant (only used when "sku" is provided without "variants" array).',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  price?: number;
+
+  @ApiPropertyOptional({
+    example: 50,
+    description: 'Initial stock quantity for the default variant (only used when "sku" is provided without "variants" array).',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Type(() => Number)
+  stockQuantity?: number;
 
   @ApiPropertyOptional({
     example: [{ sku: 'NIKE-SHIRT-BLK-M', price: 129.99, attributes: [{ attributeId: '...', attributeValueId: '...' }] }],

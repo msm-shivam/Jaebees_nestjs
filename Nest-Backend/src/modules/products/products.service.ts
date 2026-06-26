@@ -25,6 +25,7 @@ import { ProductCollection } from '../collections/entities/product-collection.en
 import { ProductTagMapping } from '../product-tags/entities/product-tag-mapping.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { ProductVariantAttribute } from '../product-variants/entities/product-variant-attribute.entity';
+import { Inventory } from '../inventory/entities/inventory.entity';
 import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
@@ -48,6 +49,8 @@ export class ProductsService {
     private readonly variantRepo: Repository<ProductVariant>,
     @InjectRepository(ProductVariantAttribute)
     private readonly variantAttributeRepo: Repository<ProductVariantAttribute>,
+    @InjectRepository(Inventory)
+    private readonly inventoryRepo: Repository<Inventory>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -129,6 +132,39 @@ export class ProductsService {
     // Create variants if provided
     if (dto.variants && dto.variants.length > 0) {
       await this.createVariants(saved.id, dto.variants);
+    } else if (dto.sku) {
+      // Auto-create default variant + inventory from simple sku field
+      const existingSku = await this.variantRepo.findOne({
+        where: { sku: dto.sku },
+        withDeleted: true,
+      });
+      if (existingSku) {
+        if (existingSku.deletedAt) {
+          await this.variantRepo.remove(existingSku);
+        } else {
+          throw new ConflictException(`SKU "${dto.sku}" already exists`);
+        }
+      }
+
+      const variant = this.variantRepo.create({
+        productId: saved.id,
+        sku: dto.sku,
+        price: dto.price ?? 0,
+        isDefault: true,
+      });
+      const savedVariant = await this.variantRepo.save(variant);
+
+      const stockQty = dto.stockQuantity ?? 0;
+      const inventory = this.inventoryRepo.create({
+        variantId: savedVariant.id,
+        quantity: stockQty,
+        availableQuantity: stockQty,
+        reservedQuantity: 0,
+        lowStockThreshold: 5,
+        reorderPoint: 10,
+        reorderQuantity: 50,
+      });
+      await this.inventoryRepo.save(inventory);
     }
 
     const result = await this.findByIdOrFail(saved.id);
@@ -365,6 +401,44 @@ export class ProductsService {
     // Create variants if provided (adds to existing variants)
     if (dto.variants && dto.variants.length > 0) {
       await this.createVariants(id, dto.variants);
+    } else if (dto.sku) {
+      let variant = await this.variantRepo.findOne({
+        where: { productId: id, sku: dto.sku },
+      });
+      if (!variant) {
+        const dup = await this.variantRepo.findOne({
+          where: { sku: dto.sku },
+          withDeleted: true,
+        });
+        if (dup) {
+          if (dup.deletedAt) {
+            await this.variantRepo.remove(dup);
+          } else {
+            throw new ConflictException(`SKU "${dto.sku}" already exists`);
+          }
+        }
+        variant = this.variantRepo.create({
+          productId: id,
+          sku: dto.sku,
+          price: dto.price ?? 0,
+          isDefault: true,
+        });
+        const savedVariant = await this.variantRepo.save(variant);
+        const stockQty = dto.stockQuantity ?? 0;
+        const inventory = this.inventoryRepo.create({
+          variantId: savedVariant.id,
+          quantity: stockQty,
+          availableQuantity: stockQty,
+          reservedQuantity: 0,
+          lowStockThreshold: 5,
+          reorderPoint: 10,
+          reorderQuantity: 50,
+        });
+        await this.inventoryRepo.save(inventory);
+      } else if (dto.price !== undefined) {
+        variant.price = dto.price;
+        await this.variantRepo.save(variant);
+      }
     }
 
     const result = await this.findByIdOrFail(id);

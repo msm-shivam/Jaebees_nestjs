@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, In, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Inventory } from './entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
@@ -173,14 +173,66 @@ export class InventoryService {
   async findOne(id: string) {
     const inventory = await this.inventoryRepo.findOne({
       where: { id },
-      relations: { variant: true },
+      relations: { variant: { product: { images: true } } },
     });
 
     if (!inventory) {
       throw new NotFoundException('Inventory not found');
     }
 
-    return this.toResponse(inventory);
+    const variant = inventory.variant;
+    const product = variant?.product;
+
+    return {
+      ...this.toResponse(inventory),
+      variant: variant
+        ? {
+            id: variant.id,
+            productId: variant.productId,
+            sku: variant.sku,
+            price: variant.price,
+            compareAtPrice: variant.compareAtPrice,
+            costPrice: variant.costPrice,
+            barcode: variant.barcode,
+            weight: variant.weight,
+            status: variant.status,
+            isDefault: variant.isDefault,
+            createdAt: variant.createdAt,
+            updatedAt: variant.updatedAt,
+            product: product
+              ? {
+                  id: product.id,
+                  name: product.name,
+                  slug: product.slug,
+                  skuPrefix: product.skuPrefix,
+                  shortDescription: product.shortDescription,
+                  description: product.description,
+                  status: product.status,
+                  isFeatured: product.isFeatured,
+                  isActive: product.isActive,
+                  brandId: product.brandId,
+                  categoryId: product.categoryId,
+                  subCategoryId: product.subCategoryId,
+                  metaTitle: product.metaTitle,
+                  metaDescription: product.metaDescription,
+                  metaKeywords: product.metaKeywords,
+                  averageRating: product.averageRating,
+                  totalRatings: product.totalRatings,
+                  totalReviews: product.totalReviews,
+                  createdAt: product.createdAt,
+                  updatedAt: product.updatedAt,
+                  images: (product.images ?? []).map((img) => ({
+                    id: img.id,
+                    imageUrl: img.imageUrl,
+                    altText: img.altText,
+                    sortOrder: img.sortOrder,
+                    isPrimary: img.isPrimary,
+                  })),
+                }
+              : null,
+          }
+        : null,
+    };
   }
 
   async findByVariant(variantId: string) {
@@ -299,11 +351,12 @@ export class InventoryService {
     return this.toResponse(updatedInventory);
   }
 
-  private toResponse(inventory: Inventory): InventoryResponseDto {
+  private toResponse(inventory: Inventory, productName?: string): InventoryResponseDto {
     return {
       id: inventory.id,
       variantId: inventory.variantId,
       variantSku: inventory.variant?.sku ?? '',
+      productName,
       quantity: inventory.quantity,
       reservedQuantity: inventory.reservedQuantity,
       availableQuantity: inventory.availableQuantity,

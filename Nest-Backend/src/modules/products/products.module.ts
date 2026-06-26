@@ -9,6 +9,7 @@ import { ProductCollection } from '../collections/entities/product-collection.en
 import { ProductTagMapping } from '../product-tags/entities/product-tag-mapping.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { ProductVariantAttribute } from '../product-variants/entities/product-variant-attribute.entity';
+import { Inventory } from '../inventory/entities/inventory.entity';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
@@ -25,6 +26,7 @@ import { SecurityComplianceModule } from '../security-compliance/security-compli
       ProductTagMapping,
       ProductVariant,
       ProductVariantAttribute,
+      Inventory,
     ]),
     SecurityComplianceModule
   ],

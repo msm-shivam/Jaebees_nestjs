@@ -10,6 +10,9 @@ export class InventoryResponseDto {
   @ApiProperty({ example: 'NIKE-PEGASUS-41-RED-9' })
   variantSku: string;
 
+  @ApiPropertyOptional({ example: 'Nike Air Max 2024' })
+  productName?: string;
+
   @ApiProperty({ example: 100 })
   quantity: number;
 
