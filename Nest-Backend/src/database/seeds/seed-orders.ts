@@ -246,13 +246,13 @@ async function seed() {
       daysAfterSignup: 5,
       items: [{ productId: U.prod1, variantIdx: 1, qty: 1 }, { productId: U.prod5, variantIdx: 0, qty: 2 }],
       createShipment: true, deliveredAfterDays: 5 },
-    // Ahmed: second order 80 days ago → returned
-    { userEmail: 'ahmed@example.com', addrIdx: 0, orderStatus: 'RETURNED', paymentStatus: 'REFUNDED',
+    // Ahmed: second order 80 days ago → delivered
+    { userEmail: 'ahmed@example.com', addrIdx: 0, orderStatus: 'DELIVERED', paymentStatus: 'PAID',
       daysAfterSignup: 15,
       items: [{ productId: U.prod3, variantIdx: 0, qty: 1 }],
-      createShipment: true, deliveredAfterDays: 4, createReturn: true, returnReason: 'WRONG_SIZE' },
-    // Sara: signed up ~60 days ago → ordered 50 days ago → shipped (still in transit)
-    { userEmail: 'sara@example.com', addrIdx: 1, orderStatus: 'SHIPPED', paymentStatus: 'PAID',
+      createShipment: true, deliveredAfterDays: 4 },
+    // Sara: signed up ~60 days ago → ordered 50 days ago → out for delivery
+    { userEmail: 'sara@example.com', addrIdx: 1, orderStatus: 'OUT_FOR_DELIVERY', paymentStatus: 'PAID',
       daysAfterSignup: 10,
       items: [{ productId: U.prod2, variantIdx: 0, qty: 3 }, { productId: U.prod4, variantIdx: 1, qty: 1 }],
       createShipment: true, deliveredAfterDays: null },
@@ -261,11 +261,11 @@ async function seed() {
       daysAfterSignup: 20,
       items: [{ productId: U.prod6, variantIdx: 0, qty: 1 }],
       createShipment: false, deliveredAfterDays: null },
-    // Omar: signed up ~30 days ago → ordered 25 days ago → returned (defective)
-    { userEmail: 'omar@example.com', addrIdx: 2, orderStatus: 'RETURNED', paymentStatus: 'REFUNDED',
+    // Omar: signed up ~30 days ago → ordered 25 days ago → delivered
+    { userEmail: 'omar@example.com', addrIdx: 2, orderStatus: 'DELIVERED', paymentStatus: 'PAID',
       daysAfterSignup: 5,
       items: [{ productId: U.prod4, variantIdx: 0, qty: 2 }, { productId: U.prod6, variantIdx: 1, qty: 1 }],
-      createShipment: true, deliveredAfterDays: 4, createReturn: true, returnReason: 'DEFECTIVE' },
+      createShipment: true, deliveredAfterDays: 4 },
     // Omar: second order 2 days ago → pending (recent)
     { userEmail: 'omar@example.com', addrIdx: 2, orderStatus: 'PENDING', paymentStatus: 'PENDING',
       daysAfterSignup: 28,
@@ -352,8 +352,8 @@ async function seed() {
       const shippedAt = addDays(createdAt, 2);
       const deliveredAt = spec.deliveredAfterDays ? addDays(createdAt, spec.deliveredAfterDays) : null;
       let sStatus: string;
-      if (spec.orderStatus === 'DELIVERED' || spec.orderStatus === 'RETURNED') sStatus = 'DELIVERED';
-      else if (spec.orderStatus === 'SHIPPED') sStatus = 'OUT_FOR_DELIVERY';
+      if (spec.orderStatus === 'DELIVERED') sStatus = 'DELIVERED';
+      else if (spec.orderStatus === 'OUT_FOR_DELIVERY' || spec.orderStatus === 'SHIPPED') sStatus = 'OUT_FOR_DELIVERY';
       else sStatus = 'PENDING';
 
       await qr.query(
@@ -378,7 +378,7 @@ async function seed() {
            VALUES ($1, $2, 'DELIVERED', 'Package delivered successfully', NULL, $3, $3)`,
           [uuid(), shipmentId, deliveredAt],
         );
-      } else if (spec.orderStatus === 'SHIPPED') {
+      } else if (spec.orderStatus === 'SHIPPED' || spec.orderStatus === 'OUT_FOR_DELIVERY') {
         for (let t = 0; t < 3; t++) {
           await qr.query(
             `INSERT INTO shipment_tracking_logs (id, shipment_id, status, note, changed_by, created_at, updated_at)
