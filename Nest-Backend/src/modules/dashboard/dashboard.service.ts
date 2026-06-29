@@ -620,6 +620,7 @@ WHERE o.created_at >= $1
       'REFUNDED',
       'PARTIALLY_REFUNDED'
   )
+  AND p.deleted_at IS NULL
 GROUP BY
     p.id,
     p.name,
