@@ -50,11 +50,24 @@ export class RbacService {
     return this.roleRepo.save(role);
   }
 
-  async findAllRoles(): Promise<Role[]> {
-    return this.roleRepo.find({
+  async findAllRoles(): Promise<any> {
+    const roles = await this.roleRepo.find({
       relations: { permissions: true },
       order: { createdAt: 'ASC' },
     });
+
+    const systemSlugs = Object.values(DefaultRoles) as string[];
+    const totalRoles = roles.length;
+    const systemRoles = roles.filter((r) => systemSlugs.includes(r.slug)).length;
+    const customRoles = totalRoles - systemRoles;
+
+    return {
+      roles,
+      totalRoles,
+      activeRoles: totalRoles,
+      systemRoles,
+      customRoles,
+    };
   }
 
   async findRoleById(id: string): Promise<Role> {
@@ -176,13 +189,11 @@ export class RbacService {
     });
 
     const moduleSet = new Set(permissions.map((p) => p.module));
-    const modules = [...moduleSet];
 
     return {
-      data: permissions,
+      permissions,
       totalPermissions: permissions.length,
-      totalModules: modules.length,
-      modules,
+      totalModules: moduleSet.size,
     };
   }
 

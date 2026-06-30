@@ -40,7 +40,44 @@ export class ProductReportService {
       totalRevenue: parseFloat(r.totalRevenue),
       orderCount: parseInt(r.orderCount, 10),
     }));
-    return { data: mappedRows };
+
+    // Summary
+    const summaryQb = this.dataSource
+      .createQueryBuilder()
+      .select([
+        'COUNT(DISTINCT p.id) as "totalProduct"',
+        'COALESCE(SUM(oi.quantity), 0) as "productSold"',
+      ])
+      .from('products', 'p')
+      .leftJoin('order_items', 'oi', 'oi.product_id = p.id')
+      .leftJoin(
+        'orders',
+        'o',
+        'o.id = oi.order_id AND o.status NOT IN (:...excluded)',
+        { excluded: ['CANCELLED'] },
+      );
+
+    if (dateFrom) summaryQb.andWhere('o.created_at >= :dateFrom', { dateFrom });
+    if (dateTo) summaryQb.andWhere('o.created_at <= :dateTo', { dateTo });
+
+    const summary = await summaryQb.getRawOne();
+
+    const topEarner = mappedRows.length > 0
+      ? {
+          productId: mappedRows[0].productId,
+          productName: mappedRows[0].productName,
+          totalRevenue: mappedRows[0].totalRevenue,
+          totalSold: mappedRows[0].totalSold,
+          imageUrl: mappedRows[0].imageUrl,
+        }
+      : null;
+
+    return {
+      products: mappedRows,
+      totalProduct: parseInt(summary?.totalProduct ?? '0', 10),
+      productSold: parseFloat(summary?.productSold ?? '0'),
+      topEarner,
+    };
   }
 
   async getByCategory(dateFrom?: string, dateTo?: string) {

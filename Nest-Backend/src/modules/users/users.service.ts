@@ -170,7 +170,7 @@ export class UsersService {
       ]);
 
     return {
-      data,
+      customers: data,
       total,
       page,
       limit,

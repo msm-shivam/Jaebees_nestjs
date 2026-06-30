@@ -32,8 +32,22 @@ export class EmailTemplateService {
     return this.templateRepo.save(template);
   }
 
-  async findAll(): Promise<EmailTemplate[]> {
-    return this.templateRepo.find({ order: { createdAt: 'DESC' } });
+  async findAll(): Promise<any> {
+    const templates = await this.templateRepo.find({ order: { createdAt: 'DESC' } });
+
+    const [totalTemplates, activeTemplates, inactiveTemplates] =
+      await Promise.all([
+        this.templateRepo.count(),
+        this.templateRepo.count({ where: { isActive: true } }),
+        this.templateRepo.count({ where: { isActive: false } }),
+      ]);
+
+    return {
+      templates,
+      totalTemplates,
+      activeTemplates,
+      inactiveTemplates,
+    };
   }
 
   async findById(id: string): Promise<EmailTemplate> {

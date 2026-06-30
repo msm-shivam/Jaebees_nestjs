@@ -75,7 +75,7 @@ export class SalesReportService {
       : 0;
 
     return {
-      data: mappedRows,
+      sales: mappedRows,
       totalRevenue: parseFloat(summary?.totalRevenue ?? '0'),
       totalOrders: parseInt(summary?.totalOrders ?? '0', 10),
       averageOrderValue: parseFloat(summary?.averageOrderValue ?? '0'),

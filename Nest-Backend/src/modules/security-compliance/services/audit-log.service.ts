@@ -129,16 +129,14 @@ export class AuditLogService {
     }));
 
     return {
-      data: mappedData,
+      logs: mappedData,
       total,
       page,
       limit,
-      metrics: {
-        totalLogs,
-        todayLogs,
-        thisWeekLogs,
-        criticalEvents,
-      },
+      totalLogs,
+      todayLogs,
+      thisWeekLogs,
+      criticalEvents,
     };
   }
 

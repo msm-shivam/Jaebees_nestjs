@@ -81,7 +81,7 @@ export class AdminService {
     ]);
 
     return {
-      data: admins.map((a) =>
+      users: admins.map((a) =>
         plainToInstance(AdminResponseDto, a, { excludeExtraneousValues: true }),
       ),
       totalUsers,

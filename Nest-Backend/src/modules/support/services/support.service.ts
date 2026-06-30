@@ -244,7 +244,7 @@ export class SupportService {
     ]);
 
     return {
-      data: plainToInstance(TicketResponseDto, data),
+      tickets: plainToInstance(TicketResponseDto, data),
       total,
       page,
       limit,
