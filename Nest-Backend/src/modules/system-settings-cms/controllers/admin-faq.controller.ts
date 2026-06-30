@@ -12,7 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
@@ -64,7 +69,10 @@ export class AdminFaqController {
   @Permissions(DefaultPermissions.CMS_MANAGE)
   @ApiOperation({ summary: 'Update a FAQ' })
   @ApiResponse({ status: 200, description: 'FAQ updated.' })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateFaqDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateFaqDto,
+  ) {
     return this.faqService.update(id, dto);
   }
 

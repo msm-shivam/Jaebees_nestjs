@@ -1,5 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEmail, IsNumber, IsUrl } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsNumber,
+  IsBoolean,
+  Min,
+  Max,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateStoreSettingsDto {
   @ApiProperty({ example: 'Sport Ecom', required: false })
@@ -77,7 +86,7 @@ export class UpdateStoreSettingsDto {
   @IsNumber()
   latitude?: number;
 
-  @ApiProperty({ example: 77.2090, required: false })
+  @ApiProperty({ example: 77.209, required: false })
   @IsOptional()
   @IsNumber()
   longitude?: number;
@@ -104,7 +113,10 @@ export class UpdateSocialLinksDto {
   @IsString()
   youtube?: string;
 
-  @ApiProperty({ example: 'https://linkedin.com/company/sportecom', required: false })
+  @ApiProperty({
+    example: 'https://linkedin.com/company/sportecom',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   linkedin?: string;
@@ -172,4 +184,83 @@ export class UpdateBusinessInfoDto {
   @IsOptional()
   @IsString()
   ifscCode?: string;
+}
+
+export class UpdateSmtpConfigDto {
+  @ApiPropertyOptional({ example: 'smtp.gmail.com' })
+  @IsOptional()
+  @IsString()
+  smtpHost?: string;
+
+  @ApiPropertyOptional({ example: 587 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(65535)
+  smtpPort?: number;
+
+  @ApiPropertyOptional({ example: 'admin@sportecom.com' })
+  @IsOptional()
+  @IsString()
+  smtpUser?: string;
+
+  @ApiPropertyOptional({ example: 'your-app-password' })
+  @IsOptional()
+  @IsString()
+  smtpPass?: string;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  smtpSecure?: boolean;
+
+  @ApiPropertyOptional({ example: 'smtp' })
+  @IsOptional()
+  @IsString()
+  emailProvider?: string;
+
+  @ApiPropertyOptional({ example: 'Sport Ecom' })
+  @IsOptional()
+  @IsString()
+  fromName?: string;
+
+  @ApiPropertyOptional({ example: 'support@sportecom.com' })
+  @IsOptional()
+  @IsEmail()
+  fromEmail?: string;
+}
+
+export class TestSmtpDto {
+  @ApiProperty({ example: 'recipient@example.com' })
+  @IsEmail()
+  to: string;
+
+  @ApiPropertyOptional({ example: 'smtp.gmail.com' })
+  @IsOptional()
+  @IsString()
+  smtpHost?: string;
+
+  @ApiPropertyOptional({ example: 587 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(65535)
+  smtpPort?: number;
+
+  @ApiPropertyOptional({ example: 'admin@sportecom.com' })
+  @IsOptional()
+  @IsString()
+  smtpUser?: string;
+
+  @ApiPropertyOptional({ example: 'your-app-password' })
+  @IsOptional()
+  @IsString()
+  smtpPass?: string;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  smtpSecure?: boolean;
 }

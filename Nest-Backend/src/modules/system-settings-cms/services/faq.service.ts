@@ -19,7 +19,10 @@ export class FaqService {
   async create(dto: CreateFaqDto) {
     const faq = this.faqRepo.create(dto);
     const saved = await this.faqRepo.save(faq);
-    return { message: 'FAQ created successfully', data: this.toResponse(saved) };
+    return {
+      message: 'FAQ created successfully',
+      data: this.toResponse(saved),
+    };
   }
 
   async findAll(query: FaqQueryDto) {
@@ -30,7 +33,13 @@ export class FaqService {
     if (query.isActive !== undefined) where.isActive = query.isActive;
     if (query.category) where.category = query.category;
     if (query.search) {
-      return this.search(query.search, query.category, query.isActive, page, limit);
+      return this.search(
+        query.search,
+        query.category,
+        query.isActive,
+        page,
+        limit,
+      );
     }
 
     const [items, total] = await this.faqRepo.findAndCount({
@@ -48,7 +57,13 @@ export class FaqService {
     );
   }
 
-  private async search(search: string, category?: string, isActive?: boolean, page = 1, limit = 20) {
+  private async search(
+    search: string,
+    category?: string,
+    isActive?: boolean,
+    page = 1,
+    limit = 20,
+  ) {
     const where: Record<string, unknown>[] = [
       { question: ILike(`%${search}%`) },
       { answer: ILike(`%${search}%`) },
@@ -84,7 +99,10 @@ export class FaqService {
     const faq = await this.findByIdOrFail(id);
     Object.assign(faq, dto);
     const saved = await this.faqRepo.save(faq);
-    return { message: 'FAQ updated successfully', data: this.toResponse(saved) };
+    return {
+      message: 'FAQ updated successfully',
+      data: this.toResponse(saved),
+    };
   }
 
   async getCategories() {
@@ -112,6 +130,8 @@ export class FaqService {
   }
 
   private toResponse(faq: Faq): FaqResponseDto {
-    return plainToInstance(FaqResponseDto, faq, { excludeExtraneousValues: true });
+    return plainToInstance(FaqResponseDto, faq, {
+      excludeExtraneousValues: true,
+    });
   }
 }

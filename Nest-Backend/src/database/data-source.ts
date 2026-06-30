@@ -76,6 +76,7 @@ import { TicketRating } from '../modules/support/entities/ticket-rating.entity';
 import { TicketTag } from '../modules/support/entities/ticket-tag.entity';
 import { EmailNotification } from '../modules/email-notifications/entities/email-notification.entity';
 import { EmailTemplate } from '../modules/email-notifications/entities/email-template.entity';
+import { EmailTemplate as NtfyEmailTemplate } from '../modules/notifications/entities/email-template.entity';
 import { EmailPreference } from '../modules/email-notifications/entities/email-preference.entity';
 import { EmailLog } from '../modules/email-notifications/entities/email-log.entity';
 import { EmailCampaign } from '../modules/email-notifications/entities/email-campaign.entity';
@@ -187,6 +188,7 @@ export const AppDataSource = new DataSource({
     TicketTag,
     EmailNotification,
     EmailTemplate,
+    NtfyEmailTemplate,
     EmailPreference,
     EmailLog,
     EmailCampaign,

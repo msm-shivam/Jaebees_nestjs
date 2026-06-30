@@ -50,6 +50,7 @@ import { CustomerNotificationsController } from './controllers/customer-notifica
   ],
   exports: [
     NotificationsService,
+    EmailService,
     EmailQueueService,
     NotificationPreferenceService,
   ],

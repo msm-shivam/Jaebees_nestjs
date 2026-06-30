@@ -72,7 +72,7 @@ export class NotificationsService {
       await this.notificationLogService.markSent(log.id);
     } catch (error) {
       this.logger.error(
-        `Failed to send ${options.templateCode} email to ${options.to}: ${error.message}`,
+        `Failed to send ${options.templateCode} email to ${options.to}: ${(error as Error).message}`,
       );
     }
   }
@@ -282,6 +282,178 @@ export class NotificationsService {
       to: recipient,
       templateCode: templateCode as EmailTemplateCode,
       context: { firstName: 'Test User' },
+    });
+  }
+
+  // ─── New convenience methods ──────────────────────────────────────────────
+
+  async sendWelcomeDiscountEmail(
+    to: string,
+    firstName: string,
+    discountCode: string,
+    discountAmount: number,
+  ): Promise<void> {
+    return this.sendTemplatedEmail({
+      to,
+      templateCode: EmailTemplateCode.WELCOME_DISCOUNT,
+      context: {
+        firstName,
+        discountCode,
+        discountAmount,
+        shopUrl: '{{shopUrl}}',
+      },
+    });
+  }
+
+  async sendOrderPlacedEmail(options: {
+    to: string;
+    userId: string;
+    firstName: string;
+    orderNumber: string;
+    orderTotal: string;
+    orderUrl: string;
+    items: { name: string; quantity: number; price: string }[];
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      userId: options.userId,
+      to: options.to,
+      templateCode: EmailTemplateCode.ORDER_PLACED,
+      context: {
+        firstName: options.firstName,
+        orderNumber: options.orderNumber,
+        orderTotal: options.orderTotal,
+        orderUrl: options.orderUrl,
+        items: options.items,
+      },
+      preferenceType: 'order',
+    });
+  }
+
+  async sendOrderStatusUpdate(options: {
+    to: string;
+    userId: string;
+    firstName: string;
+    orderNumber: string;
+    oldStatus: string;
+    newStatus: string;
+    orderUrl: string;
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      userId: options.userId,
+      to: options.to,
+      templateCode: EmailTemplateCode.ORDER_STATUS_UPDATE,
+      context: {
+        firstName: options.firstName,
+        orderNumber: options.orderNumber,
+        oldStatus: options.oldStatus,
+        newStatus: options.newStatus,
+        orderUrl: options.orderUrl,
+      },
+      preferenceType: 'order',
+    });
+  }
+
+  async sendBillingInvoice(options: {
+    to: string;
+    userId: string;
+    firstName: string;
+    orderNumber: string;
+    invoiceNumber: string;
+    invoiceDate: string;
+    dueDate: string;
+    amount: string;
+    billingAddress: string;
+    invoiceUrl: string;
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      userId: options.userId,
+      to: options.to,
+      templateCode: EmailTemplateCode.BILLING_INVOICE,
+      context: {
+        firstName: options.firstName,
+        orderNumber: options.orderNumber,
+        invoiceNumber: options.invoiceNumber,
+        invoiceDate: options.invoiceDate,
+        dueDate: options.dueDate,
+        amount: options.amount,
+        billingAddress: options.billingAddress,
+        invoiceUrl: options.invoiceUrl,
+      },
+      preferenceType: 'payment',
+    });
+  }
+
+  async sendCartAbandonmentEmail(options: {
+    to: string;
+    userId: string;
+    firstName: string;
+    cartTotal: string;
+    discountCode: string;
+    cartUrl: string;
+    items: { name: string; quantity: number; price: string }[];
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      userId: options.userId,
+      to: options.to,
+      templateCode: EmailTemplateCode.CART_ABANDONMENT,
+      context: {
+        firstName: options.firstName,
+        cartTotal: options.cartTotal,
+        discountCode: options.discountCode,
+        cartUrl: options.cartUrl,
+        items: options.items,
+      },
+      preferenceType: 'marketing',
+    });
+  }
+
+  async sendWishlistPromotionEmail(options: {
+    to: string;
+    userId: string;
+    firstName: string;
+    discountCode: string;
+    discountAmount: number;
+    wishlistUrl: string;
+    items: { name: string; originalPrice: string; salePrice: string }[];
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      userId: options.userId,
+      to: options.to,
+      templateCode: EmailTemplateCode.WISHLIST_PROMOTION,
+      context: {
+        firstName: options.firstName,
+        discountCode: options.discountCode,
+        discountAmount: options.discountAmount,
+        wishlistUrl: options.wishlistUrl,
+        items: options.items,
+      },
+      preferenceType: 'marketing',
+    });
+  }
+
+  async sendSalesPromotionEmail(options: {
+    to: string;
+    userId?: string;
+    firstName: string;
+    saleName: string;
+    discountCode: string;
+    discountAmount: number;
+    validUntil: string;
+    shopUrl: string;
+  }): Promise<void> {
+    return this.sendTemplatedEmail({
+      userId: options.userId,
+      to: options.to,
+      templateCode: EmailTemplateCode.SALES_PROMOTION,
+      context: {
+        firstName: options.firstName,
+        saleName: options.saleName,
+        discountCode: options.discountCode,
+        discountAmount: options.discountAmount,
+        validUntil: options.validUntil,
+        shopUrl: options.shopUrl,
+      },
+      preferenceType: 'marketing',
     });
   }
 }

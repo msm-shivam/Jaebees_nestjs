@@ -12,7 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
@@ -42,7 +47,9 @@ export class AdminCmsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @Permissions(DefaultPermissions.CMS_VIEW)
-  @ApiOperation({ summary: 'List CMS pages with pagination, search, and filters' })
+  @ApiOperation({
+    summary: 'List CMS pages with pagination, search, and filters',
+  })
   @ApiPaginatedResponse(CmsPageQueryDto)
   async findAll(@Query() query: CmsPageQueryDto) {
     return this.cmsPageService.findAll(query);

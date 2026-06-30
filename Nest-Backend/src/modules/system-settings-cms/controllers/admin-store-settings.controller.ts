@@ -9,7 +9,13 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AdminJwtGuard } from '../../../common/guards/admin-jwt.guard';
 import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { Permissions } from '../../../common/decorators/permissions.decorator';
@@ -23,6 +29,8 @@ import {
   UpdateSocialLinksDto,
   UpdateEmailConfigDto,
   UpdateBusinessInfoDto,
+  UpdateSmtpConfigDto,
+  TestSmtpDto,
 } from '../dto/store-settings.dto';
 
 @ApiTags('Admin — Store Settings')
@@ -142,5 +150,28 @@ export class AdminStoreSettingsController {
   @Permissions(DefaultPermissions.SETTINGS_MANAGE)
   async updateBusinessInfo(@Body() dto: UpdateBusinessInfoDto) {
     return this.storeSettingsService.updateBusinessInfo(dto);
+  }
+
+  @Get('email-smtp')
+  @Permissions(DefaultPermissions.SETTINGS_VIEW)
+  @ApiOperation({ summary: 'Get SMTP configuration' })
+  async getSmtpConfig() {
+    return this.storeSettingsService.getSmtpConfig();
+  }
+
+  @Patch('email-smtp')
+  @Permissions(DefaultPermissions.SETTINGS_MANAGE)
+  @ApiOperation({
+    summary: 'Update SMTP configuration (hot-reloads transporter)',
+  })
+  async updateSmtpConfig(@Body() dto: UpdateSmtpConfigDto) {
+    return this.storeSettingsService.updateSmtpConfig(dto);
+  }
+
+  @Post('email-smtp/test')
+  @Permissions(DefaultPermissions.SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Test SMTP connection by sending a test email' })
+  async testSmtp(@Body() dto: TestSmtpDto) {
+    return this.storeSettingsService.testSmtpConnection(dto);
   }
 }

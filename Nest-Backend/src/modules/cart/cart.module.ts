@@ -7,6 +7,7 @@ import { Product } from '../products/entities/product.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { CartService } from './cart.service';
 import { CartController } from './cart.controller';
+import { AdminCartController } from './admin-cart.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { CartController } from './cart.controller';
       Inventory,
     ]),
   ],
-  controllers: [CartController],
+  controllers: [CartController, AdminCartController],
   providers: [CartService],
   exports: [CartService],
 })

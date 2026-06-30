@@ -29,7 +29,8 @@
     "seed:finance": "ts-node -r tsconfig-paths/register src/database/seeds/seed-finance.ts",
     "seed:support": "ts-node -r tsconfig-paths/register src/database/seeds/seed-support.ts",
     "seed:reviews": "ts-node -r tsconfig-paths/register src/database/seeds/seed-reviews.ts",
-    "seed:all": "npm run seed && npm run seed:users && npm run seed:orders && npm run seed:finance && npm run seed:support && npm run seed:reviews"
+    "seed:email-templates": "ts-node -r tsconfig-paths/register src/database/seeds/seed-email-templates.ts",
+    "seed:all": "npm run seed && npm run seed:email-templates && npm run seed:users && npm run seed:orders && npm run seed:finance && npm run seed:support && npm run seed:reviews"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.4",
