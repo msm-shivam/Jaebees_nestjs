@@ -41,6 +41,13 @@ export class AdminInventoryAnalyticsController {
     return this.analyticsService.getStockValue();
   }
 
+  @Get('movements')
+  @Permissions(DefaultPermissions.INVENTORY_ANALYTICS_VIEW)
+  @ApiOperation({ summary: 'Get stock movement summary statistics' })
+  getMovementStats() {
+    return this.analyticsService.getMovementStats();
+  }
+
   @Get('alerts')
   @Permissions(DefaultPermissions.INVENTORY_ANALYTICS_VIEW)
   @ApiOperation({ summary: 'Get inventory alert statistics' })

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { Inventory } from '../../inventory/entities/inventory.entity';
 import { StockAlert } from '../entities/stock-alert.entity';
 import { InventoryAudit } from '../entities/inventory-audit.entity';
@@ -171,6 +171,37 @@ export class InventoryAnalyticsService {
     return {
       totalStockValue: Math.round(totalValue * 100) / 100,
       totalItems: inventories.length,
+    };
+  }
+
+  async getMovementStats(): Promise<any> {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [todayMovements, stockIn, stockOut, netChangeResult] =
+      await Promise.all([
+        this.auditRepository.count({
+          where: { createdAt: MoreThanOrEqual(todayStart) },
+        }),
+        this.auditRepository.count({
+          where: { actionType: AuditActionType.STOCK_IN },
+        }),
+        this.auditRepository.count({
+          where: { actionType: AuditActionType.STOCK_OUT },
+        }),
+        this.auditRepository
+          .createQueryBuilder('audit')
+          .select('COALESCE(SUM(ABS(audit.after_quantity - audit.before_quantity)), 0)', 'net')
+          .getRawOne<{ net: string | null }>(),
+      ]);
+
+    const netChange = Number(netChangeResult?.net ?? 0);
+
+    return {
+      todayMovements,
+      stockIn,
+      stockOut,
+      netChange,
     };
   }
 
