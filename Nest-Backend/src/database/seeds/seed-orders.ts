@@ -133,12 +133,12 @@ async function seed() {
     await qr.query(
       `INSERT INTO product_images (id, product_id, image_url, alt_text, sort_order, is_primary, created_at, updated_at)
        VALUES ($1, $2, $3, $4, 0, true, $5, $5)`,
-      [uuid(), p.id, `/images/products/${p.skuPrefix.toLowerCase()}-1.jpg`, p.name, now],
+      [uuid(), p.id, `/uploads/products/${p.skuPrefix.toLowerCase()}-1.jpg`, p.name, now],
     );
     await qr.query(
       `INSERT INTO product_images (id, product_id, image_url, alt_text, sort_order, is_primary, created_at, updated_at)
        VALUES ($1, $2, $3, $4, 1, false, $5, $5)`,
-      [uuid(), p.id, `/images/products/${p.skuPrefix.toLowerCase()}-2.jpg`, `${p.name} - Side`, now],
+      [uuid(), p.id, `/uploads/products/${p.skuPrefix.toLowerCase()}-2.jpg`, `${p.name} - Side`, now],
     );
   }
   console.log('  Images: 12');
