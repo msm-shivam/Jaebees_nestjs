@@ -57,15 +57,16 @@ export class DiscoveryService {
         catId: product.categoryId,
         brandId: product.brandId,
       })
-      .orderBy(
+      .addSelect(
         `CASE WHEN p.category_id = :catId2 AND p.brand_id = :brandId2 THEN 0 WHEN p.category_id = :catId3 THEN 1 ELSE 2 END`,
-        'ASC',
+        'relevance_score',
       )
       .setParameters({
         catId2: product.categoryId,
         brandId2: product.brandId,
         catId3: product.categoryId,
       })
+      .addOrderBy('relevance_score', 'ASC')
       .addOrderBy('p.average_rating', 'DESC')
       .take(limit)
       .getMany();

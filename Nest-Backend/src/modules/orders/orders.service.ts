@@ -30,6 +30,10 @@ import { DeliveryChargesService } from '../delivery-charges/delivery-charges.ser
 import { ShipmentsService } from '../shipments/shipments.service';
 import { paginate } from '../../common/utils/pagination.util';
 import { AuditLogService } from '../security-compliance/services/audit-log.service';
+import { FirebaseService } from '../firebase/firebase.service';
+import { FcmUserType } from '../firebase/entities/fcm-token.entity';
+import { AdminNotificationService } from '../notifications/admin-notification.service';
+import { AdminNotificationType } from '../notifications/entities/admin-notification.entity';
 
 @Injectable()
 export class OrdersService {
@@ -56,7 +60,9 @@ export class OrdersService {
     private readonly deliveryChargesService: DeliveryChargesService,
     private readonly shipmentsService: ShipmentsService,
     private readonly notificationsService: NotificationsService,
-    private readonly auditLogService: AuditLogService
+    private readonly auditLogService: AuditLogService,
+    private readonly firebaseService: FirebaseService,
+    private readonly adminNotificationService: AdminNotificationService,
   ) { }
 
   async createOrder(
@@ -218,6 +224,14 @@ export class OrdersService {
                     : 'LOW_STOCK',
               }),
             );
+            const alertLabel =
+              inventory.availableQuantity <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK';
+            await this.adminNotificationService.create({
+              type: AdminNotificationType.INVENTORY,
+              title: `${alertLabel.replace('_', ' ')} Alert`,
+              message: `Variant ${cartItem.variantId} (SKU: ${variant?.sku ?? 'N/A'}) is ${alertLabel === 'OUT_OF_STOCK' ? 'out of stock' : 'low on stock'} (available: ${inventory.availableQuantity}, threshold: ${threshold})`,
+              data: { variantId: inventory.variantId, availableQuantity: inventory.availableQuantity, threshold, alertType: alertLabel },
+            });
           }
         }
       }
@@ -250,7 +264,23 @@ export class OrdersService {
         orderNumber: savedOrder.orderNumber,
         firstName: user.firstName,
       });
+      await this.firebaseService.sendPushToUser(
+        userId,
+        FcmUserType.CUSTOMER,
+        {
+          title: 'Order Confirmed',
+          body: `Your order ${savedOrder.orderNumber} has been placed successfully.`,
+          data: { orderId: savedOrder.id, orderNumber: savedOrder.orderNumber },
+        },
+      );
     }
+
+    await this.adminNotificationService.create({
+      type: AdminNotificationType.ORDER,
+      title: 'New Order',
+      message: `Order ${savedOrder.orderNumber} placed by ${user?.firstName ?? 'Unknown'} (${user?.email ?? 'N/A'})`,
+      data: { orderId: savedOrder.id, orderNumber: savedOrder.orderNumber, userId },
+    });
 
     return {
       message: 'Order created successfully.',
@@ -377,6 +407,26 @@ export class OrdersService {
 
     order.status = dto.status;
     const saved = await this.orderRepo.save(order);
+
+    if (order.user) {
+      await this.firebaseService.sendPushToUser(
+        order.user.id,
+        FcmUserType.CUSTOMER,
+        {
+          title: 'Order Status Updated',
+          body: `Your order ${saved.orderNumber} is now ${saved.status}.`,
+          data: { orderId: saved.id, orderNumber: saved.orderNumber, status: saved.status },
+        },
+      );
+    }
+
+    await this.adminNotificationService.create({
+      type: AdminNotificationType.ORDER,
+      title: 'Order Status Updated',
+      message: `Order ${saved.orderNumber} status changed to ${saved.status}`,
+      data: { orderId: saved.id, orderNumber: saved.orderNumber, status: saved.status, updatedBy: adminId },
+    });
+
     // Reload with full relations for response
     const result = await this.orderRepo.findOne({
       where: { id: orderId },
@@ -438,13 +488,25 @@ export class OrdersService {
         await this.inventoryRepo.save(inventory);
       }
     }
-    // await this.auditLogService.log({
-    //   userId: adminId,
-    //   action: 'CANCEL',
-    //   entityType: 'ORDER',
-    //   entityId: saved.id,
-    //   newValues: { status: saved.status, notes: saved.notes, orderNumber: saved.orderNumber }
-    // });
+
+    if (order.user) {
+      await this.firebaseService.sendPushToUser(
+        order.user.id,
+        FcmUserType.CUSTOMER,
+        {
+          title: 'Order Cancelled',
+          body: `Your order ${saved.orderNumber} has been cancelled.`,
+          data: { orderId: saved.id, orderNumber: saved.orderNumber },
+        },
+      );
+    }
+
+    await this.adminNotificationService.create({
+      type: AdminNotificationType.ORDER,
+      title: 'Order Cancelled',
+      message: `Order ${saved.orderNumber} was cancelled${order.user ? ` by ${order.user.firstName} ${order.user.lastName}` : ''}${dto?.reason ? `: ${dto.reason}` : ''}`,
+      data: { orderId: saved.id, orderNumber: saved.orderNumber, reason: dto?.reason ?? null, cancelledBy: adminId },
+    });
 
     return {
       message: 'Order cancelled successfully.',

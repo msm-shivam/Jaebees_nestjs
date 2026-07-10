@@ -46,6 +46,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ImagesModule } from './modules/images';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { PublicCatalogModule } from './modules/public-catalog/public-catalog.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     ImagesModule,
     DashboardModule,
     FirebaseModule,
+    PublicCatalogModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

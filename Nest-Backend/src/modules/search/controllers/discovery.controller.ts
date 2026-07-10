@@ -1,12 +1,24 @@
 import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 import { DiscoveryService } from '../services/discovery.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { ProductResponseDto } from '../../../modules/products/dto/product-response.dto';
 
 @ApiTags('Discovery')
 @Controller('discovery')
 export class DiscoveryController {
   constructor(private readonly discoveryService: DiscoveryService) {}
+
+  private mapProducts(products: any[]) {
+    return products.map((p) =>
+      plainToInstance(
+        ProductResponseDto,
+        { ...p, brandName: p.brand?.name ?? '', categoryName: p.category?.name ?? '' },
+        { excludeExtraneousValues: true },
+      ),
+    );
+  }
 
   @Get('related/:productId')
   @ApiOperation({ summary: 'Get related products' })
@@ -14,7 +26,9 @@ export class DiscoveryController {
     @Param('productId') productId: string,
     @Query('limit') limit?: number,
   ) {
-    return this.discoveryService.getRelatedProducts(productId, limit);
+    return this.mapProducts(
+      await this.discoveryService.getRelatedProducts(productId, limit),
+    );
   }
 
   @Get('also-viewed/:productId')
@@ -23,7 +37,9 @@ export class DiscoveryController {
     @Param('productId') productId: string,
     @Query('limit') limit?: number,
   ) {
-    return this.discoveryService.getAlsoViewed(productId, limit);
+    return this.mapProducts(
+      await this.discoveryService.getAlsoViewed(productId, limit),
+    );
   }
 
   @Get('frequently-bought/:productId')
@@ -32,25 +48,33 @@ export class DiscoveryController {
     @Param('productId') productId: string,
     @Query('limit') limit?: number,
   ) {
-    return this.discoveryService.getFrequentlyBought(productId, limit);
+    return this.mapProducts(
+      await this.discoveryService.getFrequentlyBought(productId, limit),
+    );
   }
 
   @Get('trending-products')
   @ApiOperation({ summary: 'Get trending products' })
   async trendingProducts(@Query('limit') limit?: number) {
-    return this.discoveryService.getTrendingProducts(limit);
+    return this.mapProducts(
+      await this.discoveryService.getTrendingProducts(limit),
+    );
   }
 
   @Get('featured-products')
   @ApiOperation({ summary: 'Get featured products' })
   async featuredProducts(@Query('limit') limit?: number) {
-    return this.discoveryService.getFeaturedProducts(limit);
+    return this.mapProducts(
+      await this.discoveryService.getFeaturedProducts(limit),
+    );
   }
 
   @Get('new-arrivals')
   @ApiOperation({ summary: 'Get new arrivals' })
   async newArrivals(@Query('limit') limit?: number) {
-    return this.discoveryService.getNewArrivals(limit);
+    return this.mapProducts(
+      await this.discoveryService.getNewArrivals(limit),
+    );
   }
 
   @Get('recently-viewed')
@@ -58,7 +82,9 @@ export class DiscoveryController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get recently viewed products (customer)' })
   async recentlyViewed(@Req() req: any, @Query('limit') limit?: number) {
-    return this.discoveryService.getRecentlyViewed(req.user.id, limit);
+    return this.mapProducts(
+      await this.discoveryService.getRecentlyViewed(req.user.id, limit),
+    );
   }
 
   @Get('recommended')
@@ -66,7 +92,9 @@ export class DiscoveryController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get personalized product recommendations' })
   async recommended(@Req() req: any, @Query('limit') limit?: number) {
-    return this.discoveryService.getRecommended(req.user.id, limit);
+    return this.mapProducts(
+      await this.discoveryService.getRecommended(req.user.id, limit),
+    );
   }
 
   @Get('similar/:productId')
@@ -75,19 +103,25 @@ export class DiscoveryController {
     @Param('productId') productId: string,
     @Query('limit') limit?: number,
   ) {
-    return this.discoveryService.getSimilar(productId, limit);
+    return this.mapProducts(
+      await this.discoveryService.getSimilar(productId, limit),
+    );
   }
 
   @Get('recent-trending')
   @ApiOperation({ summary: 'Get recently trending products (7 days)' })
   async recentTrending(@Query('limit') limit?: number) {
-    return this.discoveryService.getRecentTrending(limit);
+    return this.mapProducts(
+      await this.discoveryService.getRecentTrending(limit),
+    );
   }
 
   @Get('seasonal')
   @ApiOperation({ summary: 'Get seasonal product recommendations' })
   async seasonal(@Query('limit') limit?: number) {
-    return this.discoveryService.getSeasonal(limit);
+    return this.mapProducts(
+      await this.discoveryService.getSeasonal(limit),
+    );
   }
 
   @Get('record-view/:productId')

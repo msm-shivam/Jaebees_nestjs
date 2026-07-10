@@ -16,6 +16,7 @@ import { UpdateDeliveryChargeDto } from './dto/update-delivery-charge.dto';
 import { DeliveryChargeResponseDto } from './dto/delivery-charge-response.dto';
 import { DeliveryChargeQueryDto } from './dto/delivery-charge-query.dto';
 import { ActiveDeliveryChargesResponseDto } from './dto/active-delivery-charges-response.dto';
+import { PaymentMethod } from '../payments/entities/payment-method.entity';
 import { paginate } from '../../common/utils/pagination.util';
 
 @Injectable()
@@ -25,6 +26,8 @@ export class DeliveryChargesService {
     private readonly repo: Repository<DeliveryCharge>,
     @InjectRepository(DeliveryChargeAudit)
     private readonly auditRepo: Repository<DeliveryChargeAudit>,
+    @InjectRepository(PaymentMethod)
+    private readonly paymentMethodRepo: Repository<PaymentMethod>,
   ) {}
 
   async create(dto: CreateDeliveryChargeDto, adminId: string) {
@@ -167,46 +170,64 @@ export class DeliveryChargesService {
     };
   }
 
-  async getActiveCharges(): Promise<ActiveDeliveryChargesResponseDto> {
+  async getActiveCharges(): Promise<{
+    deliveryCharge: number;
+    freeShippingThreshold: number;
+    codCharge?: number;
+    handlingCharge: number;
+  }> {
     const charges = await this.repo.find({ where: { isActive: true } });
 
-    const result = new ActiveDeliveryChargesResponseDto();
-    result.deliveryCharge = 0;
-    result.freeShippingThreshold = 0;
-    result.codCharge = 0;
-    result.handlingCharge = 0;
+    const codMethod = await this.paymentMethodRepo.findOne({
+      where: { code: 'cod', isActive: true },
+    });
+
+    let deliveryCharge = 0;
+    let freeShippingThreshold = 0;
+    let codCharge = undefined as number | undefined;
+    let handlingCharge = 0;
 
     for (const c of charges) {
       const amount = Number(c.chargeAmount);
       switch (c.chargeType) {
         case DeliveryChargeType.FIXED_DELIVERY:
-          result.deliveryCharge = amount;
+          deliveryCharge = amount;
           break;
         case DeliveryChargeType.FREE_SHIPPING_THRESHOLD:
-          result.freeShippingThreshold = amount;
+          freeShippingThreshold = amount;
           break;
         case DeliveryChargeType.COD_CHARGE:
-          result.codCharge = amount;
+          codCharge = codMethod ? amount : undefined;
           break;
         case DeliveryChargeType.HANDLING_CHARGE:
-          result.handlingCharge = amount;
+          handlingCharge = amount;
           break;
       }
     }
 
-    return result;
+    return {
+      deliveryCharge,
+      freeShippingThreshold,
+      ...(codCharge !== undefined ? { codCharge } : {}),
+      handlingCharge,
+    };
   }
 
   calculateCharges(
     subtotal: number,
-    activeCharges: ActiveDeliveryChargesResponseDto,
+    activeCharges: {
+      deliveryCharge: number;
+      freeShippingThreshold: number;
+      codCharge?: number;
+      handlingCharge: number;
+    },
   ) {
     const deliveryCharge =
       subtotal >= activeCharges.freeShippingThreshold &&
       activeCharges.freeShippingThreshold > 0
         ? 0
         : activeCharges.deliveryCharge;
-    const codCharge = activeCharges.codCharge;
+    const codCharge = activeCharges.codCharge ?? 0;
     const handlingCharge = activeCharges.handlingCharge;
     return { deliveryCharge, codCharge, handlingCharge };
   }

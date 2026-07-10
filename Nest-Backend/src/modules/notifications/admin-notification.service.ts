@@ -6,6 +6,7 @@ import {
   AdminNotificationType,
 } from './entities/admin-notification.entity';
 import { AdminNotificationQueryDto } from './dto/admin-notification-query.dto';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class AdminNotificationService {
@@ -14,6 +15,7 @@ export class AdminNotificationService {
   constructor(
     @InjectRepository(AdminNotification)
     private readonly repo: Repository<AdminNotification>,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   async create(data: {
@@ -25,6 +27,13 @@ export class AdminNotificationService {
     const notification = this.repo.create(data);
     const saved = await this.repo.save(notification);
     this.logger.log(`Admin notification created: ${saved.id} - ${saved.title}`);
+    const pushData: Record<string, string> = { type: data.type, notificationId: saved.id };
+    if (data.data) {
+      for (const [key, value] of Object.entries(data.data)) {
+        pushData[key] = String(value);
+      }
+    }
+    this.firebaseService.sendPushToAllAdmins({ title: data.title, body: data.message, data: pushData });
     return saved;
   }
 
@@ -109,5 +118,25 @@ export class AdminNotificationService {
 
   async countUnread(): Promise<number> {
     return this.repo.count({ where: { isRead: false } as any });
+  }
+
+  async getSummary(): Promise<{
+    total: number;
+    unread: number;
+    orders: number;
+    inventory: number;
+    customers: number;
+    systemAlerts: number;
+  }> {
+    const [total, unread, orders, inventory, customers, systemAlerts] =
+      await Promise.all([
+        this.repo.count(),
+        this.repo.count({ where: { isRead: false } as any }),
+        this.repo.count({ where: { type: AdminNotificationType.ORDER } as any }),
+        this.repo.count({ where: { type: AdminNotificationType.INVENTORY } as any }),
+        this.repo.count({ where: { type: AdminNotificationType.CUSTOMER } as any }),
+        this.repo.count({ where: { type: AdminNotificationType.SYSTEM_ALERT } as any }),
+      ]);
+    return { total, unread, orders, inventory, customers, systemAlerts };
   }
 }

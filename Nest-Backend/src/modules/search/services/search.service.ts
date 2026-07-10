@@ -23,6 +23,8 @@ import {
 import { SearchLog } from '../entities/search-log.entity';
 import { SearchAnalyticsService } from './search-analytics.service';
 import { paginate } from '../../../common/utils/pagination.util';
+import { ProductResponseDto } from '../../products/dto/product-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class SearchService {
@@ -308,28 +310,36 @@ export class SearchService {
       });
     }
 
-    // Sorting
+    // Sorting + track columns for SELECT DISTINCT compatibility
+    const sortColumns: string[] = [];
     switch (sort) {
       case SortOption.NEWEST:
         qb.orderBy('p.created_at', 'DESC');
+        sortColumns.push('p.created_at');
         break;
       case SortOption.PRICE_ASC:
         qb.orderBy('v.price', 'ASC');
+        sortColumns.push('v.price');
         break;
       case SortOption.PRICE_DESC:
         qb.orderBy('v.price', 'DESC');
+        sortColumns.push('v.price');
         break;
       case SortOption.HIGHEST_RATED:
         qb.orderBy('p.average_rating', 'DESC');
+        sortColumns.push('p.average_rating');
         break;
       case SortOption.NAME_ASC:
         qb.orderBy('p.name', 'ASC');
+        sortColumns.push('p.name');
         break;
       case SortOption.NAME_DESC:
         qb.orderBy('p.name', 'DESC');
+        sortColumns.push('p.name');
         break;
       case SortOption.DISCOUNT_DESC:
         qb.orderBy('v.compare_at_price', 'DESC');
+        sortColumns.push('v.compare_at_price');
         break;
       case SortOption.RELEVANCE:
       default:
@@ -339,8 +349,10 @@ export class SearchService {
             'ASC',
           ).setParameter('exactTerm', `${query.q.toLowerCase()}%`);
           qb.addOrderBy('p.total_reviews', 'DESC');
+          sortColumns.push('p.total_reviews');
         } else {
           qb.orderBy('p.created_at', 'DESC');
+          sortColumns.push('p.created_at');
         }
         break;
     }
@@ -348,9 +360,16 @@ export class SearchService {
     // Get total count (without pagination)
     const total = await qb.getCount();
 
-    // Apply pagination
+    // Apply pagination — must add ORDER BY columns to SELECT for PostgreSQL DISTINCT
     qb.skip(skip).take(limit);
-    qb.select('DISTINCT p.id');
+    qb.distinct(true).select('p.id');
+    sortColumns.forEach((col) => qb.addSelect(col));
+    if (query.q && sort === SortOption.RELEVANCE) {
+      qb.addSelect(
+        `CASE WHEN LOWER(p.name) LIKE :exactTerm THEN 0 ELSE 1 END`,
+        'relevance_order',
+      ).setParameter('exactTerm', `${query.q.toLowerCase()}%`);
+    }
 
     // Get IDs only for pagination, then fetch full entities
     const rawIds = await qb.getRawMany();
@@ -360,7 +379,7 @@ export class SearchService {
 
     let items: any[] = [];
     if (ids.length > 0) {
-      items = await this.productRepo
+      const products = await this.productRepo
         .createQueryBuilder('p')
         .leftJoinAndSelect('p.brand', 'brand')
         .leftJoinAndSelect('p.category', 'category')
@@ -378,7 +397,18 @@ export class SearchService {
         .getMany();
       // Re-order to match pagination order
       const idOrder = new Map(ids.map((id, i) => [id, i]));
-      items.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
+      products.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
+      items = products.map((p) =>
+        plainToInstance(
+          ProductResponseDto,
+          {
+            ...p,
+            brandName: p.brand?.name ?? '',
+            categoryName: p.category?.name ?? '',
+          },
+          { excludeExtraneousValues: true },
+        ),
+      );
     }
 
     // Log the search
@@ -426,9 +456,38 @@ export class SearchService {
     }));
 
     return {
-      categories,
-      brands,
-      collections,
+      categories: categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        image: c.image,
+        description: c.description,
+        sortOrder: c.sortOrder,
+        isActive: c.isActive,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      })),
+      brands: brands.map((b) => ({
+        id: b.id,
+        name: b.name,
+        slug: b.slug,
+        logo: b.logo,
+        description: b.description,
+        isActive: b.isActive,
+        createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
+      })),
+      collections: collections.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        image: c.image,
+        description: c.description,
+        isActive: c.isActive,
+        productCount: c.productCount,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      })),
       attributes: filterableAttributes,
     };
   }

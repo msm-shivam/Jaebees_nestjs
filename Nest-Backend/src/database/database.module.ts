@@ -104,6 +104,10 @@ import { HomepageSection } from '../modules/system-settings-cms/entities/homepag
 import { ContactSetting } from '../modules/system-settings-cms/entities/contact-setting.entity';
 import { SiteConfiguration } from '../modules/system-settings-cms/entities/site-configuration.entity';
 import { StoreSetting } from '../modules/system-settings-cms/entities/store-setting.entity';
+import { SearchLog } from '../modules/search/entities/search-log.entity';
+import { RecentSearch } from '../modules/search/entities/recent-search.entity';
+import { ProductView } from '../modules/search/entities/product-view.entity';
+import { FcmToken } from '../modules/firebase/entities/fcm-token.entity';
 
 @Module({
   imports: [
@@ -223,7 +227,11 @@ import { StoreSetting } from '../modules/system-settings-cms/entities/store-sett
             HomepageSection,
             ContactSetting,
             SiteConfiguration,
-            StoreSetting
+            StoreSetting,
+            SearchLog,
+            RecentSearch,
+            ProductView,
+            FcmToken
           ],
           migrations: ['dist/database/migrations/*.js'],
           synchronize: false,

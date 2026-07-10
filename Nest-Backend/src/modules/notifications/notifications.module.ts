@@ -56,6 +56,7 @@ import { AdminNotificationService } from './admin-notification.service';
   ],
   exports: [
     NotificationsService,
+    AdminNotificationService,
     EmailService,
     EmailQueueService,
     NotificationPreferenceService,

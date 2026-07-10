@@ -8,6 +8,8 @@ import { Repository } from 'typeorm';
 import { Address } from './entities/address.entity';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
+import { AddressResponseDto } from './dto/address-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AddressesService {
@@ -39,9 +41,12 @@ export class AddressesService {
   }
 
   async findAll(userId: string) {
-    return this.repo.find({
+    const addresses = await this.repo.find({
       where: { userId },
       order: { isDefault: 'DESC', createdAt: 'DESC' },
+    });
+    return plainToInstance(AddressResponseDto, addresses, {
+      excludeExtraneousValues: true,
     });
   }
 

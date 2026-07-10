@@ -32,6 +32,13 @@ export class AdminNotificationsV2Controller {
     return this.adminNotificationService.findAll(query);
   }
 
+  @Get('summary')
+  @Permissions(DefaultPermissions.NOTIFICATION_VIEW)
+  @ApiOperation({ summary: 'Get notification summary counts (total, unread, by type)' })
+  async summary() {
+    return this.adminNotificationService.getSummary();
+  }
+
   @Get('unread-count')
   @Permissions(DefaultPermissions.NOTIFICATION_VIEW)
   @ApiOperation({ summary: 'Get count of unread notifications' })

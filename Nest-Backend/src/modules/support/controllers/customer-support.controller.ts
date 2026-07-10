@@ -17,6 +17,8 @@ import { CreateTicketDto } from '../dto/create-ticket.dto';
 import { ReplyTicketDto } from '../dto/reply-ticket.dto';
 import { TicketQueryDto } from '../dto/ticket-query.dto';
 import { RateTicketDto } from '../dto/rate-ticket.dto';
+import { TicketResponseDto } from '../dto/ticket-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('Customer — Support')
 @ApiBearerAuth('JWT')
@@ -43,7 +45,10 @@ export class CustomerSupportController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.supportService.findOne(id, user.sub);
+    const ticket = await this.supportService.findOne(id, user.sub);
+    return plainToInstance(TicketResponseDto, ticket, {
+      excludeExtraneousValues: true,
+    });
   }
 
   @Post(':id/reply')

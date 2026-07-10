@@ -111,6 +111,8 @@ export class SupportService {
   async findMyTickets(customerId: string, query: TicketQueryDto) {
     const qb = this.ticketRepo
       .createQueryBuilder('t')
+      .leftJoinAndSelect('t.customer', 'customer')
+      .leftJoinAndSelect('t.assignedAdmin', 'assignedAdmin')
       .leftJoinAndSelect('t.messages', 'messages')
       .where('t.customer_id = :customerId', { customerId });
 
@@ -128,13 +130,22 @@ export class SupportService {
       .take(limit)
       .getManyAndCount();
 
-    return { data, total, page, limit };
+    return {
+      data: plainToInstance(TicketResponseDto, data, {
+        excludeExtraneousValues: true,
+      }),
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(ticketId: string, customerId?: string) {
     const ticket = await this.ticketRepo.findOne({
       where: { id: ticketId },
       relations: {
+        customer: true,
+        assignedAdmin: true,
         messages: true,
         assignments: { assignedAdmin: true },
         notes: true,

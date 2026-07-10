@@ -104,6 +104,7 @@ import { HomepageSection } from '../modules/system-settings-cms/entities/homepag
 import { ContactSetting } from '../modules/system-settings-cms/entities/contact-setting.entity';
 import { SiteConfiguration } from '../modules/system-settings-cms/entities/site-configuration.entity';
 import { StoreSetting } from '../modules/system-settings-cms/entities/store-setting.entity';
+import { FcmToken } from '../modules/firebase/entities/fcm-token.entity';
 
 
 dotenv.config();
@@ -219,6 +220,7 @@ export const AppDataSource = new DataSource({
     ContactSetting,
     SiteConfiguration,
     StoreSetting,
+    FcmToken,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
