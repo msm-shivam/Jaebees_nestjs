@@ -33,7 +33,11 @@ export class AdminNotificationService {
         pushData[key] = String(value);
       }
     }
-    this.firebaseService.sendPushToAllAdmins({ title: data.title, body: data.message, data: pushData });
+    try {
+      await this.firebaseService.sendPushToAllAdmins({ title: data.title, body: data.message, data: pushData });
+    } catch (err) {
+      this.logger.error(`Push to admins failed: ${(err as Error).message}`);
+    }
     return saved;
   }
 

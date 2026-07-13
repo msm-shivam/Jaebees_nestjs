@@ -5,6 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { DataSource } from 'typeorm';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuditLogService } from '../../modules/security-compliance/services/audit-log.service';
@@ -15,9 +16,10 @@ export class AuditInterceptor implements NestInterceptor {
   constructor(
     private readonly auditLogService: AuditLogService,
     private readonly reflector: Reflector,
+    private readonly dataSource: DataSource,
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const skipAudit =
       this.reflector.getAllAndOverride<boolean>(SKIP_AUDIT_LOG_KEY, [
         context.getHandler(),
@@ -38,6 +40,25 @@ export class AuditInterceptor implements NestInterceptor {
     const action = this.getAction(method);
     const entityType = this.getEntityType(route.path);
 
+    let oldValues: Record<string, unknown> | null = null;
+    if (['PATCH', 'PUT', 'DELETE'].includes(method) && params?.id) {
+      try {
+        const metadata = this.dataSource.entityMetadatas.find(
+          m => m.name.toLowerCase() === entityType.toLowerCase(),
+        );
+        if (metadata) {
+          const repo = this.dataSource.getRepository(metadata.target);
+          const entity = await repo.findOne({ where: { id: params.id } as any });
+          if (entity) {
+            const { id, createdAt, updatedAt, deletedAt, ...rest } = entity as any;
+            oldValues = Object.keys(rest).length > 0 ? rest : null;
+          }
+        }
+      } catch {
+        // fail silently — oldValues stays null
+      }
+    }
+
     return next.handle().pipe(
       tap((response: unknown) => {
         const res = response as Record<string, unknown> | undefined;
@@ -55,6 +76,7 @@ export class AuditInterceptor implements NestInterceptor {
             entityId,
             ipAddress: ip,
             userAgent: headers['user-agent'],
+            oldValues: action === 'UPDATE' || action === 'DELETE' ? oldValues : null,
             newValues:
               action === 'CREATE' || action === 'UPDATE' ? (data as Record<string, unknown>) : null,
           })

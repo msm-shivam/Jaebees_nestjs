@@ -66,7 +66,10 @@ export class FirebaseService implements OnModuleInit {
     tokens: string[],
     payload: { title: string; body: string; data?: Record<string, string> },
   ): Promise<BatchResponse | null> {
-    if (!this.messaging) return null;
+    if (!this.messaging) {
+      this.logger.warn('Firebase messaging not initialized — push skipped');
+      return null;
+    }
     try {
       const message: MulticastMessage = {
         tokens,
@@ -74,6 +77,7 @@ export class FirebaseService implements OnModuleInit {
         data: payload.data,
       };
       const response = await this.messaging.sendEachForMulticast(message);
+      this.logger.log(`Multicast sent: ${response.successCount}/${tokens.length} succeeded`);
       await this.cleanupInvalidTokens(response, tokens);
       return response;
     } catch (error) {
@@ -88,7 +92,10 @@ export class FirebaseService implements OnModuleInit {
     payload: { title: string; body: string; data?: Record<string, string> },
   ): Promise<void> {
     const tokens = await this.fcmTokenService.findByUser(userId, userType);
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) {
+      this.logger.warn(`No FCM tokens for ${userType} ${userId} — push skipped`);
+      return;
+    }
     await this.sendMulticast(
       tokens.map((t) => t.token),
       payload,
@@ -98,8 +105,15 @@ export class FirebaseService implements OnModuleInit {
   async sendPushToAllAdmins(
     payload: { title: string; body: string; data?: Record<string, string> },
   ): Promise<void> {
+    if (!this.messaging) {
+      this.logger.warn('Firebase messaging not initialized — push to admins skipped');
+      return;
+    }
     const tokens = await this.fcmTokenService.findAllByUserType(FcmUserType.ADMIN);
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) {
+      this.logger.warn('No admin FCM tokens registered — push skipped');
+      return;
+    }
     await this.sendMulticast(
       tokens.map((t) => t.token),
       payload,

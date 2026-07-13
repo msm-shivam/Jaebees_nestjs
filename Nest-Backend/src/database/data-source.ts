@@ -105,6 +105,7 @@ import { ContactSetting } from '../modules/system-settings-cms/entities/contact-
 import { SiteConfiguration } from '../modules/system-settings-cms/entities/site-configuration.entity';
 import { StoreSetting } from '../modules/system-settings-cms/entities/store-setting.entity';
 import { FcmToken } from '../modules/firebase/entities/fcm-token.entity';
+import { Slider } from '../modules/sliders/entities/slider.entity';
 
 
 dotenv.config();
@@ -221,6 +222,7 @@ export const AppDataSource = new DataSource({
     SiteConfiguration,
     StoreSetting,
     FcmToken,
+    Slider,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

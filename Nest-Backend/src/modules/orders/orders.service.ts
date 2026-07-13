@@ -405,6 +405,7 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Order not found.');
 
+    const oldStatus = order.status;
     order.status = dto.status;
     const saved = await this.orderRepo.save(order);
 
@@ -418,6 +419,15 @@ export class OrdersService {
           data: { orderId: saved.id, orderNumber: saved.orderNumber, status: saved.status },
         },
       );
+      await this.notificationsService.sendOrderStatusUpdate({
+        to: order.user.email,
+        userId: order.user.id,
+        firstName: order.user.firstName,
+        orderNumber: saved.orderNumber,
+        oldStatus,
+        newStatus: saved.status,
+        orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
+      });
     }
 
     await this.adminNotificationService.create({
@@ -472,6 +482,7 @@ export class OrdersService {
       }
     }
 
+    const oldStatus = order.status;
     order.status = OrderStatus.CANCELLED;
     if (dto?.reason) {
       order.notes = dto.reason;
@@ -499,6 +510,15 @@ export class OrdersService {
           data: { orderId: saved.id, orderNumber: saved.orderNumber },
         },
       );
+      await this.notificationsService.sendOrderStatusUpdate({
+        to: order.user.email,
+        userId: order.user.id,
+        firstName: order.user.firstName,
+        orderNumber: saved.orderNumber,
+        oldStatus,
+        newStatus: OrderStatus.CANCELLED,
+        orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
+      });
     }
 
     await this.adminNotificationService.create({

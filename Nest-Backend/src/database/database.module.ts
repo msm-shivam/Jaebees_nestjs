@@ -108,6 +108,7 @@ import { SearchLog } from '../modules/search/entities/search-log.entity';
 import { RecentSearch } from '../modules/search/entities/recent-search.entity';
 import { ProductView } from '../modules/search/entities/product-view.entity';
 import { FcmToken } from '../modules/firebase/entities/fcm-token.entity';
+import { Slider } from '../modules/sliders/entities/slider.entity';
 
 @Module({
   imports: [
@@ -231,7 +232,8 @@ import { FcmToken } from '../modules/firebase/entities/fcm-token.entity';
             SearchLog,
             RecentSearch,
             ProductView,
-            FcmToken
+            FcmToken,
+            Slider
           ],
           migrations: ['dist/database/migrations/*.js'],
           synchronize: false,

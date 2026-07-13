@@ -188,6 +188,8 @@ export enum DefaultPermissions {
   SETTINGS_MANAGE = 'settings.manage',
   CMS_VIEW = 'cms.view',
   CMS_MANAGE = 'cms.manage',
+  SLIDER_VIEW = 'slider.view',
+  SLIDER_MANAGE = 'slider.manage',
   // Catalog
   CATALOG_VIEW = 'catalog.view',
   CATALOG_MANAGE = 'catalog.manage',

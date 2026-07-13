@@ -134,28 +134,11 @@ export class AdminAuthService {
     });
 
     if (!admin || !admin.isActive) {
-      await this.auditLogService.log({
-        userId: payload.sub,
-        action: 'REFRESH_TOKEN_FAILED',
-        entityType: 'ADMIN',
-        entityId: payload.sub,
-        ipAddress,
-        userAgent,
-        newValues: { reason: 'Account disabled or not found' },
-      }).catch(() => {});
       throw new UnauthorizedException(AuthMessages.ACCOUNT_DISABLED);
     }
 
     await this.adminSessionRepo.remove(session);
     const tokens = await this.generateAdminTokens(admin, ipAddress, userAgent);
-    await this.auditLogService.log({
-      userId: admin.id,
-      action: 'REFRESH_TOKEN',
-      entityType: 'ADMIN',
-      entityId: admin.id,
-      ipAddress,
-      userAgent,
-    }).catch(() => {});
     return { message: AuthMessages.TOKEN_REFRESHED, data: tokens };
   }
 

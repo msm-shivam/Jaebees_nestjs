@@ -60,10 +60,20 @@ export class AuthService {
 
   // ─── Register ────────────────────────────────────────────────────────────────
   async register(dto: RegisterDto): Promise<{ message: string }> {
-    const emailExists = await this.userRepo.findOne({
-      where: { email: dto.email.toLowerCase() },
+    const email = dto.email.toLowerCase();
+    const existingUser = await this.userRepo.findOne({
+      where: { email },
     });
-    if (emailExists) throw new BadRequestException(UserMessages.EMAIL_TAKEN);
+
+    if (existingUser) {
+      if (existingUser.isEmailVerified) {
+        throw new BadRequestException(UserMessages.EMAIL_TAKEN);
+      }
+      // Unverified user trying again — resend OTP instead of error
+      const otp = await this.createAndSaveOtp(email, OtpType.EMAIL_VERIFY);
+      await this.notificationsService.sendVerifyEmail(email, otp);
+      return { message: AuthMessages.REGISTER_SUCCESS };
+    }
 
     if (dto.mobile) {
       const mobileExists = await this.userRepo.findOne({
@@ -77,7 +87,7 @@ export class AuthService {
     const user = this.userRepo.create({
       firstName: dto.firstName,
       lastName: dto.lastName,
-      email: dto.email.toLowerCase(),
+      email,
       mobile: dto.mobile,
       passwordHash,
       isEmailVerified: false,
@@ -274,14 +284,6 @@ export class AuthService {
       ipAddress,
       userAgent,
     );
-    await this.auditLogService.log({
-      userId: user.id,
-      action: 'REFRESH_TOKEN',
-      entityType: 'auth',
-      entityId: user.id,
-      ipAddress,
-      userAgent,
-    }).catch(() => {});
     return { message: AuthMessages.TOKEN_REFRESHED, data: tokens };
   }
 

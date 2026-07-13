@@ -1,4 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ClassSerializerInterceptor, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -13,7 +14,7 @@ import {
 } from './common/constants/app.constants';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'verbose'],
   });
 
@@ -35,6 +36,9 @@ async function bootstrap() {
       excludeExtraneousValues: true,
     }),
   );
+
+  // ─── Trust Proxy (real client IP behind reverse proxy) ──────────────────
+  app.set('trust proxy', true);
 
   // ─── CORS ────────────────────────────────────────────────────────────────
   app.enableCors({

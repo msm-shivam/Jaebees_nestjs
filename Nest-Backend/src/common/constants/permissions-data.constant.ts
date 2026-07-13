@@ -671,6 +671,8 @@ export const ALL_PERMISSIONS: PermissionDef[] = [
   },
   { slug: DefaultPermissions.CMS_VIEW, name: 'View CMS', module: 'cms' },
   { slug: DefaultPermissions.CMS_MANAGE, name: 'Manage CMS', module: 'cms' },
+  { slug: DefaultPermissions.SLIDER_VIEW, name: 'View Sliders', module: 'cms' },
+  { slug: DefaultPermissions.SLIDER_MANAGE, name: 'Manage Sliders', module: 'cms' },
   {
     slug: DefaultPermissions.CATALOG_VIEW,
     name: 'View Catalog',
