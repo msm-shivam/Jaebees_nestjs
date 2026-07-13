@@ -514,7 +514,7 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "cms_pages" ALTER COLUMN "page_type" TYPE "public"."cms_pages_page_type_enum" USING "page_type"::"text"::"public"."cms_pages_page_type_enum"`);
         await queryRunner.query(`DROP TYPE "public"."cms_page_type_enum_old"`);
         await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "store_tagline" SET DEFAULT 'India''s Sports Marketplace'`);
-        try { await queryRunner.query(`ALTER TABLE "fcm_tokens" DROP CONSTRAINT "UQ_fcm_tokens_token"`); } catch {}
+        await queryRunner.query(`ALTER TABLE IF EXISTS "fcm_tokens" DROP CONSTRAINT IF EXISTS "UQ_fcm_tokens_token"`);
         await queryRunner.query(`CREATE INDEX "IDX_e9658e959c490b0a634dfc5478" ON "user_sessions"  ("user_id") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_d376a9f93bba651f32a2c03a7d" ON "users"  ("mobile") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_97672ac88f789774dd47f7c8be" ON "users"  ("email") `);
@@ -737,8 +737,8 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_e8ce999b33b34908767839049c" ON "homepage_sections"  ("created_at") `);
         await queryRunner.query(`CREATE INDEX "IDX_3e1f76a68bb1bcd0574f0ab13d" ON "homepage_sections"  ("sort_order") `);
         await queryRunner.query(`CREATE INDEX "IDX_c94aa2bfbbd0145457ea8374b0" ON "homepage_sections"  ("section_key") `);
-        try { await queryRunner.query(`CREATE UNIQUE INDEX "IDX_639c0f1d38d97d778122d4f299" ON "fcm_tokens"  ("token") `); } catch {}
-        try { await queryRunner.query(`CREATE INDEX "IDX_e88d13c90aff0b752ec8103415" ON "fcm_tokens"  ("user_id", "user_type") `); } catch {}
+        await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_639c0f1d38d97d778122d4f299" ON "fcm_tokens"  ("token") `);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_e88d13c90aff0b752ec8103415" ON "fcm_tokens"  ("user_id", "user_type") `);
         await queryRunner.query(`CREATE INDEX "IDX_178199805b901ccd220ab7740e" ON "role_permissions"  ("role_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_17022daf3f885f7d35423e9971" ON "role_permissions"  ("permission_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_9e4cb7a25d8b0a8082e35f7fe3" ON "admin_roles"  ("admin_id") `);
@@ -1170,7 +1170,7 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_97672ac88f789774dd47f7c8be"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_d376a9f93bba651f32a2c03a7d"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_e9658e959c490b0a634dfc5478"`);
-        try { await queryRunner.query(`ALTER TABLE "fcm_tokens" ADD CONSTRAINT "UQ_fcm_tokens_token" UNIQUE ("token")`); } catch {}
+        await queryRunner.query(`ALTER TABLE IF EXISTS "fcm_tokens" ADD CONSTRAINT "UQ_fcm_tokens_token" UNIQUE ("token")`);
         await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "store_tagline" SET DEFAULT 'India''s Sports Marketplace'`);
         await queryRunner.query(`CREATE TYPE "public"."cms_page_type_enum_old" AS ENUM('ABOUT_US', 'PRIVACY_POLICY', 'TERMS_AND_CONDITIONS', 'SHIPPING_POLICY', 'RETURN_POLICY', 'CONTACT_US', 'CUSTOM_PAGE')`);
         await queryRunner.query(`ALTER TABLE "cms_pages" ALTER COLUMN "page_type" TYPE "public"."cms_page_type_enum_old" USING "page_type"::"text"::"public"."cms_page_type_enum_old"`);
@@ -1371,7 +1371,7 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_admin_roles_admin_id" ON "admin_roles" USING btree ("admin_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_role_permissions_permission_id" ON "role_permissions" USING btree ("permission_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_role_permissions_role_id" ON "role_permissions" USING btree ("role_id") `);
-        try { await queryRunner.query(`CREATE INDEX "IDX_fcm_tokens_user" ON "fcm_tokens" USING btree ("user_id", "user_type") `); } catch {}
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_fcm_tokens_user" ON "fcm_tokens" USING btree ("user_id", "user_type") `);
         await queryRunner.query(`CREATE INDEX "idx_homepage_sections_created_at" ON "homepage_sections" USING btree ("created_at") `);
         await queryRunner.query(`CREATE INDEX "idx_homepage_sections_sort_order" ON "homepage_sections" USING btree ("sort_order") `);
         await queryRunner.query(`CREATE INDEX "idx_homepage_sections_section_key" ON "homepage_sections" USING btree ("section_key") `);
