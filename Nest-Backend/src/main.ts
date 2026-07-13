@@ -20,7 +20,6 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') ?? 3000;
-  const nodeEnv = configService.get<string>('app.nodeEnv') ?? 'development';
 
   // ─── Global Prefix & Versioning ──────────────────────────────────────────
   app.setGlobalPrefix(`${API_PREFIX}/${API_VERSION}`);
@@ -40,9 +39,9 @@ async function bootstrap() {
   // ─── Trust Proxy (real client IP behind reverse proxy) ──────────────────
   app.set('trust proxy', true);
 
-  // ─── CORS ────────────────────────────────────────────────────────────────
+  // ─── CORS (allow all domains with credentials for cross-origin login) ────
   app.enableCors({
-    origin: nodeEnv === 'production' ? [] : '*',
+    origin: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
