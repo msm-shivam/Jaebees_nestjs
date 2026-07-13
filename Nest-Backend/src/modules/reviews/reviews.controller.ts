@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -48,13 +49,13 @@ export class ReviewsController {
 
   @Get('reviews/product/:productId')
   @ApiOperation({ summary: 'Get approved reviews for a product' })
-  getProductReviews(@Param('productId') productId: string) {
+  getProductReviews(@Param('productId', ParseUUIDPipe) productId: string) {
     return this.reviewsService.findByProduct(productId);
   }
 
   @Get('reviews/:id')
   @ApiOperation({ summary: 'Get a review by ID' })
-  getById(@Param('id') id: string) {
+  getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.findById(id);
   }
 

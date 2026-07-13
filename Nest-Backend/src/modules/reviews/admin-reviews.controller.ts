@@ -4,6 +4,7 @@ import {
   Patch,
   Delete,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -43,14 +44,14 @@ export class AdminReviewsController {
   @Get(':id')
   @Permissions(DefaultPermissions.REVIEW_VIEW)
   @ApiOperation({ summary: 'Get review by ID' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.findById(id);
   }
 
   @Patch(':id/approve')
   @Permissions(DefaultPermissions.REVIEW_APPROVE)
   @ApiOperation({ summary: 'Approve a pending review' })
-  approve(@Param('id') id: string, @Req() req: Request) {
+  approve(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
     const adminId: string = (req.user as Record<string, unknown>).id as string;
     return this.reviewsService.approve(id, adminId);
   }
@@ -58,7 +59,7 @@ export class AdminReviewsController {
   @Patch(':id/reject')
   @Permissions(DefaultPermissions.REVIEW_REJECT)
   @ApiOperation({ summary: 'Reject a pending review' })
-  reject(@Param('id') id: string, @Req() req: Request) {
+  reject(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
     const adminId: string = (req.user as Record<string, unknown>).id as string;
     return this.reviewsService.reject(id, adminId);
   }
@@ -66,7 +67,7 @@ export class AdminReviewsController {
   @Patch(':id/hide')
   @Permissions(DefaultPermissions.REVIEW_MODERATE)
   @ApiOperation({ summary: 'Hide a review' })
-  hide(@Param('id') id: string, @Req() req: Request) {
+  hide(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
     const adminId: string = (req.user as Record<string, unknown>).id as string;
     return this.reviewsService.hide(id, adminId);
   }
@@ -74,7 +75,7 @@ export class AdminReviewsController {
   @Delete(':id')
   @Permissions(DefaultPermissions.REVIEW_DELETE)
   @ApiOperation({ summary: 'Delete a review' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.remove(id);
   }
 }

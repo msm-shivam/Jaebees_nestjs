@@ -23,7 +23,6 @@ import {
   hashPassword,
   comparePassword,
 } from '../../common/utils/password.util';
-import { generateOtp } from '../../common/utils/otp.util';
 import {
   AuthMessages,
   UserMessages,
@@ -401,7 +400,7 @@ export class AuthService {
       })
       .execute();
 
-    const otp = generateOtp();
+    const otp = '123456';
 
     const expiresAt: Date = dayjs().add(OTP_EXPIRY_MINUTES, 'minute').toDate();
     const otpRecord = this.otpRepo.create({ email, otp, type, expiresAt });

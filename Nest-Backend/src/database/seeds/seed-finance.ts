@@ -16,7 +16,7 @@ async function seed() {
   await AppDataSource.initialize();
   const qr = AppDataSource.createQueryRunner();
 
-  const cleanTables = [
+  const cleanTables = [ 
     'tax_records', 'settlements', 'expense_records', 'ledger_entries',
     'financial_audits', 'financial_transactions',
   ];
