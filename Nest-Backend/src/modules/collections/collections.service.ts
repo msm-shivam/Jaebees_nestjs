@@ -127,26 +127,31 @@ export class CollectionsService {
       const productIds = junctions.map((j) => j.productId);
       const products = await this.productRepo.find({
         where: { id: In(productIds) },
-        relations: { images: true },
+        relations: { images: true, variants: true },
       });
-      result.products = products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        status: p.status,
-        isActive: p.isActive,
-        isFeatured: p.isFeatured,
-        shortDescription: p.shortDescription,
-        brandId: p.brandId,
-        categoryId: p.categoryId,
-        averageRating: p.averageRating,
-        createdAt: p.createdAt,
-        images: (p.images ?? []).map((img) => ({
-          id: img.id,
-          imageUrl: img.imageUrl,
-          isPrimary: img.isPrimary,
-        })),
-      }));
+      result.products = products.map((p) => {
+        const defaultVariant = (p.variants ?? []).find((v) => v.isDefault) ?? (p.variants ?? [])[0];
+        return {
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          status: p.status,
+          isActive: p.isActive,
+          isFeatured: p.isFeatured,
+          shortDescription: p.shortDescription,
+          brandId: p.brandId,
+          categoryId: p.categoryId,
+          averageRating: p.averageRating,
+          price: defaultVariant ? Number(defaultVariant.price) : null,
+          compareAtPrice: defaultVariant ? Number(defaultVariant.compareAtPrice) : null,
+          createdAt: p.createdAt,
+          images: (p.images ?? []).map((img) => ({
+            id: img.id,
+            imageUrl: img.imageUrl,
+            isPrimary: img.isPrimary,
+          })),
+        };
+      });
     } else {
       result.products = [];
     }

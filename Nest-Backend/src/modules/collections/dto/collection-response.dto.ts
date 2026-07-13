@@ -20,6 +20,8 @@ class LinkedProductDto {
   @Expose() @ApiPropertyOptional() brandId: string | null;
   @Expose() @ApiPropertyOptional() categoryId: string | null;
   @Expose() @ApiProperty() averageRating: number;
+  @Expose() @ApiPropertyOptional() price: number | null;
+  @Expose() @ApiPropertyOptional() compareAtPrice: number | null;
   @Expose() @ApiProperty() createdAt: Date;
   @Expose() @ApiProperty({ type: [ProductImageDto] })
   @Type(() => ProductImageDto)
