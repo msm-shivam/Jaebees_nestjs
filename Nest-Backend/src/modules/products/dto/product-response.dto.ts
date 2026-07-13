@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { ProductStatus } from '../entities/product.entity';
 import { ProductImageResponseDto } from './product-image-response.dto';
+import { ProductVariantResponseDto } from './product-variant-response.dto';
 
 export class ProductResponseDto {
   @Expose()
@@ -128,6 +129,14 @@ export class ProductResponseDto {
   })
   @Type(() => ProductImageResponseDto)
   images: ProductImageResponseDto[];
+
+  @Expose()
+  @ApiProperty({
+    type: [ProductVariantResponseDto],
+    description: 'Product variants',
+  })
+  @Type(() => ProductVariantResponseDto)
+  variants: ProductVariantResponseDto[];
 
   @Expose()
   @ApiProperty({ example: '2024-01-15T10:30:00Z' })

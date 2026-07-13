@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { ProductsService } from '../../products/products.service';
 import { ProductQueryDto } from '../../products/dto/product-query.dto';
 import { ProductResponseDto } from '../../products/dto/product-response.dto';
+import { ProductStatus } from '../../products/entities/product.entity';
 import { ApiPaginatedResponse } from '../../../common/decorators/api-paginated-response.decorator';
 
 @ApiTags('Products')
@@ -15,7 +16,8 @@ export class PublicProductsController {
   @ApiOperation({ summary: 'List products', description: 'Public product listing with pagination, search, and filtering by brand, category, status, and featured flag.' })
   @ApiPaginatedResponse(ProductResponseDto)
   async findAll(@Query() query: ProductQueryDto) {
-    return this.productsService.findAll(query);
+    const publicQuery = { ...query, status: ProductStatus.ACTIVE };
+    return this.productsService.findAll(publicQuery as ProductQueryDto);
   }
 
   @Get(':id')

@@ -16,6 +16,7 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
 import { UpdateProductImageDto } from './dto/update-product-image.dto';
 import { ProductImageResponseDto } from './dto/product-image-response.dto';
+import { ProductVariantResponseDto } from './dto/product-variant-response.dto';
 import { toSlug } from '../../common/utils/slug.util';
 import { paginate } from '../../common/utils/pagination.util';
 import { Brand } from '../brands/entities/brand.entity';
@@ -346,26 +347,22 @@ export class ProductsService {
 
     await this.productRepo.save(product);
 
-    // Replace collections if provided
-    if (dto.collectionIds !== undefined) {
+    // Replace collections if explicitly provided with values
+    if (dto.collectionIds !== undefined && dto.collectionIds.length > 0) {
       await this.productCollectionRepo.delete({ productId: id });
-      if (dto.collectionIds.length > 0) {
-        const mappings = dto.collectionIds.map((collectionId) =>
-          this.productCollectionRepo.create({ productId: id, collectionId }),
-        );
-        await this.productCollectionRepo.save(mappings);
-      }
+      const mappings = dto.collectionIds.map((collectionId) =>
+        this.productCollectionRepo.create({ productId: id, collectionId }),
+      );
+      await this.productCollectionRepo.save(mappings);
     }
 
-    // Replace tags if provided
-    if (dto.tagIds !== undefined) {
+    // Replace tags if explicitly provided with values
+    if (dto.tagIds !== undefined && dto.tagIds.length > 0) {
       await this.productTagMappingRepo.delete({ productId: id });
-      if (dto.tagIds.length > 0) {
-        const mappings = dto.tagIds.map((tagId) =>
-          this.productTagMappingRepo.create({ productId: id, tagId }),
-        );
-        await this.productTagMappingRepo.save(mappings);
-      }
+      const mappings = dto.tagIds.map((tagId) =>
+        this.productTagMappingRepo.create({ productId: id, tagId }),
+      );
+      await this.productTagMappingRepo.save(mappings);
     }
 
     // Save uploaded images (adds to existing images)
@@ -729,7 +726,7 @@ export class ProductsService {
   private async findByIdOrFail(id: string): Promise<Product> {
     const product = await this.productRepo.findOne({
       where: { id },
-      relations: { brand: true, category: true, images: true },
+      relations: { brand: true, category: true, images: true, variants: true },
     });
     if (!product) throw new NotFoundException('Product not found.');
     return product;
@@ -800,11 +797,15 @@ export class ProductsService {
     const images = (product.images ?? []).map((img) =>
       this.imageToResponse(img),
     );
+    const variants = (product.variants ?? []).map((v) =>
+      this.variantToResponse(v),
+    );
     return plainToInstance(
       ProductResponseDto,
       {
         ...product,
         images,
+        variants,
         brandName: brandName ?? product.brand?.name ?? null,
         categoryName: categoryName ?? product.category?.name ?? null,
       },
@@ -814,6 +815,12 @@ export class ProductsService {
 
   private imageToResponse(image: ProductImage): ProductImageResponseDto {
     return plainToInstance(ProductImageResponseDto, image, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  private variantToResponse(variant: ProductVariant): ProductVariantResponseDto {
+    return plainToInstance(ProductVariantResponseDto, variant, {
       excludeExtraneousValues: true,
     });
   }

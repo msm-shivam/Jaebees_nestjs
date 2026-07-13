@@ -15,7 +15,7 @@ import { CollectionResponseDto } from './dto/collection-response.dto';
 import { toSlug } from '../../common/utils/slug.util';
 import { paginate } from '../../common/utils/pagination.util';
 import { CatalogMessages } from '../../common/constants/messages.constants';
-import { Product } from '../products/entities/product.entity';
+import { Product, ProductStatus } from '../products/entities/product.entity';
 
 @Injectable()
 export class CollectionsService {
@@ -126,7 +126,7 @@ export class CollectionsService {
     if (junctions.length > 0) {
       const productIds = junctions.map((j) => j.productId);
       const products = await this.productRepo.find({
-        where: { id: In(productIds) },
+        where: { id: In(productIds), status: ProductStatus.ACTIVE },
         relations: { images: true, variants: true },
       });
       result.products = products.map((p) => {
