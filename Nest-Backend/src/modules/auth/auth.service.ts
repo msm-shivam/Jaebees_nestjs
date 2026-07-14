@@ -70,7 +70,7 @@ export class AuthService {
       }
       // Unverified user trying again — resend OTP instead of error
       const otp = await this.createAndSaveOtp(email, OtpType.EMAIL_VERIFY);
-      await this.notificationsService.sendVerifyEmail(email, otp);
+      this.notificationsService.sendVerifyEmail(email, otp).catch(() => {});
       return { message: AuthMessages.REGISTER_SUCCESS };
     }
 
@@ -95,11 +95,7 @@ export class AuthService {
     await this.userRepo.save(user);
 
     const otp = await this.createAndSaveOtp(user.email, OtpType.EMAIL_VERIFY);
-    await this.notificationsService.sendWelcomeEmail(
-      user.email,
-      user.firstName,
-    );
-    await this.notificationsService.sendVerifyEmail(user.email, otp);
+    this.notificationsService.sendVerifyEmail(user.email, otp).catch(() => {});
     return { message: AuthMessages.REGISTER_SUCCESS };
   }
 
@@ -130,10 +126,14 @@ export class AuthService {
       ipAddress,
       userAgent,
     );
-    await this.notificationsService.sendEmailVerified(
+    this.notificationsService.sendWelcomeEmail(
       user.email,
       user.firstName,
-    );
+    ).catch(() => {});
+    this.notificationsService.sendEmailVerified(
+      user.email,
+      user.firstName,
+    ).catch(() => {});
     return { message: AuthMessages.OTP_VERIFIED, data: tokens };
   }
 

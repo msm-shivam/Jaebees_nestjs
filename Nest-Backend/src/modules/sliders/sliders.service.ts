@@ -39,11 +39,17 @@ export class SlidersService {
     return this.toResponse(slider);
   }
 
-  async update(id: string, dto: UpdateSliderDto, imageUrls?: string[]): Promise<SliderResponseDto> {
+  async update(id: string, dto: UpdateSliderDto, newUrls: string[]): Promise<SliderResponseDto> {
     const slider = await this.repo.findOne({ where: { id } as any });
     if (!slider) throw new NotFoundException('Slider not found');
     Object.assign(slider, dto);
-    if (imageUrls) slider.images = imageUrls.length > 0 ? imageUrls : null;
+    // images: if dto.images provided, use as base; then append any new uploads
+    if (dto.images !== undefined) {
+      slider.images = [...dto.images, ...newUrls];
+      if (slider.images.length === 0) slider.images = null;
+    } else if (newUrls.length > 0) {
+      slider.images = [...(slider.images ?? []), ...newUrls];
+    }
     const saved = await this.repo.save(slider);
     return this.toResponse(saved);
   }

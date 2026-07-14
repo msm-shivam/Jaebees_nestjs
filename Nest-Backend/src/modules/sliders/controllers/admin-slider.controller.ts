@@ -63,7 +63,7 @@ export class AdminSliderController {
   @Patch(':id')
   @Permissions(DefaultPermissions.SLIDER_MANAGE)
   @UseInterceptors(
-    FilesInterceptor('images', 5, {
+    FilesInterceptor('newImages', 5, {
       storage: diskStorage({
         destination: './uploads/sliders',
         filename: (_req, file, cb) => {
@@ -78,8 +78,8 @@ export class AdminSliderController {
     @Body() dto: UpdateSliderDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    const urls = files?.length ? files.map((f) => `/uploads/sliders/${f.filename}`) : undefined;
-    return this.slidersService.update(id, dto, urls);
+    const newUrls = files?.length ? files.map((f) => `/uploads/sliders/${f.filename}`) : [];
+    return this.slidersService.update(id, dto, newUrls);
   }
 
   @Delete(':id')
