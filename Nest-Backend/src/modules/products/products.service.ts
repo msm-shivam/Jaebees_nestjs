@@ -408,7 +408,7 @@ export class ProductsService {
     if (dto.variants && dto.variants.length > 0) {
       const existingVariants = await this.variantRepo.find({
         where: { productId: id },
-        select: ['id'],
+        select: { id: true },
       });
       if (existingVariants.length > 0) {
         await this.stockAlertRepo.delete({
