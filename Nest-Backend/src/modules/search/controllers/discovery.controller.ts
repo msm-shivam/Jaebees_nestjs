@@ -54,6 +54,7 @@ export class DiscoveryController {
   }
 
   @Get('trending-products')
+  @Get('trending')
   @ApiOperation({ summary: 'Get trending products' })
   async trendingProducts(@Query('limit') limit?: number) {
     return this.mapProducts(
@@ -62,6 +63,7 @@ export class DiscoveryController {
   }
 
   @Get('featured-products')
+  @Get('featured')
   @ApiOperation({ summary: 'Get featured products' })
   async featuredProducts(@Query('limit') limit?: number) {
     return this.mapProducts(
@@ -97,7 +99,24 @@ export class DiscoveryController {
     );
   }
 
+  @Get('top-rated')
+  @ApiOperation({ summary: 'Get top-rated products' })
+  async topRated(@Query('limit') limit?: number) {
+    return this.mapProducts(
+      await this.discoveryService.getTopRated(limit),
+    );
+  }
+
+  @Get('on-sale')
+  @ApiOperation({ summary: 'Get products on sale (with discount)' })
+  async onSale(@Query('limit') limit?: number) {
+    return this.mapProducts(
+      await this.discoveryService.getOnSale(limit),
+    );
+  }
+
   @Get('similar/:productId')
+  @Get('similar-products/:productId')
   @ApiOperation({ summary: 'Get similar products (same category + brand)' })
   async similar(
     @Param('productId') productId: string,

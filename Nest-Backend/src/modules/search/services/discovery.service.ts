@@ -49,6 +49,7 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
+      .leftJoinAndSelect('p.variants', 'variants')
       .where('p.id != :productId', { productId })
       .andWhere('p.deleted_at IS NULL')
       .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
@@ -127,6 +128,7 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
+      .leftJoinAndSelect('p.variants', 'variants')
       .leftJoin(
         'product_views',
         'pv',
@@ -229,6 +231,7 @@ export class DiscoveryService {
           .leftJoinAndSelect('p.brand', 'brand')
           .leftJoinAndSelect('p.category', 'category')
           .leftJoinAndSelect('p.images', 'images')
+          .leftJoinAndSelect('p.variants', 'variants')
           .where('p.deleted_at IS NULL')
           .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
           .andWhere('p.is_active = :isActive', { isActive: true })
@@ -256,6 +259,7 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
+      .leftJoinAndSelect('p.variants', 'variants')
       .where('p.id != :productId', { productId })
       .andWhere('p.deleted_at IS NULL')
       .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
@@ -276,6 +280,7 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
+      .leftJoinAndSelect('p.variants', 'variants')
       .leftJoin(
         'product_views',
         'pv',
@@ -299,6 +304,33 @@ export class DiscoveryService {
         'trending_score',
       )
       .orderBy('"trending_score"', 'DESC')
+      .take(limit)
+      .getMany();
+
+    return products;
+  }
+
+  async getTopRated(limit = 20): Promise<Product[]> {
+    return this.productRepo.find({
+      where: { status: ProductStatus.ACTIVE, isActive: true },
+      relations: { brand: true, category: true, images: true, variants: true },
+      order: { averageRating: 'DESC' },
+      take: limit,
+    });
+  }
+
+  async getOnSale(limit = 20): Promise<Product[]> {
+    const products = await this.productRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.brand', 'brand')
+      .leftJoinAndSelect('p.category', 'category')
+      .leftJoinAndSelect('p.images', 'images')
+      .leftJoinAndSelect('p.variants', 'variants')
+      .where('p.deleted_at IS NULL')
+      .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
+      .andWhere('p.is_active = :isActive', { isActive: true })
+      .andWhere('variants.compare_at_price > variants.price')
+      .orderBy('p.average_rating', 'DESC')
       .take(limit)
       .getMany();
 
@@ -339,6 +371,7 @@ export class DiscoveryService {
       .leftJoinAndSelect('p.brand', 'brand')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.images', 'images')
+      .leftJoinAndSelect('p.variants', 'variants')
       .where('p.deleted_at IS NULL')
       .andWhere('p.status = :status', { status: ProductStatus.ACTIVE })
       .andWhere('p.is_active = :isActive', { isActive: true })
