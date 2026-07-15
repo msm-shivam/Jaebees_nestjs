@@ -227,6 +227,7 @@ export class UpdateProductDto {
   })
   @IsOptional()
   @IsArray()
+  @Type(() => VariantInputDto)
   @ValidateNested({ each: true })
   variants?: VariantInputDto[];
 }

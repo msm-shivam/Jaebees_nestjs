@@ -400,8 +400,9 @@ export class ProductsService {
       );
     }
 
-    // Create variants if provided (adds to existing variants)
+    // Replace variants if provided
     if (dto.variants && dto.variants.length > 0) {
+      await this.variantRepo.delete({ productId: id });
       await this.createVariants(id, dto.variants);
     } else if (dto.sku) {
       let variant = await this.variantRepo.findOne({
