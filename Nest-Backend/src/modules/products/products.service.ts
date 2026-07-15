@@ -27,6 +27,7 @@ import { ProductTagMapping } from '../product-tags/entities/product-tag-mapping.
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { ProductVariantAttribute } from '../product-variants/entities/product-variant-attribute.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
+import { StockAlert } from '../inventory-plus/entities/stock-alert.entity';
 import { AuditLogService } from '../security-compliance/services/audit-log.service';
 
 @Injectable()
@@ -52,6 +53,8 @@ export class ProductsService {
     private readonly variantAttributeRepo: Repository<ProductVariantAttribute>,
     @InjectRepository(Inventory)
     private readonly inventoryRepo: Repository<Inventory>,
+    @InjectRepository(StockAlert)
+    private readonly stockAlertRepo: Repository<StockAlert>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -403,6 +406,15 @@ export class ProductsService {
 
     // Replace variants if provided
     if (dto.variants && dto.variants.length > 0) {
+      const existingVariants = await this.variantRepo.find({
+        where: { productId: id },
+        select: ['id'],
+      });
+      if (existingVariants.length > 0) {
+        await this.stockAlertRepo.delete({
+          variantId: In(existingVariants.map((v) => v.id)),
+        });
+      }
       await this.variantRepo.delete({ productId: id });
       await this.createVariants(id, dto.variants);
     } else if (dto.sku) {
