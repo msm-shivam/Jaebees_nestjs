@@ -123,12 +123,9 @@ export class DiscoveryService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const products = await this.productRepo
+    const rows = await this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.brand', 'brand')
-      .leftJoinAndSelect('p.category', 'category')
-      .leftJoinAndSelect('p.images', 'images')
-      .leftJoinAndSelect('p.variants', 'variants')
+      .select('p.id', 'id')
       .leftJoin(
         'product_views',
         'pv',
@@ -151,17 +148,16 @@ export class DiscoveryService {
       .andWhere('oi.created_at > :since2', { since2: thirtyDaysAgo })
       .andWhere('wi.created_at > :since3', { since3: thirtyDaysAgo })
       .groupBy('p.id')
-      .addGroupBy('brand.id')
-      .addGroupBy('category.id')
       .addSelect(
         'COUNT(DISTINCT pv.id) + COUNT(DISTINCT oi.id) + COUNT(DISTINCT wi.id)',
         'trending_score',
       )
       .orderBy('"trending_score"', 'DESC')
       .take(limit)
-      .getMany();
+      .getRawMany();
 
-    return products;
+    const ids = rows.map((r: any) => r.id);
+    return this.findProducts(ids);
   }
 
   async getFeaturedProducts(limit = 20): Promise<Product[]> {
@@ -275,12 +271,9 @@ export class DiscoveryService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const products = await this.productRepo
+    const rows = await this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.brand', 'brand')
-      .leftJoinAndSelect('p.category', 'category')
-      .leftJoinAndSelect('p.images', 'images')
-      .leftJoinAndSelect('p.variants', 'variants')
+      .select('p.id', 'id')
       .leftJoin(
         'product_views',
         'pv',
@@ -297,17 +290,16 @@ export class DiscoveryService {
       .andWhere('pv.created_at > :since', { since: sevenDaysAgo })
       .andWhere('oi.created_at > :since2', { since2: sevenDaysAgo })
       .groupBy('p.id')
-      .addGroupBy('brand.id')
-      .addGroupBy('category.id')
       .addSelect(
         'COUNT(DISTINCT pv.id) + COUNT(DISTINCT oi.id)',
         'trending_score',
       )
       .orderBy('"trending_score"', 'DESC')
       .take(limit)
-      .getMany();
+      .getRawMany();
 
-    return products;
+    const ids = rows.map((r: any) => r.id);
+    return this.findProducts(ids);
   }
 
   async getTopRated(limit = 20): Promise<Product[]> {
