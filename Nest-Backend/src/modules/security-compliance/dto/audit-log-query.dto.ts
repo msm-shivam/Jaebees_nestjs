@@ -15,6 +15,18 @@ export class AuditLogQueryDto {
   @Transform(({ value }: { value: string }) => value || undefined)
   entityType?: string;
 
+  @ApiPropertyOptional({ description: 'Alias for entityType (frontend sends "module" param)' })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }: { value: string }) => value || undefined)
+  module?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }: { value: string }) => value || undefined)
+  search?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

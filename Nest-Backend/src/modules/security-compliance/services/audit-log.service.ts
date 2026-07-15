@@ -21,6 +21,7 @@ export class AuditLogService {
     entityType?: string;
     userId?: string;
     severity?: string;
+    search?: string;
     dateFrom?: string;
     dateTo?: string;
     page?: number;
@@ -40,6 +41,11 @@ export class AuditLogService {
       qb.andWhere('a.user_id = :userId', { userId: query.userId });
     if (query.severity)
       qb.andWhere('a.severity = :severity', { severity: query.severity });
+    if (query.search)
+      qb.andWhere(
+        '(a.action ILIKE :search OR a.entity_type ILIKE :search OR CAST(a.entity_id AS text) ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
     if (query.dateFrom)
       qb.andWhere('a.created_at >= :dateFrom', { dateFrom: query.dateFrom });
     if (query.dateTo)

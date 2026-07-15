@@ -24,6 +24,9 @@ export class AdminAuditLogController {
   @Get()
   @Permissions(DefaultPermissions.AUDIT_VIEW)
   async findAll(@Query() query: AuditLogQueryDto) {
+    if (query.module && !query.entityType) {
+      query.entityType = query.module;
+    }
     return this.auditLogService.findAll(query);
   }
 
