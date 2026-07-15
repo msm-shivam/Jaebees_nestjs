@@ -207,7 +207,8 @@ export class ProductsService {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.brand', 'brand')
       .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.images', 'images');
+      .leftJoinAndSelect('product.images', 'images')
+      .leftJoinAndSelect('product.variants', 'variants');
 
     // Search filter
     if (query.search) {
