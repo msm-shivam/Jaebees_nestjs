@@ -258,6 +258,10 @@ export class OrdersService {
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (user) {
+      if (!user.firstOrderId) {
+        user.firstOrderId = savedOrder.id;
+        await this.userRepo.save(user);
+      }
       await this.notificationsService.sendOrderConfirmation({
         to: user.email,
         userId: user.id,

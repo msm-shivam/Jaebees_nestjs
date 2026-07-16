@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import {
   Entity,
   Column,
@@ -28,6 +29,7 @@ export class WishlistItem extends BaseEntity {
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
+  @Expose()
   @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   product: Product;
@@ -35,10 +37,12 @@ export class WishlistItem extends BaseEntity {
   @Column({ name: 'variant_id', type: 'uuid', nullable: true })
   variantId: string;
 
+  @Expose()
   @ManyToOne(() => ProductVariant, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'variant_id' })
   variant: ProductVariant;
 
+  @Expose()
   @CreateDateColumn({ name: 'added_at', type: 'timestamptz' })
   addedAt: Date;
 

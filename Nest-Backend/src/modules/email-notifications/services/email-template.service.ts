@@ -25,13 +25,20 @@ export class EmailTemplateService {
     return this.templateRepo.save(template);
   }
 
-  async findAll(query: { page?: number; limit?: number; active?: boolean }) {
+  async findAll(query: { page?: number; limit?: number; active?: boolean; search?: string }) {
     const qb = this.templateRepo
       .createQueryBuilder('t')
       .orderBy('t.createdAt', 'DESC');
 
     if (query.active !== undefined)
       qb.andWhere('t.active = :active', { active: query.active });
+
+    if (query.search) {
+      qb.andWhere(
+        '(t.name ILIKE :search OR t.code ILIKE :search OR t.subject ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
 
     const page = query.page || 1;
     const limit = query.limit || 20;

@@ -38,4 +38,8 @@ export class UserResponseDto {
   @Expose()
   @ApiPropertyOptional()
   avatar: string | null;
+
+  @Expose()
+  @ApiPropertyOptional()
+  firstOrderId: string | null;
 }

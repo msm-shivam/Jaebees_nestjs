@@ -39,6 +39,9 @@ export class User extends BaseEntity {
   @Column({ name: 'avatar', type: 'varchar', length: 500, nullable: true, default: null })
   avatar: string | null;
 
+  @Column({ name: 'first_order_id', type: 'uuid', nullable: true, default: null })
+  firstOrderId: string | null;
+
   @OneToMany(() => UserSession, (session) => session.user)
   sessions: UserSession[];
 }

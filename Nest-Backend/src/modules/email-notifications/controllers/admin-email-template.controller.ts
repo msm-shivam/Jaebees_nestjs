@@ -38,10 +38,11 @@ export class AdminEmailTemplateController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('active') active?: string,
+    @Query('search') search?: string,
   ) {
     const isActive =
       active === 'true' ? true : active === 'false' ? false : undefined;
-    return this.templateService.findAll({ page, limit, active: isActive });
+    return this.templateService.findAll({ page, limit, active: isActive, search });
   }
 
   @Get(':id')

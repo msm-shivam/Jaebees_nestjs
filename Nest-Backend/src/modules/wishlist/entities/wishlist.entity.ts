@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import {
   Entity,
   Column,
@@ -21,9 +22,11 @@ export class Wishlist extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @Expose()
   @Column({ name: 'total_items', type: 'int', default: 0 })
   totalItems: number;
 
+  @Expose()
   @OneToMany(() => WishlistItem, (item) => item.wishlist, { cascade: true })
   items: WishlistItem[];
 
