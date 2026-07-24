@@ -264,8 +264,59 @@ export class ProductsService {
     }
 
     // Sorting
-    const validSortFields = ['name', 'createdAt', 'updatedAt', 'status'];
+    const validSortFields = ['name', 'createdAt', 'updatedAt', 'status', 'price'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'name';
+
+    if (sortBy === 'price') {
+      const priceQb = this.productRepo
+        .createQueryBuilder('product')
+        .select('product.id', 'id')
+        .leftJoin('product.variants', 'variant')
+        .where('product.deleted_at IS NULL');
+      if (query.search) {
+        priceQb.andWhere('(product.name ILIKE :search OR product.description ILIKE :search OR product.shortDescription ILIKE :search)', { search: `%${query.search}%` });
+      }
+      if (query.status) priceQb.andWhere('product.status = :status', { status: query.status });
+      if (query.brandId) priceQb.andWhere('product.brandId = :brandId', { brandId: query.brandId });
+      if (query.categoryId) priceQb.andWhere('product.categoryId = :categoryId', { categoryId: query.categoryId });
+      if (query.subCategoryId) priceQb.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: query.subCategoryId });
+      if (query.isFeatured !== undefined) priceQb.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured });
+      if (query.isActive !== undefined) priceQb.andWhere('product.isActive = :isActive', { isActive: query.isActive });
+
+      const raw = await priceQb
+        .groupBy('product.id')
+        .addSelect('MIN(variant.price)', 'min_price')
+        .addOrderBy('min_price', sortOrder)
+        .addOrderBy('product.id', 'ASC')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getRawMany<{ id: string }>();
+
+      const orderedIds = raw.map((r) => r.id);
+      if (orderedIds.length === 0) return paginate([], 0, page, limit);
+
+      const items = await this.productRepo.find({
+        where: { id: In(orderedIds) },
+        relations: { brand: true, category: true, images: true, variants: true },
+      });
+      const ordered = orderedIds.map((id) => items.find((p) => p.id === id)).filter(Boolean) as Product[];
+
+      const countQb = this.productRepo.createQueryBuilder('product').where('product.deleted_at IS NULL');
+      if (query.status) countQb.andWhere('product.status = :status', { status: query.status });
+      if (query.isActive !== undefined) countQb.andWhere('product.isActive = :isActive', { isActive: query.isActive });
+      if (query.brandId) countQb.andWhere('product.brandId = :brandId', { brandId: query.brandId });
+      if (query.categoryId) countQb.andWhere('product.categoryId = :categoryId', { categoryId: query.categoryId });
+      if (query.subCategoryId) countQb.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: query.subCategoryId });
+      if (query.isFeatured !== undefined) countQb.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured });
+      if (query.search) countQb.andWhere('(product.name ILIKE :search OR product.description ILIKE :search OR product.shortDescription ILIKE :search)', { search: `%${query.search}%` });
+      const total = await countQb.getCount();
+
+      return paginate(
+        ordered.map((item) => this.toResponse(item, item.brand?.name, item.category?.name)),
+        total, page, limit,
+      );
+    }
+
     queryBuilder.orderBy({ [`product.${sortField}`]: sortOrder });
 
     // Pagination
