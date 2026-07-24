@@ -27,6 +27,8 @@ import {
   AuthMessages,
   UserMessages,
 } from '../../common/constants/messages.constants';
+import { FcmTokenService } from '../firebase/fcm-token.service';
+import { FcmUserType } from '../firebase/entities/fcm-token.entity';
 import { AuditLogService } from '../security-compliance/services/audit-log.service';
 import { OTP_EXPIRY_MINUTES } from '../../common/constants/app.constants';
 import {
@@ -55,6 +57,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly notificationsService: NotificationsService,
     private readonly auditLogService: AuditLogService,
+    private readonly fcmTokenService: FcmTokenService,
   ) {}
 
   // ─── Register ────────────────────────────────────────────────────────────────
@@ -93,6 +96,10 @@ export class AuthService {
       isActive: true,
     });
     await this.userRepo.save(user);
+
+    if (dto.fcmToken) {
+      this.fcmTokenService.register(user.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
+    }
 
     const otp = await this.createAndSaveOtp(user.email, OtpType.EMAIL_VERIFY);
     this.notificationsService.sendVerifyEmail(user.email, otp).catch(() => {});
@@ -134,6 +141,11 @@ export class AuthService {
       user.email,
       user.firstName,
     ).catch(() => {});
+
+    if (dto.fcmToken) {
+      this.fcmTokenService.register(user.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
+    }
+
     return { message: AuthMessages.OTP_VERIFIED, data: tokens };
   }
 
@@ -243,6 +255,10 @@ export class AuthService {
       newValues: { email: dto.email },
     }).catch(() => {});
 
+    if (dto.fcmToken) {
+      this.fcmTokenService.register(user.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
+    }
+
     return { message: AuthMessages.LOGIN_SUCCESS, data: tokens };
   }
 
@@ -327,10 +343,10 @@ export class AuthService {
     await this.userRepo.update(user.id, { passwordHash });
     await this.userSessionRepo.delete({ userId: user.id });
 
-    await this.notificationsService.sendPasswordResetConfirmation(
+    this.notificationsService.sendPasswordResetConfirmation(
       user.email,
       user.firstName,
-    );
+    ).catch(() => {});
     return { message: AuthMessages.PASSWORD_RESET_SUCCESS };
   }
 

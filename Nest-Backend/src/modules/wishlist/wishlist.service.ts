@@ -49,11 +49,19 @@ export class WishlistService {
       withDeleted: false,
     });
     if (!wishlist) {
-      wishlist = this.wishlistRepository.create({ userId, totalItems: 0 });
-      wishlist = await this.wishlistRepository.save(wishlist);
-      wishlist.items = [];
+      try {
+        wishlist = this.wishlistRepository.create({ userId, totalItems: 0 });
+        wishlist = await this.wishlistRepository.save(wishlist);
+      } catch {
+        wishlist = await this.wishlistRepository.findOne({
+          where: { userId },
+          relations: { items: { product: { images: true }, variant: true } },
+          withDeleted: false,
+        });
+      }
+      if (wishlist) wishlist.items = [];
     }
-    return wishlist;
+    return wishlist!;
   }
 
   async getWishlist(userId: string): Promise<Wishlist> {
