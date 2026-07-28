@@ -115,7 +115,7 @@ export class ReturnService {
       'Return request created by customer',
     );
 
-    await this.notificationsService.sendTemplatedEmail({
+    this.notificationsService.sendTemplatedEmail({
       to: order.user.email,
       templateCode: 'return_requested' as any,
       context: {
@@ -123,7 +123,7 @@ export class ReturnService {
         returnNumber,
         orderNumber: order.orderNumber,
       },
-    });
+    }).catch(() => {});
 
     return { message: 'Return request created successfully', data: saved };
   }
@@ -437,14 +437,14 @@ export class ReturnService {
     );
 
     if (returnRequest.order?.user?.email) {
-      await this.notificationsService.sendTemplatedEmail({
+      this.notificationsService.sendTemplatedEmail({
         to: returnRequest.order.user.email,
         templateCode: 'return_approved' as any,
         context: {
           firstName: returnRequest.order.user.firstName,
           returnNumber: returnRequest.returnNumber,
         },
-      });
+      }).catch(() => {});
     }
 
     return { message: 'Return request approved' };
@@ -468,7 +468,7 @@ export class ReturnService {
     );
 
     if (returnRequest.order?.user?.email) {
-      await this.notificationsService.sendTemplatedEmail({
+      this.notificationsService.sendTemplatedEmail({
         to: returnRequest.order.user.email,
         templateCode: 'return_rejected' as any,
         context: {
@@ -476,7 +476,7 @@ export class ReturnService {
           returnNumber: returnRequest.returnNumber,
           reason: dto.reason || 'N/A',
         },
-      });
+      }).catch(() => {});
     }
 
     return { message: 'Return request rejected' };
@@ -658,7 +658,7 @@ export class ReturnService {
     await this.createAudit(returnId, adminId, 'REFUND_PROCESSED', auditNotes);
 
     if (returnRequest.order?.user?.email) {
-      await this.notificationsService.sendTemplatedEmail({
+      this.notificationsService.sendTemplatedEmail({
         to: returnRequest.order.user.email,
         templateCode: 'return_refunded' as any,
         context: {
@@ -666,7 +666,7 @@ export class ReturnService {
           returnNumber: returnRequest.returnNumber,
           amount: totalRefund.toFixed(2),
         },
-      });
+      }).catch(() => {});
     }
 
     return {

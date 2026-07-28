@@ -1,3 +1,4 @@
+import { Expose, Type } from 'class-transformer';
 import {
   Entity,
   Column,
@@ -27,27 +28,35 @@ export enum VariantStatus {
 @Index('idx_product_variants_status', ['status'])
 @Index('idx_product_variants_is_default', ['isDefault'])
 export class ProductVariant {
+  @Expose()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Expose()
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
+  @Expose()
+  @Type(() => Product)
   @ManyToOne(() => Product, (product) => product.variants, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
+  @Expose()
   @Column({ type: 'varchar', length: 150, unique: true })
   sku: string;
 
+  @Expose()
   @Column({ type: 'varchar', length: 150, nullable: true })
   barcode: string;
 
+  @Expose()
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   price: number;
 
+  @Expose()
   @Column({
     name: 'compare_at_price',
     type: 'decimal',
@@ -57,6 +66,7 @@ export class ProductVariant {
   })
   compareAtPrice: number;
 
+  @Expose()
   @Column({
     name: 'cost_price',
     type: 'decimal',
@@ -66,9 +76,11 @@ export class ProductVariant {
   })
   costPrice: number;
 
+  @Expose()
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   weight: number;
 
+  @Expose()
   @Column({
     type: 'enum',
     enum: VariantStatus,
@@ -76,6 +88,7 @@ export class ProductVariant {
   })
   status: VariantStatus;
 
+  @Expose()
   @Column({ name: 'is_default', type: 'boolean', default: false })
   isDefault: boolean;
 
@@ -93,9 +106,11 @@ export class ProductVariant {
   })
   inventories: Inventory[];
 
+  @Expose()
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;
 
+  @Expose()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt: Date;
 

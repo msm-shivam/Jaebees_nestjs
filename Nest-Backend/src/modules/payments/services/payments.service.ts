@@ -126,7 +126,7 @@ export class PaymentsService {
         performedBy: 'system',
       });
 
-      await this.sendPaymentNotification(payment.orderId, 'success');
+      this.sendPaymentNotification(payment.orderId, 'success').catch(() => {});
     } else if (intent.status === 'processing') {
       payment.status = PaymentStatus.PROCESSING;
       payment.gatewayStatus = intent.status;
@@ -144,7 +144,7 @@ export class PaymentsService {
         performedBy: 'system',
       });
 
-      await this.sendPaymentNotification(payment.orderId, 'failed');
+      this.sendPaymentNotification(payment.orderId, 'failed').catch(() => {});
     }
 
     return {
@@ -198,7 +198,7 @@ export class PaymentsService {
               message: `Payment failed via webhook: ${failedId}`,
               performedBy: 'system',
             });
-            await this.sendPaymentNotification(payment.orderId, 'failed');
+      this.sendPaymentNotification(payment.orderId, 'failed').catch(() => {});
           }
         }
         webhook.processed = true;
@@ -225,7 +225,7 @@ export class PaymentsService {
             }
             await this.paymentRepo.save(payment);
             await this.syncOrderPayment(payment.orderId);
-            await this.sendPaymentNotification(payment.orderId, 'refunded');
+            this.sendPaymentNotification(payment.orderId, 'refunded').catch(() => {});
             await this.createLog(payment.id, 'REFUND_COMPLETED', {
               message: `Refund completed via webhook: ${piId}`,
               performedBy: 'system',
@@ -423,29 +423,29 @@ export class PaymentsService {
       if (!order?.user) return;
 
       if (type === 'success') {
-        await this.notificationsService.sendPaymentSuccess({
+        this.notificationsService.sendPaymentSuccess({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
           amount: Number(order.totalAmount),
-        });
+        }).catch(() => {});
       } else if (type === 'failed') {
-        await this.notificationsService.sendPaymentFailed({
+        this.notificationsService.sendPaymentFailed({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
-        });
+        }).catch(() => {});
       } else if (type === 'refunded') {
-        await this.notificationsService.sendRefundProcessed({
+        this.notificationsService.sendRefundProcessed({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
           amount: Number(order.totalAmount),
           reason: 'Webhook refund',
-        });
+        }).catch(() => {});
       }
     } catch (error) {
       Logger.error(

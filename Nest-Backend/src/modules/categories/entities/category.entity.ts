@@ -16,12 +16,15 @@ import { SubCategory } from '../../sub-categories/entities/sub-category.entity';
 @Index(['sortOrder'])
 @Index(['isActive'])
 export class Category extends BaseEntity {
+  @Expose()
   @Column({ length: 150 })
   name: string;
 
+  @Expose()
   @Column({ unique: true, length: 150 })
   slug: string;
 
+  @Expose()
   @Column({ type: 'varchar', length: 500, nullable: true })
   image: string | null;
 

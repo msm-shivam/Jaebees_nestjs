@@ -14,9 +14,11 @@ import { Category } from '../../categories/entities/category.entity';
 @Index(['slug'], { unique: true })
 @Index(['isActive'])
 export class Brand extends BaseEntity {
+  @Expose()
   @Column({ length: 150 })
   name: string;
 
+  @Expose()
   @Column({ unique: true, length: 150 })
   slug: string;
 

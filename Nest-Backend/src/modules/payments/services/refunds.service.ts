@@ -107,14 +107,14 @@ export class RefundsService {
       relations: { user: true },
     });
     if (order?.user) {
-      await this.notificationsService.sendRefundProcessed({
+      this.notificationsService.sendRefundProcessed({
         to: order.user.email,
         userId: order.user.id,
         firstName: order.user.firstName,
         orderNumber: order.orderNumber,
         amount: refundAmount,
         reason: dto.reason ?? 'Customer request',
-      });
+      }).catch(() => {});
     }
 
     return {

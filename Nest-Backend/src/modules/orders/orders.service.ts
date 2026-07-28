@@ -262,13 +262,13 @@ export class OrdersService {
         user.firstOrderId = savedOrder.id;
         await this.userRepo.save(user);
       }
-      await this.notificationsService.sendOrderConfirmation({
+      this.notificationsService.sendOrderConfirmation({
         to: user.email,
         userId: user.id,
         orderNumber: savedOrder.orderNumber,
         firstName: user.firstName,
-      });
-      await this.firebaseService.sendPushToUser(
+      }).catch(() => {});
+      this.firebaseService.sendPushToUser(
         userId,
         FcmUserType.CUSTOMER,
         {
@@ -276,7 +276,7 @@ export class OrdersService {
           body: `Your order ${savedOrder.orderNumber} has been placed successfully.`,
           data: { orderId: savedOrder.id, orderNumber: savedOrder.orderNumber },
         },
-      );
+      ).catch(() => {});
     }
 
     await this.adminNotificationService.create({
@@ -414,7 +414,7 @@ export class OrdersService {
     const saved = await this.orderRepo.save(order);
 
     if (order.user) {
-      await this.firebaseService.sendPushToUser(
+      this.firebaseService.sendPushToUser(
         order.user.id,
         FcmUserType.CUSTOMER,
         {
@@ -422,8 +422,8 @@ export class OrdersService {
           body: `Your order ${saved.orderNumber} is now ${saved.status}.`,
           data: { orderId: saved.id, orderNumber: saved.orderNumber, status: saved.status },
         },
-      );
-      await this.notificationsService.sendOrderStatusUpdate({
+      ).catch(() => {});
+      this.notificationsService.sendOrderStatusUpdate({
         to: order.user.email,
         userId: order.user.id,
         firstName: order.user.firstName,
@@ -431,7 +431,7 @@ export class OrdersService {
         oldStatus,
         newStatus: saved.status,
         orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
-      });
+      }).catch(() => {});
     }
 
     await this.adminNotificationService.create({
@@ -505,7 +505,7 @@ export class OrdersService {
     }
 
     if (order.user) {
-      await this.firebaseService.sendPushToUser(
+      this.firebaseService.sendPushToUser(
         order.user.id,
         FcmUserType.CUSTOMER,
         {
@@ -513,8 +513,8 @@ export class OrdersService {
           body: `Your order ${saved.orderNumber} has been cancelled.`,
           data: { orderId: saved.id, orderNumber: saved.orderNumber },
         },
-      );
-      await this.notificationsService.sendOrderStatusUpdate({
+      ).catch(() => {});
+      this.notificationsService.sendOrderStatusUpdate({
         to: order.user.email,
         userId: order.user.id,
         firstName: order.user.firstName,
@@ -522,7 +522,7 @@ export class OrdersService {
         oldStatus,
         newStatus: OrderStatus.CANCELLED,
         orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
-      });
+      }).catch(() => {});
     }
 
     await this.adminNotificationService.create({

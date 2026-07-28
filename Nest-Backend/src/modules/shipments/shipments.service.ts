@@ -46,7 +46,7 @@ export class ShipmentsService {
       null,
     );
 
-    await this.sendShipmentNotification(orderId, 'created', trackingNumber);
+    this.sendShipmentNotification(orderId, 'created', trackingNumber).catch(() => {});
 
     return saved;
   }
@@ -283,7 +283,7 @@ export class ShipmentsService {
     await this.shipmentRepo.save(shipment);
 
     if (dto.status) {
-      await this.sendShipmentNotification(
+      this.sendShipmentNotification(
         shipment.orderId,
         dto.status === ShipmentStatus.OUT_FOR_DELIVERY
           ? 'out_for_delivery'
@@ -291,7 +291,7 @@ export class ShipmentsService {
             ? 'delivered'
             : 'status_update',
         shipment.trackingNumber,
-      );
+      ).catch(() => {});
     }
 
     const freshLogs = await this.logRepo.find({
@@ -342,28 +342,28 @@ export class ShipmentsService {
       if (!order?.user) return;
 
       if (type === 'created') {
-        await this.notificationsService.sendShipmentCreated({
+        this.notificationsService.sendShipmentCreated({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
           trackingNumber,
-        });
+        }).catch(() => {});
       } else if (type === 'out_for_delivery') {
-        await this.notificationsService.sendOutForDelivery({
+        this.notificationsService.sendOutForDelivery({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
           trackingNumber,
-        });
+        }).catch(() => {});
       } else if (type === 'delivered') {
-        await this.notificationsService.sendDeliveryCompleted({
+        this.notificationsService.sendDeliveryCompleted({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
-        });
+        }).catch(() => {});
       }
     } catch (error) {
       Logger.error(

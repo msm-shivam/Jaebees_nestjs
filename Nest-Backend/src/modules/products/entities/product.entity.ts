@@ -1,3 +1,4 @@
+import { Expose, Type } from 'class-transformer';
 import {
   Column,
   DeleteDateColumn,
@@ -39,12 +40,15 @@ export class Product extends BaseEntity {
   @Column({ name: 'sub_category_id', type: 'uuid', nullable: true })
   subCategoryId: string | null;
 
+  @Expose()
   @Column({ length: 255 })
   name: string;
 
+  @Expose()
   @Column({ unique: true, length: 255 })
   slug: string;
 
+  @Expose()
   @Column({ name: 'sku_prefix', type: 'varchar', length: 100, nullable: true })
   skuPrefix: string | null;
 
@@ -54,6 +58,7 @@ export class Product extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
+  @Expose()
   @Column({
     type: 'enum',
     enum: ProductStatus,
@@ -70,12 +75,15 @@ export class Product extends BaseEntity {
   @Column({ name: 'meta_keywords', type: 'text', nullable: true })
   metaKeywords: string | null;
 
+  @Expose()
   @Column({ name: 'is_featured', default: false })
   isFeatured: boolean;
 
+  @Expose()
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
+  @Expose()
   @Column({
     name: 'average_rating',
     type: 'decimal',
@@ -110,10 +118,14 @@ export class Product extends BaseEntity {
   deletedAt: Date | null;
 
   // ─── Relations ────────────────────────────────────────────────────────────
+  @Expose()
+  @Type(() => Brand)
   @ManyToOne(() => Brand, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'brand_id' })
   brand: Brand;
 
+  @Expose()
+  @Type(() => Category)
   @ManyToOne(() => Category, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'category_id' })
   category: Category;
@@ -122,12 +134,15 @@ export class Product extends BaseEntity {
   @JoinColumn({ name: 'sub_category_id' })
   subCategory: SubCategory;
 
+  @Expose()
+  @Type(() => ProductImage)
   @OneToMany(() => ProductImage, (image) => image.product, {
     cascade: true,
     onDelete: 'CASCADE',
   })
   images: ProductImage[];
 
+  @Expose()
   @OneToMany(() => ProductVariant, (variant) => variant.product, {
     cascade: true,
     onDelete: 'CASCADE',

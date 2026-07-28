@@ -169,9 +169,9 @@ export class AuthService {
 
     if (user) {
       if (dto.type === OtpType.EMAIL_VERIFY) {
-        await this.notificationsService.sendVerifyEmail(email, otp);
+        this.notificationsService.sendVerifyEmail(email, otp).catch(() => {});
       } else if (dto.type === OtpType.FORGOT_PASSWORD) {
-        await this.notificationsService.sendPasswordResetEmail(email, otp);
+        this.notificationsService.sendPasswordResetEmail(email, otp).catch(() => {});
       }
     }
 
@@ -322,7 +322,7 @@ export class AuthService {
       user.email,
       OtpType.FORGOT_PASSWORD,
     );
-    await this.notificationsService.sendPasswordResetEmail(user.email, otp);
+    this.notificationsService.sendPasswordResetEmail(user.email, otp).catch(() => {});
     return { message: AuthMessages.OTP_SENT };
   }
 

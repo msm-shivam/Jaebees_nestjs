@@ -94,7 +94,7 @@ export class SupportService {
 
     const user = await this.userRepo.findOne({ where: { id: customerId } });
     if (user) {
-      await this.notificationsService.sendTemplatedEmail({
+      this.notificationsService.sendTemplatedEmail({
         to: user.email,
         templateCode: 'ticket_created' as any,
         context: {
@@ -102,7 +102,7 @@ export class SupportService {
           ticketNumber: saved.ticketNumber,
           subject: saved.subject,
         },
-      });
+      }).catch(() => {});
     }
 
     return { message: 'Ticket created successfully', data: saved };
@@ -339,14 +339,14 @@ export class SupportService {
       where: { id: ticket.customerId },
     });
     if (customer) {
-      await this.notificationsService.sendTemplatedEmail({
+      this.notificationsService.sendTemplatedEmail({
         to: customer.email,
         templateCode: 'ticket_reply' as any,
         context: {
           firstName: customer.firstName,
           ticketNumber: ticket.ticketNumber,
         },
-      });
+      }).catch(() => {});
     }
 
     return { message: 'Reply added' };

@@ -62,7 +62,7 @@ export class CartService {
 
     let cart = await this.cartRepo.findOne({
       where: { userId },
-      relations: { items: true },
+      relations: { items: { variant: { product: { images: true } } } },
     });
     if (!cart) {
       cart = this.cartRepo.create({
@@ -183,14 +183,14 @@ export class CartService {
     await this.cartRepo.update(cartId, { subtotal, totalItems });
     return this.cartRepo.findOne({
       where: { id: cartId },
-      relations: { items: true },
+      relations: { items: { variant: { product: { images: true } } } },
     }) as Promise<Cart>;
   }
 
   async getOrCreateCart(userId: string): Promise<Cart> {
     let cart = await this.cartRepo.findOne({
       where: { userId },
-      relations: { items: true },
+      relations: { items: { variant: { product: { images: true } } } },
     });
     if (!cart) {
       cart = this.cartRepo.create({
@@ -207,7 +207,7 @@ export class CartService {
   private async getUserCartOrFail(userId: string): Promise<Cart> {
     const cart = await this.cartRepo.findOne({
       where: { userId },
-      relations: { items: true },
+      relations: { items: { variant: { product: { images: true } } } },
     });
     if (!cart) throw new NotFoundException('Cart not found.');
     return cart;

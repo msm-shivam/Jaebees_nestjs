@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import {
   Column,
   DeleteDateColumn,
@@ -16,15 +17,19 @@ export class ProductImage extends BaseEntity {
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
+  @Expose()
   @Column({ name: 'image_url', type: 'text' })
   imageUrl: string;
 
+  @Expose()
   @Column({ name: 'alt_text', type: 'varchar', length: 255, nullable: true })
   altText: string | null;
 
+  @Expose()
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
 
+  @Expose()
   @Column({ name: 'is_primary', default: false })
   isPrimary: boolean;
 
