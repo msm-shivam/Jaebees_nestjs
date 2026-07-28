@@ -115,11 +115,12 @@ export class WishlistService {
       productId: dto.productId,
       variantId: dto.variantId,
     });
-    await this.wishlistItemRepository.save(item);
+    const savedItem = await this.wishlistItemRepository.save(item);
 
-    wishlist.totalItems = await this.wishlistItemRepository.count({
-      where: { wishlistId: wishlist.id },
-    });
+    if (wishlist.items) {
+      wishlist.items.push(savedItem);
+    }
+    wishlist.totalItems = wishlist.items?.length ?? 1;
     await this.wishlistRepository.save(wishlist);
 
     return this.getOrCreateWishlist(userId);
@@ -135,9 +136,10 @@ export class WishlistService {
     }
     await this.wishlistItemRepository.softRemove(item);
 
-    wishlist.totalItems = await this.wishlistItemRepository.count({
-      where: { wishlistId: wishlist.id },
-    });
+    if (wishlist.items) {
+      wishlist.items = wishlist.items.filter((i) => i.id !== itemId);
+    }
+    wishlist.totalItems = wishlist.items?.length ?? 0;
     await this.wishlistRepository.save(wishlist);
 
     return this.getOrCreateWishlist(userId);
@@ -182,9 +184,10 @@ export class WishlistService {
     });
     await this.wishlistItemRepository.softRemove(item);
 
-    wishlist.totalItems = await this.wishlistItemRepository.count({
-      where: { wishlistId: wishlist.id },
-    });
+    if (wishlist.items) {
+      wishlist.items = wishlist.items.filter((i) => i.id !== itemId);
+    }
+    wishlist.totalItems = wishlist.items?.length ?? 0;
     await this.wishlistRepository.save(wishlist);
 
     return { message: 'Item moved to cart successfully' };
@@ -218,11 +221,12 @@ export class WishlistService {
         productId: cartItem.variant.productId,
         variantId: cartItem.variantId,
       });
-      await this.wishlistItemRepository.save(newItem);
+      const savedItem = await this.wishlistItemRepository.save(newItem);
 
-      wishlist.totalItems = await this.wishlistItemRepository.count({
-        where: { wishlistId: wishlist.id },
-      });
+      if (wishlist.items) {
+        wishlist.items.push(savedItem);
+      }
+      wishlist.totalItems = wishlist.items?.length ?? 1;
       await this.wishlistRepository.save(wishlist);
     }
 

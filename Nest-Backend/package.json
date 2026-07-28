@@ -30,7 +30,8 @@
     "seed:support": "ts-node -r tsconfig-paths/register src/database/seeds/seed-support.ts",
     "seed:reviews": "ts-node -r tsconfig-paths/register src/database/seeds/seed-reviews.ts",
     "seed:email-templates": "ts-node -r tsconfig-paths/register src/database/seeds/seed-email-templates.ts",
-    "seed:all": "npm run seed && npm run seed:email-templates && npm run seed:users && npm run seed:orders && npm run seed:finance && npm run seed:support && npm run seed:reviews"
+    "seed:products": "ts-node -r tsconfig-paths/register src/database/seeds/seed-products.ts",
+    "seed:all": "npm run seed && npm run seed:email-templates && npm run seed:users && npm run seed:products && npm run seed:orders && npm run seed:finance && npm run seed:support && npm run seed:reviews"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.4",
@@ -51,6 +52,7 @@
     "class-validator": "^0.15.1",
     "dayjs": "^1.11.21",
     "faker": "^6.6.6",
+    "firebase": "^12.16.0",
     "firebase-admin": "^14.1.0",
     "handlebars": "^4.7.9",
     "ioredis": "^5.11.1",

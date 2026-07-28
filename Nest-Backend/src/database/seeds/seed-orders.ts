@@ -162,6 +162,16 @@ async function seed() {
   }
   console.log('  Variants: 12');
 
+  // ─── Inventory ─────────────────────────────────────────────────────────
+  for (const vId of Object.values(productVariants).flat()) {
+    await qr.query(
+      `INSERT INTO inventories (id, variant_id, quantity, reserved_quantity, available_quantity, low_stock_threshold, reorder_point, reorder_quantity, created_at, updated_at)
+       VALUES ($1, $2, 100, 0, 100, 5, 10, 50, $3, $3)`,
+      [uuid(), vId, now],
+    );
+  }
+  console.log('  Inventory: 12');
+
   // ─── Payment Methods (upsert) ─────────────────────────────────────────
   let pmRows = await qr.query(`SELECT id, code FROM payment_methods LIMIT 3`);
   if (pmRows.length === 0) {

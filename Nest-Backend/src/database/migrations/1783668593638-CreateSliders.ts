@@ -343,7 +343,6 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "suppliers" DROP COLUMN "lead_time_days"`);
         await queryRunner.query(`ALTER TABLE "suppliers" DROP COLUMN "payment_terms"`);
         await queryRunner.query(`ALTER TABLE "suppliers" DROP COLUMN "notes"`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "avatar" DROP DEFAULT`);
         await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "avatar" DROP DEFAULT`);
         await queryRunner.query(`ALTER TYPE "public"."otp_type_enum" RENAME TO "otp_type_enum_old"`);
         await queryRunner.query(`CREATE TYPE "public"."otp_verifications_type_enum" AS ENUM('EMAIL_VERIFY', 'FORGOT_PASSWORD')`);
@@ -513,7 +512,6 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`CREATE TYPE "public"."cms_pages_page_type_enum" AS ENUM('ABOUT_US', 'PRIVACY_POLICY', 'TERMS_AND_CONDITIONS', 'SHIPPING_POLICY', 'RETURN_POLICY', 'CONTACT_US', 'CUSTOM_PAGE')`);
         await queryRunner.query(`ALTER TABLE "cms_pages" ALTER COLUMN "page_type" TYPE "public"."cms_pages_page_type_enum" USING "page_type"::"text"::"public"."cms_pages_page_type_enum"`);
         await queryRunner.query(`DROP TYPE "public"."cms_page_type_enum_old"`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "store_tagline" SET DEFAULT 'India''s Sports Marketplace'`);
         await queryRunner.query(`ALTER TABLE IF EXISTS "fcm_tokens" DROP CONSTRAINT IF EXISTS "UQ_fcm_tokens_token"`);
         await queryRunner.query(`CREATE INDEX "IDX_e9658e959c490b0a634dfc5478" ON "user_sessions"  ("user_id") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_d376a9f93bba651f32a2c03a7d" ON "users"  ("mobile") `);
@@ -667,9 +665,6 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_1a431dbf8e8336445526717401" ON "notification_logs"  ("sent_at") `);
         await queryRunner.query(`CREATE INDEX "IDX_feb65e9636ac2c4e59a863c3a3" ON "notification_logs"  ("status") `);
         await queryRunner.query(`CREATE INDEX "IDX_f803d5e1bd85942b24ee424870" ON "notification_logs"  ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_c37317d42fad919539d82929d9" ON "admin_notifications"  ("created_at") `);
-        await queryRunner.query(`CREATE INDEX "IDX_f75875c3d2fc663a0e7e7141ca" ON "admin_notifications"  ("is_read") `);
-        await queryRunner.query(`CREATE INDEX "IDX_e5fa912ddd0cd401a206f16ffd" ON "admin_notifications"  ("type") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_f19292146419a50d1e9d8c80b5" ON "email_preferences"  ("user_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_8fa8c951a0652c1ec745d79492" ON "email_logs"  ("created_at") `);
         await queryRunner.query(`CREATE INDEX "IDX_5cdfd5d9a6da9ad08a562866ff" ON "email_logs"  ("notification_id") `);
@@ -1171,7 +1166,6 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_d376a9f93bba651f32a2c03a7d"`);
         await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_e9658e959c490b0a634dfc5478"`);
         await queryRunner.query(`DO $$ BEGIN ALTER TABLE "fcm_tokens" ADD CONSTRAINT "UQ_fcm_tokens_token" UNIQUE ("token"); EXCEPTION WHEN undefined_table THEN NULL; END $$;`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "store_tagline" SET DEFAULT 'India''s Sports Marketplace'`);
         await queryRunner.query(`CREATE TYPE "public"."cms_page_type_enum_old" AS ENUM('ABOUT_US', 'PRIVACY_POLICY', 'TERMS_AND_CONDITIONS', 'SHIPPING_POLICY', 'RETURN_POLICY', 'CONTACT_US', 'CUSTOM_PAGE')`);
         await queryRunner.query(`ALTER TABLE "cms_pages" ALTER COLUMN "page_type" TYPE "public"."cms_page_type_enum_old" USING "page_type"::"text"::"public"."cms_page_type_enum_old"`);
         await queryRunner.query(`DROP TYPE "public"."cms_pages_page_type_enum"`);
@@ -1351,7 +1345,6 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`DROP TYPE "public"."otp_verifications_type_enum"`);
         await queryRunner.query(`ALTER TYPE "public"."otp_type_enum_old" RENAME TO "otp_type_enum"`);
         await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "avatar" SET DEFAULT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "avatar" SET DEFAULT NULL`);
         await queryRunner.query(`ALTER TABLE "suppliers" ADD "notes" text`);
         await queryRunner.query(`ALTER TABLE "suppliers" ADD "payment_terms" character varying(200)`);
         await queryRunner.query(`ALTER TABLE "suppliers" ADD "lead_time_days" integer`);
@@ -1439,9 +1432,6 @@ export class CreateSliders1783668593638 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "idx_email_logs_created_at" ON "email_logs" USING btree ("created_at") `);
         await queryRunner.query(`CREATE INDEX "idx_email_logs_notification_id" ON "email_logs" USING btree ("notification_id") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "idx_email_preferences_user_id" ON "email_preferences" USING btree ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_admin_notifications_created_at" ON "admin_notifications" USING btree ("created_at") `);
-        await queryRunner.query(`CREATE INDEX "IDX_admin_notifications_is_read" ON "admin_notifications" USING btree ("is_read") `);
-        await queryRunner.query(`CREATE INDEX "IDX_admin_notifications_type" ON "admin_notifications" USING btree ("type") `);
         await queryRunner.query(`CREATE INDEX "idx_notification_logs_sent_at" ON "notification_logs" USING btree ("sent_at") `);
         await queryRunner.query(`CREATE INDEX "idx_notification_logs_status" ON "notification_logs" USING btree ("status") `);
         await queryRunner.query(`CREATE INDEX "idx_notification_logs_user" ON "notification_logs" USING btree ("user_id") `);

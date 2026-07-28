@@ -241,6 +241,7 @@ export class OrdersService {
     await this.shipmentsService.createShipment(savedOrder.id, warehouse.id);
 
     await this.cartItemRepo.remove(cart.items);
+    cart.items = [];
     cart.subtotal = 0;
     cart.totalItems = 0;
     await this.cartRepo.save(cart);
