@@ -52,7 +52,8 @@ pids
 
 # env files (can opt-in for committing if needed)
 .env*
-
+.env
+*.env
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
