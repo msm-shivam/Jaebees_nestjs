@@ -111,12 +111,30 @@ async function seed() {
 
   // ─── Products (6) ──────────────────────────────────────────────────────
   const products = [
-    { id: U.prod1, brandId: U.brand1, categoryId: U.cat1, subCategoryId: U.sub1, name: 'Nike Air Zoom Pegasus 40', slug: 'nike-air-zoom-pegasus-40', skuPrefix: 'NIKE-PEG-40', price: 4399, compareAt: 5499 },
-    { id: U.prod2, brandId: U.brand1, categoryId: U.cat2, subCategoryId: U.sub2, name: 'Nike Dri-FIT Training Tee', slug: 'nike-dri-fit-training-tee', skuPrefix: 'NIKE-DF-TEE', price: 1199, compareAt: 1499 },
-    { id: U.prod3, brandId: U.brand2, categoryId: U.cat1, subCategoryId: U.sub1, name: 'Adidas Ultraboost Light', slug: 'adidas-ultraboost-light', skuPrefix: 'ADIDAS-UB-LIGHT', price: 6399, compareAt: 7999 },
-    { id: U.prod4, brandId: U.brand2, categoryId: U.cat2, subCategoryId: U.sub2, name: 'Adidas Essentials Hoodie', slug: 'adidas-essentials-hoodie', skuPrefix: 'ADIDAS-HOODIE', price: 2499, compareAt: 2999 },
-    { id: U.prod5, brandId: U.brand1, categoryId: U.cat1, subCategoryId: U.sub1, name: 'Nike Revolution 6', slug: 'nike-revolution-6', skuPrefix: 'NIKE-REV-6', price: 1999, compareAt: 2499 },
-    { id: U.prod6, brandId: U.brand2, categoryId: U.cat2, subCategoryId: U.sub2, name: 'Adidas Training Shorts', slug: 'adidas-training-shorts', skuPrefix: 'ADIDAS-SHORTS', price: 1499, compareAt: 1799 },
+    {
+      id: U.prod1, brandId: U.brand1, categoryId: U.cat1, subCategoryId: U.sub1, name: 'Nike Air Zoom Pegasus 40', slug: 'nike-air-zoom-pegasus-40', skuPrefix: 'NIKE-PEG-40', price: 4399, compareAt: 5499,
+      images: { primary: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=80', secondary: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=1000&q=80' }
+    },
+    {
+      id: U.prod2, brandId: U.brand1, categoryId: U.cat2, subCategoryId: U.sub2, name: 'Nike Dri-FIT Training Tee', slug: 'nike-dri-fit-training-tee', skuPrefix: 'NIKE-DF-TEE', price: 1199, compareAt: 1499,
+      images: { primary: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80', secondary: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1000&q=80' }
+    },
+    {
+      id: U.prod3, brandId: U.brand2, categoryId: U.cat1, subCategoryId: U.sub1, name: 'Adidas Ultraboost Light', slug: 'adidas-ultraboost-light', skuPrefix: 'ADIDAS-UB-LIGHT', price: 6399, compareAt: 7999,
+      images: { primary: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=80', secondary: 'https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=1000&q=80' }
+    },
+    {
+      id: U.prod4, brandId: U.brand2, categoryId: U.cat2, subCategoryId: U.sub2, name: 'Adidas Essentials Hoodie', slug: 'adidas-essentials-hoodie', skuPrefix: 'ADIDAS-HOODIE', price: 2499, compareAt: 2999,
+      images: { primary: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1000&q=80', secondary: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=1000&q=80' }
+    },
+    {
+      id: U.prod5, brandId: U.brand1, categoryId: U.cat1, subCategoryId: U.sub1, name: 'Nike Revolution 6', slug: 'nike-revolution-6', skuPrefix: 'NIKE-REV-6', price: 1999, compareAt: 2499,
+      images: { primary: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1000&q=80', secondary: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=80' }
+    },
+    {
+      id: U.prod6, brandId: U.brand2, categoryId: U.cat2, subCategoryId: U.sub2, name: 'Adidas Training Shorts', slug: 'adidas-training-shorts', skuPrefix: 'ADIDAS-SHORTS', price: 1499, compareAt: 1799,
+      images: { primary: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=1000&q=80', secondary: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=80' }
+    },
   ];
   for (const p of products) {
     await qr.query(
@@ -133,12 +151,12 @@ async function seed() {
     await qr.query(
       `INSERT INTO product_images (id, product_id, image_url, alt_text, sort_order, is_primary, created_at, updated_at)
        VALUES ($1, $2, $3, $4, 0, true, $5, $5)`,
-      [uuid(), p.id, `/uploads/products/${p.skuPrefix.toLowerCase()}-1.jpg`, p.name, now],
+      [uuid(), p.id, p.images.primary, p.name, now],
     );
     await qr.query(
       `INSERT INTO product_images (id, product_id, image_url, alt_text, sort_order, is_primary, created_at, updated_at)
        VALUES ($1, $2, $3, $4, 1, false, $5, $5)`,
-      [uuid(), p.id, `/uploads/products/${p.skuPrefix.toLowerCase()}-2.jpg`, `${p.name} - Side`, now],
+      [uuid(), p.id, p.images.secondary, `${p.name} - Side`, now],
     );
   }
   console.log('  Images: 12');
