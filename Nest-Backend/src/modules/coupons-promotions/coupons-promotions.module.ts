@@ -7,6 +7,7 @@ import { Promotion } from './entities/promotion.entity';
 import { PromotionProduct } from './entities/promotion-product.entity';
 import { PromotionCategory } from './entities/promotion-category.entity';
 import { Campaign } from './entities/campaign.entity';
+import { Order } from '../orders/entities/order.entity';
 import { CouponService } from './services/coupon.service';
 import { CouponUsageService } from './services/coupon-usage.service';
 import { CouponValidationService } from './services/coupon-validation.service';
@@ -31,6 +32,7 @@ import { AnalyticsController } from './controllers/analytics.controller';
       PromotionProduct,
       PromotionCategory,
       Campaign,
+      Order,
     ]),
   ],
   controllers: [

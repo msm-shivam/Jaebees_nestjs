@@ -101,10 +101,6 @@ export class Coupon {
   status: CouponStatus;
 
   @Expose()
-  @Column({ name: 'is_stackable', default: false })
-  isStackable: boolean;
-
-  @Expose()
   @Column({ name: 'auto_apply', default: false })
   autoApply: boolean;
 

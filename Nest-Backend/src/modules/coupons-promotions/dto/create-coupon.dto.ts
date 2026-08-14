@@ -103,11 +103,6 @@ export class CreateCouponDto {
   @ApiPropertyOptional({ default: false })
   @IsOptional()
   @IsBoolean()
-  isStackable?: boolean;
-
-  @ApiPropertyOptional({ default: false })
-  @IsOptional()
-  @IsBoolean()
   autoApply?: boolean;
 
   @ApiPropertyOptional({ example: 0 })

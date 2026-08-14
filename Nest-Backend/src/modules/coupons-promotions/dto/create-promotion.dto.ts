@@ -52,11 +52,6 @@ export class CreatePromotionDto {
   @ApiPropertyOptional({ default: false })
   @IsOptional()
   @IsBoolean()
-  isStackable: boolean;
-
-  @ApiPropertyOptional({ default: false })
-  @IsOptional()
-  @IsBoolean()
   autoApply: boolean;
 
   @ApiPropertyOptional({ type: [String] })

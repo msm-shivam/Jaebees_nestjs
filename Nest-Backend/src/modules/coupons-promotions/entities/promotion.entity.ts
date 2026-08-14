@@ -42,9 +42,6 @@ export class Promotion {
   @Column({ type: 'int', default: 0 })
   priority: number;
 
-  @Column({ name: 'is_stackable', default: false })
-  isStackable: boolean;
-
   @Column({ name: 'auto_apply', default: false })
   autoApply: boolean;
 

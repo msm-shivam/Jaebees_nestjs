@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, MoreThan, Like } from 'typeorm';
 import { Promotion } from '../entities/promotion.entity';
@@ -20,16 +20,21 @@ export class PromotionService {
   ) {}
 
   async create(dto: CreatePromotionDto): Promise<Promotion> {
+    const startDate = new Date(dto.startDate);
+    const endDate = new Date(dto.endDate);
+    if (startDate >= endDate) {
+      throw new BadRequestException('End date must be strictly after start date');
+    }
+
     const promotion = this.promotionRepository.create({
       name: dto.name,
       description: dto.description,
       type: dto.type,
       discountValue: dto.discountValue,
-      startDate: new Date(dto.startDate),
-      endDate: new Date(dto.endDate),
+      startDate,
+      endDate,
       isActive: dto.isActive ?? true,
       priority: dto.priority ?? 0,
-      isStackable: dto.isStackable ?? false,
       autoApply: dto.autoApply ?? false,
     });
     const saved = await this.promotionRepository.save(promotion);
@@ -93,13 +98,19 @@ export class PromotionService {
   }
 
   async update(id: string, dto: UpdatePromotionDto): Promise<Promotion> {
-    await this.findById(id);
+    const existing = await this.findById(id);
     const updateData: any = { ...dto };
+    const finalStart = dto.startDate ? new Date(dto.startDate) : existing.startDate;
+    const finalEnd = dto.endDate ? new Date(dto.endDate) : existing.endDate;
+    if (finalStart >= finalEnd) {
+      throw new BadRequestException('End date must be strictly after start date');
+    }
+
     if (dto.startDate) {
-      updateData.startDate = new Date(dto.startDate);
+      updateData.startDate = finalStart;
     }
     if (dto.endDate) {
-      updateData.endDate = new Date(dto.endDate);
+      updateData.endDate = finalEnd;
     }
     await this.promotionRepository.update(id, updateData);
 

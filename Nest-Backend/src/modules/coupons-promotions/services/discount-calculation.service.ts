@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, MoreThan } from 'typeorm';
+import { Repository, LessThan, MoreThan, In } from 'typeorm';
 import { Coupon } from '../entities/coupon.entity';
 import { Promotion } from '../entities/promotion.entity';
+import { Order, OrderStatus } from '../../orders/entities/order.entity';
 import { CouponUsageService } from './coupon-usage.service';
 import {
   CouponValidationService,
@@ -13,9 +14,9 @@ import { PromotionType } from '../enums/promotion-type.enum';
 import { DiscountResponseDto } from '../dto/discount-response.dto';
 
 export interface DiscountContext {
-  userId: string;
+  userId?: string;
   orderAmount: number;
-  isFirstOrder: boolean;
+  isFirstOrder?: boolean;
 }
 
 @Injectable()
@@ -25,6 +26,8 @@ export class DiscountCalculationService {
     private readonly couponRepository: Repository<Coupon>,
     @InjectRepository(Promotion)
     private readonly promotionRepository: Repository<Promotion>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     private readonly couponValidationService: CouponValidationService,
     private readonly couponUsageService: CouponUsageService,
   ) {}
@@ -46,8 +49,32 @@ export class DiscountCalculationService {
       };
     }
 
+    let isFirstOrder = context.isFirstOrder;
+    if (isFirstOrder === undefined) {
+      if (context.userId && /^[0-9a-fA-F-]{36}$/.test(context.userId)) {
+        const orderCount = await this.orderRepository.count({
+          where: {
+            userId: context.userId,
+            status: In([
+              OrderStatus.CONFIRMED,
+              OrderStatus.PROCESSING,
+              OrderStatus.DELIVERED,
+              OrderStatus.SHIPPED,
+            ]),
+          },
+        });
+        isFirstOrder = orderCount === 0;
+      } else {
+        isFirstOrder = true;
+      }
+    }
+
     try {
-      const result = await this.couponValidationService.validate(coupon, context);
+      const result = await this.couponValidationService.validate(coupon, {
+        userId: context.userId || '',
+        orderAmount: context.orderAmount,
+        isFirstOrder,
+      });
       const finalAmount = Math.max(0, context.orderAmount - result.discountAmount);
 
       return {

@@ -39,7 +39,6 @@ export class CustomerCouponController {
     return this.discountCalculationService.applyCoupon(dto.code, {
       userId: validUserId,
       orderAmount: dto.orderAmount ?? 0,
-      isFirstOrder: false,
     });
   }
 
@@ -51,7 +50,6 @@ export class CustomerCouponController {
     return this.discountCalculationService.applyCoupon(dto.code, {
       userId: user.id,
       orderAmount: dto.orderAmount ?? 0,
-      isFirstOrder: false,
     });
   }
 

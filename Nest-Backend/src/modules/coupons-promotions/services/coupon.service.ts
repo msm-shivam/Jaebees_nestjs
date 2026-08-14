@@ -72,11 +72,17 @@ export class CouponService implements OnModuleInit {
     }
 
     const { rules, startDate, endDate, ...rest } = dto;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (start >= end) {
+      throw new BadRequestException('End date must be strictly after start date');
+    }
+
     const coupon = this.couponRepository.create({
       ...rest,
       code,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate: start,
+      endDate: end,
     });
 
     const savedCoupon = await this.couponRepository.save(coupon);
@@ -162,11 +168,16 @@ export class CouponService implements OnModuleInit {
     if (dto.code) {
       updateData.code = dto.code.toUpperCase();
     }
+    const finalStart = startDate ? new Date(startDate) : coupon.startDate;
+    const finalEnd = endDate ? new Date(endDate) : coupon.endDate;
+    if (finalStart >= finalEnd) {
+      throw new BadRequestException('End date must be strictly after start date');
+    }
     if (startDate) {
-      updateData.startDate = new Date(startDate);
+      updateData.startDate = finalStart;
     }
     if (endDate) {
-      updateData.endDate = new Date(endDate);
+      updateData.endDate = finalEnd;
     }
 
     await this.couponRepository.update(id, updateData);
