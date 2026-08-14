@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Coupon } from './entities/coupon.entity';
+import { CouponRule } from './entities/coupon-rule.entity';
 import { CouponUsage } from './entities/coupon-usage.entity';
 import { Promotion } from './entities/promotion.entity';
 import { PromotionProduct } from './entities/promotion-product.entity';
@@ -24,6 +25,7 @@ import { AnalyticsController } from './controllers/analytics.controller';
   imports: [
     TypeOrmModule.forFeature([
       Coupon,
+      CouponRule,
       CouponUsage,
       Promotion,
       PromotionProduct,
@@ -51,6 +53,7 @@ import { AnalyticsController } from './controllers/analytics.controller';
   exports: [
     CouponService,
     CouponUsageService,
+    CouponValidationService,
     PromotionService,
     CampaignService,
     DiscountCalculationService,

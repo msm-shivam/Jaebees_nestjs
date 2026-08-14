@@ -35,6 +35,7 @@ export class DiscountCalculationService {
   ): Promise<DiscountResponseDto> {
     const coupon = await this.couponRepository.findOne({
       where: { code: code.toUpperCase() },
+      relations: { rules: true },
     });
     if (!coupon) {
       return {
@@ -46,7 +47,16 @@ export class DiscountCalculationService {
     }
 
     try {
-      await this.couponValidationService.validate(coupon, context);
+      const result = await this.couponValidationService.validate(coupon, context);
+      const finalAmount = Math.max(0, context.orderAmount - result.discountAmount);
+
+      return {
+        valid: true,
+        couponId: coupon.id,
+        couponCode: coupon.code,
+        discountAmount: result.discountAmount,
+        finalAmount,
+      };
     } catch (err: any) {
       return {
         valid: false,
@@ -55,20 +65,6 @@ export class DiscountCalculationService {
         finalAmount: context.orderAmount,
       };
     }
-
-    const discountAmount = this.couponValidationService.calculateDiscount(
-      coupon,
-      context.orderAmount,
-    );
-    const finalAmount = Math.max(0, context.orderAmount - discountAmount);
-
-    return {
-      valid: true,
-      couponId: coupon.id,
-      couponCode: coupon.code,
-      discountAmount,
-      finalAmount,
-    };
   }
 
   async applyBestPromotion(

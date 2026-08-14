@@ -1,9 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Delete,
   Body,
-  Param,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -15,8 +15,6 @@ import { ApplyCouponDto } from '../dto/apply-coupon.dto';
 import { ValidateCouponDto } from '../dto/validate-coupon.dto';
 
 @ApiTags('Coupons')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('coupons')
 export class CustomerCouponController {
   constructor(
@@ -24,17 +22,30 @@ export class CustomerCouponController {
     private readonly couponService: CouponService,
   ) {}
 
+  @Get('available')
+  @ApiOperation({ summary: 'Get active public coupons' })
+  async getAvailable() {
+    const res = await this.couponService.findAll({ limit: 50 });
+    const now = new Date();
+    return res.items.filter(
+      (c) => c.isActive && new Date(c.endDate) > now && new Date(c.startDate) <= now,
+    );
+  }
+
   @Post('validate')
   @ApiOperation({ summary: 'Validate a coupon code' })
-  async validate(@Body() dto: ValidateCouponDto, @CurrentUser() user: any) {
+  async validate(@Body() dto: ValidateCouponDto, @CurrentUser() user?: any) {
+    const validUserId = user?.id && /^[0-9a-fA-F-]{36}$/.test(user.id) ? user.id : undefined;
     return this.discountCalculationService.applyCoupon(dto.code, {
-      userId: user.id,
+      userId: validUserId,
       orderAmount: dto.orderAmount ?? 0,
       isFirstOrder: false,
     });
   }
 
   @Post('apply')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Apply a coupon to order' })
   async apply(@Body() dto: ApplyCouponDto, @CurrentUser() user: any) {
     return this.discountCalculationService.applyCoupon(dto.code, {

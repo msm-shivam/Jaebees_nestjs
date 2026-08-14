@@ -263,6 +263,20 @@ export class ProductsService {
       });
     }
 
+    // Price range filter (based on minimum variant price)
+    if (query.minPrice !== undefined) {
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = product.id AND pv.price >= :minPrice)',
+        { minPrice: query.minPrice },
+      );
+    }
+    if (query.maxPrice !== undefined) {
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = product.id AND pv.price <= :maxPrice)',
+        { maxPrice: query.maxPrice },
+      );
+    }
+
     // Sorting
     const validSortFields = ['name', 'createdAt', 'updatedAt', 'status', 'price'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'name';

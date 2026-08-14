@@ -5,6 +5,8 @@ export function generateOtp(): string {
   let otp = '';
   for (let i = 0; i < OTP_LENGTH; i++) {
     otp += digits[Math.floor(Math.random() * digits.length)];
+    console.log(otp);
   }
+  console.log(otp,'otp[][][]][][][[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[');
   return otp;
 }

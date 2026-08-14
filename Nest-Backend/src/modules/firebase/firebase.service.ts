@@ -50,9 +50,19 @@ export class FirebaseService implements OnModuleInit {
   ): Promise<string | null> {
     if (!this.messaging) return null;
     try {
+      const tag = payload.data?.orderNumber || payload.data?.orderId || 'order-update';
       const message: Message = {
         token,
         notification: { title: payload.title, body: payload.body },
+        webpush: {
+          notification: {
+            title: payload.title,
+            body: payload.body,
+            icon: '/img/logo.png',
+            badge: '/img/logo.png',
+            tag,
+          },
+        },
         data: payload.data,
       };
       return await this.messaging.send(message);
@@ -71,9 +81,19 @@ export class FirebaseService implements OnModuleInit {
       return null;
     }
     try {
+      const tag = payload.data?.orderNumber || payload.data?.orderId || 'order-update';
       const message: MulticastMessage = {
         tokens,
         notification: { title: payload.title, body: payload.body },
+        webpush: {
+          notification: {
+            title: payload.title,
+            body: payload.body,
+            icon: '/img/logo.png',
+            badge: '/img/logo.png',
+            tag,
+          },
+        },
         data: payload.data,
       };
       const response = await this.messaging.sendEachForMulticast(message);

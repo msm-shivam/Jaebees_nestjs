@@ -4,26 +4,52 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, ILike, DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { Payment } from '../entities/payment.entity';
 import { PaymentLog } from '../entities/payment-log.entity';
 import { PaymentMethod } from '../entities/payment-method.entity';
 import { PaymentWebhook } from '../entities/payment-webhook.entity';
 import { PaymentStatus } from '../entities/payment-status.enum';
-import { Order } from '../../orders/entities/order.entity';
+import {
+  CheckoutSnapshot,
+  CheckoutSnapshotStatus,
+  SnapshotItem,
+} from '../entities/checkout-snapshot.entity';
+import { Order, OrderStatus } from '../../orders/entities/order.entity';
+import { OrderItem } from '../../orders/entities/order-item.entity';
 import { User } from '../../users/entities/user.entity';
+import { Cart } from '../../cart/entities/cart.entity';
+import { CartItem } from '../../cart/entities/cart-item.entity';
+import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
+import { Inventory } from '../../inventory/entities/inventory.entity';
+import { Address } from '../../addresses/entities/address.entity';
+import { Warehouse } from '../../warehouses/entities/warehouse.entity';
 import { StripeService } from './stripe.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { AddressesService } from '../../addresses/addresses.service';
+import { WarehousesService } from '../../warehouses/warehouses.service';
+import { DeliverySettingsService } from '../../delivery-settings/delivery-settings.service';
+import { DeliveryChargesService } from '../../delivery-charges/delivery-charges.service';
+import { ShipmentsService } from '../../shipments/shipments.service';
+import { Coupon } from '../../coupons-promotions/entities/coupon.entity';
+import { CouponUsage } from '../../coupons-promotions/entities/coupon-usage.entity';
+import { CouponValidationService } from '../../coupons-promotions/services/coupon-validation.service';
 import { CreatePaymentIntentDto } from '../dto/create-payment-intent.dto';
 import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
 import { PaymentQueryDto } from '../dto/payment-query.dto';
 import { UpdatePaymentDto } from '../dto/update-payment.dto';
+import { plainToInstance } from 'class-transformer';
+import { PaymentIntentResponseDto } from '../dto/payment-response.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class PaymentsService {
+export class PaymentsService implements OnModuleInit {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
@@ -33,15 +59,256 @@ export class PaymentsService {
     private readonly paymentMethodRepo: Repository<PaymentMethod>,
     @InjectRepository(PaymentWebhook)
     private readonly webhookRepo: Repository<PaymentWebhook>,
+    @InjectRepository(CheckoutSnapshot)
+    private readonly snapshotRepo: Repository<CheckoutSnapshot>,
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepo: Repository<OrderItem>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(Cart)
+    private readonly cartRepo: Repository<Cart>,
+    @InjectRepository(CartItem)
+    private readonly cartItemRepo: Repository<CartItem>,
+    @InjectRepository(ProductVariant)
+    private readonly variantRepo: Repository<ProductVariant>,
+    @InjectRepository(Inventory)
+    private readonly inventoryRepo: Repository<Inventory>,
+    @InjectRepository(Address)
+    private readonly addressRepo: Repository<Address>,
+    @InjectRepository(Warehouse)
+    private readonly warehouseRepo: Repository<Warehouse>,
+    @InjectRepository(Coupon)
+    private readonly couponRepo: Repository<Coupon>,
+    @InjectRepository(CouponUsage)
+    private readonly couponUsageRepo: Repository<CouponUsage>,
+    private readonly couponValidationService: CouponValidationService,
     private readonly stripeService: StripeService,
     private readonly notificationsService: NotificationsService,
+    private readonly configService: ConfigService,
+    private readonly addressesService: AddressesService,
+    private readonly warehousesService: WarehousesService,
+    private readonly deliverySettingsService: DeliverySettingsService,
+    private readonly deliveryChargesService: DeliveryChargesService,
+    private readonly shipmentsService: ShipmentsService,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async createPaymentIntent(dto: CreatePaymentIntentDto) {
+  async onModuleInit() {
+    try {
+      await this.dataSource.query(`
+        CREATE TABLE IF NOT EXISTS checkout_snapshots (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          stripe_payment_intent_id varchar UNIQUE,
+          user_id varchar NOT NULL,
+          shipping_address_id varchar NOT NULL,
+          notes text,
+          items jsonb NOT NULL,
+          subtotal decimal(12,2) DEFAULT 0,
+          shipping_amount decimal(12,2) DEFAULT 0,
+          tax_amount decimal(12,2) DEFAULT 0,
+          discount_amount decimal(12,2) DEFAULT 0,
+          total_amount decimal(12,2) DEFAULT 0,
+          currency varchar DEFAULT 'usd',
+          status varchar DEFAULT 'PENDING',
+          expires_at timestamptz NOT NULL,
+          created_at timestamptz DEFAULT now(),
+          updated_at timestamptz DEFAULT now()
+        );
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS snapshot_id varchar UNIQUE;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_payment_intent_id varchar UNIQUE;
+        ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id varchar UNIQUE;
+        ALTER TABLE checkout_snapshots ADD COLUMN IF NOT EXISTS coupon_id varchar;
+        ALTER TABLE checkout_snapshots ADD COLUMN IF NOT EXISTS coupon_code varchar;
+      `);
+      this.logger.log('Database schema for checkout snapshots verified.');
+    } catch (err) {
+      this.logger.error('Failed to initialize checkout_snapshots table', err);
+    }
+  }
+
+  async createPaymentIntent(dto: CreatePaymentIntentDto, userId?: string) {
+    const currency = this.configService.get<string>('STRIPE_CURRENCY', 'usd');
+
+    // Customer Checkout Snapshot Flow (pre-order payment intent)
+    if (dto.shippingAddressId || (!dto.orderId && userId)) {
+      if (!userId) {
+        throw new BadRequestException('User authentication is required for checkout.');
+      }
+      if (!dto.shippingAddressId) {
+        throw new BadRequestException('Shipping address is required.');
+      }
+
+      const cart = await this.cartRepo.findOne({
+        where: { userId },
+        relations: { items: true },
+      });
+      if (!cart || !cart.items || cart.items.length === 0) {
+        throw new BadRequestException('Cart is empty.');
+      }
+
+      const address = await this.addressesService.findById(dto.shippingAddressId);
+      if (address.userId !== userId) {
+        throw new BadRequestException('Address does not belong to user.');
+      }
+
+      const snapshotItems: SnapshotItem[] = [];
+      for (const cartItem of cart.items) {
+        const variant = await this.variantRepo.findOne({
+          where: { id: cartItem.variantId },
+          relations: { product: true },
+        });
+        if (!variant) {
+          throw new BadRequestException(`Variant ${cartItem.variantId} not found.`);
+        }
+
+        const inventory = await this.inventoryRepo.findOne({
+          where: { variantId: cartItem.variantId },
+        });
+        if (!inventory || inventory.availableQuantity < cartItem.quantity) {
+          throw new BadRequestException(
+            `Insufficient stock for item: ${variant.product?.name ?? 'Product'}.`,
+          );
+        }
+
+        const unitPrice = Number(cartItem.unitPrice);
+        const lineTotal = Number(cartItem.lineTotal);
+        snapshotItems.push({
+          productId: variant.productId,
+          variantId: cartItem.variantId,
+          sku: variant.sku,
+          productName: variant.product?.name ?? 'Sportswear Product',
+          unitPrice,
+          quantity: cartItem.quantity,
+          lineTotal,
+        });
+      }
+
+      const warehouse = await this.warehousesService.findNearest(
+        address.latitude,
+        address.longitude,
+      );
+      const distanceKm = this.haversine(
+        address.latitude,
+        address.longitude,
+        warehouse.latitude,
+        warehouse.longitude,
+      );
+
+      const settings = await this.deliverySettingsService.getActive();
+      if (!this.deliverySettingsService.isServiceable(distanceKm, settings)) {
+        throw new BadRequestException('Delivery is not available in your area.');
+      }
+
+      const subtotal = Number(cart.subtotal);
+      const shippingAmount = this.deliverySettingsService.calculateCharge(
+        distanceKm,
+        subtotal,
+        settings,
+      );
+      const activeCharges = await this.deliveryChargesService.getActiveCharges();
+      const { deliveryCharge, codCharge, handlingCharge } =
+        this.deliveryChargesService.calculateCharges(subtotal, activeCharges);
+
+      let effectiveShippingCharge = shippingAmount + deliveryCharge + handlingCharge;
+      let discountAmount = 0;
+      let couponId: string | null = null;
+      let couponCode: string | null = null;
+
+      if (dto.couponCode) {
+        const coupon = await this.couponRepo.findOne({
+          where: { code: dto.couponCode.trim().toUpperCase() },
+          relations: { rules: true },
+        });
+
+        if (!coupon) {
+          throw new BadRequestException(`Coupon code '${dto.couponCode}' is invalid.`);
+        }
+
+        const userOrderCount = await this.orderRepo.count({
+          where: { userId, status: In([OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.DELIVERED, OrderStatus.SHIPPED]) },
+        });
+
+        const validationResult = await this.couponValidationService.validate(coupon, {
+          userId,
+          orderAmount: subtotal,
+          items: snapshotItems.map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            unitPrice: i.unitPrice,
+            quantity: i.quantity,
+            lineTotal: i.lineTotal,
+          })),
+          isFirstOrder: userOrderCount === 0,
+        });
+
+        if (validationResult.isFreeShipping) {
+          effectiveShippingCharge = 0;
+        }
+
+        discountAmount = validationResult.discountAmount;
+        couponId = coupon.id;
+        couponCode = coupon.code;
+      }
+
+      const taxAmount = Math.round(subtotal * 0.1 * 100) / 100;
+      const grandTotal = Math.max(
+        0,
+        subtotal + effectiveShippingCharge + taxAmount - discountAmount,
+      );
+
+      const snapshot = this.snapshotRepo.create({
+        userId,
+        shippingAddressId: dto.shippingAddressId,
+        notes: dto.notes ?? null,
+        items: snapshotItems,
+        subtotal,
+        shippingAmount: effectiveShippingCharge,
+        taxAmount,
+        discountAmount,
+        couponId,
+        couponCode,
+        totalAmount: grandTotal,
+        currency,
+        status: CheckoutSnapshotStatus.PENDING,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 mins
+      });
+      const savedSnapshot = await this.snapshotRepo.save(snapshot);
+
+      const metadata: Record<string, string> = {
+        snapshotId: savedSnapshot.id,
+        userId,
+      };
+      if (couponCode) {
+        metadata.couponCode = couponCode;
+      }
+
+      const intent = await this.stripeService.createPaymentIntent(
+        grandTotal,
+        currency,
+        metadata,
+        savedSnapshot.id,
+      );
+
+      savedSnapshot.stripePaymentIntentId = intent.id;
+      await this.snapshotRepo.save(savedSnapshot);
+
+      return plainToInstance(
+        PaymentIntentResponseDto,
+        {
+          clientSecret: intent.client_secret,
+          paymentIntentId: intent.id,
+        },
+        { excludeExtraneousValues: true },
+      );
+    }
+
+    // Legacy / Order-First Flow (for Admin/Legacy support)
+    if (!dto.orderId) {
+      throw new BadRequestException('Either orderId or shippingAddressId is required.');
+    }
+
     const order = await this.orderRepo.findOne({
       where: { id: dto.orderId },
     });
@@ -57,10 +324,19 @@ export class PaymentsService {
     }
 
     const amount = Number(order.totalAmount);
-    const intent = await this.stripeService.createPaymentIntent(amount, 'usd', {
+    const metadata: Record<string, string> = {
       orderId: order.id,
       orderNumber: order.orderNumber,
-    });
+    };
+    if (order.userId) {
+      metadata.userId = order.userId;
+    }
+
+    const intent = await this.stripeService.createPaymentIntent(
+      amount,
+      currency,
+      metadata,
+    );
 
     const transactionNumber = `TXN-${uuidv4().slice(0, 8).toUpperCase()}`;
 
@@ -88,164 +364,303 @@ export class PaymentsService {
 
     await this.paymentRepo.save(payment);
 
-    await this.createLog(payment.id, 'PAYMENT_INTENT_CREATED', {
-      message: `Payment intent created: ${intent.id}`,
-      performedBy: 'system',
-    });
-
-    return {
-      clientSecret: intent.client_secret,
-    };
+    return plainToInstance(
+      PaymentIntentResponseDto,
+      {
+        clientSecret: intent.client_secret,
+        paymentIntentId: intent.id,
+      },
+      { excludeExtraneousValues: true },
+    );
   }
 
   async confirmPayment(dto: ConfirmPaymentDto) {
-    const intent = await this.stripeService.retrievePaymentIntent(
-      dto.paymentIntentId,
+    return this.processSuccessfulPayment(dto.paymentIntentId);
+  }
+
+  /**
+   * Single Payment Processing Pipeline
+   * Handles payment verification, snapshot loading, database transaction, row locking, order creation, and post-commit notifications.
+   */
+  async processSuccessfulPayment(paymentIntentId: string) {
+    const startTime = Date.now();
+    const intent = await this.stripeService.retrievePaymentIntent(paymentIntentId);
+    if (!intent || intent.status !== 'succeeded') {
+      throw new BadRequestException(`Payment ${paymentIntentId} has not succeeded on Stripe.`);
+    }
+
+    const snapshotId = intent.metadata?.snapshotId;
+    const userIdFromMetadata = intent.metadata?.userId;
+
+    // 1. Snapshot-First Idempotency Check
+    const existingOrder = await this.orderRepo.findOne({
+      where: [
+        { stripePaymentIntentId: paymentIntentId },
+        ...(snapshotId ? [{ snapshotId }] : []),
+      ],
+      relations: { items: true },
+    });
+
+    if (existingOrder) {
+      this.logger.log(`Payment ${paymentIntentId} already processed for Order ${existingOrder.id}`);
+      return {
+        message: 'Payment confirmed successfully.',
+        alreadyProcessed: true,
+        orderId: existingOrder.id,
+        status: 'PAID',
+        data: existingOrder,
+      };
+    }
+
+    // 2. Load & Validate Snapshot
+    let snapshot: CheckoutSnapshot | null = null;
+    if (snapshotId) {
+      snapshot = await this.snapshotRepo.findOne({ where: { id: snapshotId } });
+      if (snapshot) {
+        if (snapshot.status === CheckoutSnapshotStatus.USED) {
+          const ord = await this.orderRepo.findOne({ where: { snapshotId: snapshot.id } });
+          if (ord) {
+            return {
+              message: 'Payment already processed.',
+              alreadyProcessed: true,
+              orderId: ord.id,
+              status: 'PAID',
+              data: ord,
+            };
+          }
+        }
+        if (
+          snapshot.status === CheckoutSnapshotStatus.EXPIRED ||
+          (snapshot.expiresAt && snapshot.expiresAt < new Date() && snapshot.status === CheckoutSnapshotStatus.PENDING)
+        ) {
+          snapshot.status = CheckoutSnapshotStatus.EXPIRED;
+          await this.snapshotRepo.save(snapshot);
+          throw new BadRequestException('Checkout session has expired. Please initiate checkout again.');
+        }
+
+        snapshot.status = CheckoutSnapshotStatus.PAYMENT_PROCESSING;
+        await this.snapshotRepo.save(snapshot);
+      }
+    }
+
+    // 3. Execute Single Database Transaction
+    const transactionResult = await this.dataSource.transaction(async (manager) => {
+      // Re-verify inventory & acquire pessimistic_write row lock
+      if (snapshot && snapshot.items) {
+        for (const item of snapshot.items) {
+          const inventory = await manager.findOne(Inventory, {
+            where: { variantId: item.variantId },
+            lock: { mode: 'pessimistic_write' },
+          });
+          if (!inventory || inventory.availableQuantity < item.quantity) {
+            throw new BadRequestException(
+              `Inventory changed during payment. Insufficient stock for variant ${item.variantId}.`,
+            );
+          }
+        }
+      }
+
+      const orderNumber = await this.generateOrderNumberInTx(manager);
+      const effectiveUserId = snapshot?.userId || userIdFromMetadata || intent.metadata?.userId;
+      const shippingAddrId = snapshot?.shippingAddressId || null;
+
+      let warehouseId: string | null = null;
+      let distanceKm: number | null = null;
+      if (shippingAddrId) {
+        const addr = await manager.findOne(Address, { where: { id: shippingAddrId } });
+        if (addr) {
+          const wh = await this.warehousesService.findNearest(addr.latitude, addr.longitude);
+          if (wh) {
+            warehouseId = wh.id;
+            distanceKm = this.haversine(addr.latitude, addr.longitude, wh.latitude, wh.longitude);
+          }
+        }
+      }
+
+      const totalAmt = snapshot?.totalAmount ? Number(snapshot.totalAmount) : Number(intent.amount) / 100;
+      const subtotalAmt = snapshot?.subtotal ? Number(snapshot.subtotal) : totalAmt;
+
+      const order = manager.create(Order, {
+        orderNumber,
+        userId: effectiveUserId,
+        snapshotId: snapshot?.id || null,
+        stripePaymentIntentId: paymentIntentId,
+        status: OrderStatus.PROCESSING,
+        paymentStatus: PaymentStatus.PAID,
+        subtotal: subtotalAmt,
+        shippingAmount: snapshot?.shippingAmount ? Number(snapshot.shippingAmount) : 0,
+        taxAmount: snapshot?.taxAmount ? Number(snapshot.taxAmount) : 0,
+        discountAmount: snapshot?.discountAmount ? Number(snapshot.discountAmount) : 0,
+        totalAmount: totalAmt,
+        paidAmount: totalAmt,
+        dueAmount: 0,
+        shippingAddressId: shippingAddrId,
+        warehouseId,
+        distanceKm,
+        notes: snapshot?.notes || null,
+      });
+      const savedOrder = await manager.save(Order, order);
+
+      // Create Order Items & Deduct Stock
+      if (snapshot && snapshot.items) {
+        const orderItems = snapshot.items.map((item) =>
+          manager.create(OrderItem, {
+            orderId: savedOrder.id,
+            productId: item.productId,
+            variantId: item.variantId,
+            productName: item.productName,
+            sku: item.sku,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.lineTotal,
+          }),
+        );
+        await manager.save(OrderItem, orderItems);
+
+        for (const item of snapshot.items) {
+          const inv = await manager.findOne(Inventory, { where: { variantId: item.variantId } });
+          if (inv) {
+            inv.availableQuantity -= item.quantity;
+            await manager.save(Inventory, inv);
+          }
+        }
+
+        snapshot.status = CheckoutSnapshotStatus.USED;
+        snapshot.stripePaymentIntentId = paymentIntentId;
+        await manager.save(CheckoutSnapshot, snapshot);
+
+        // Atomic Coupon Usage Tracking
+        if (snapshot.couponId) {
+          const couponToUpdate = await manager.findOne(Coupon, {
+            where: { id: snapshot.couponId },
+            lock: { mode: 'pessimistic_write' },
+          });
+
+          if (couponToUpdate) {
+            couponToUpdate.usageCount = (couponToUpdate.usageCount || 0) + 1;
+            await manager.save(Coupon, couponToUpdate);
+
+            const usage = manager.create(CouponUsage, {
+              couponId: couponToUpdate.id,
+              userId: effectiveUserId,
+              orderId: savedOrder.id,
+              discountAmount: snapshot.discountAmount ? Number(snapshot.discountAmount) : 0,
+            });
+            await manager.save(CouponUsage, usage);
+          }
+        }
+      }
+
+      // Create Payment Record
+      const transactionNumber = `TXN-${uuidv4().slice(0, 8).toUpperCase()}`;
+      const payment = manager.create(Payment, {
+        orderId: savedOrder.id,
+        transactionNumber,
+        amount: totalAmt,
+        status: PaymentStatus.PAID,
+        stripePaymentIntentId: paymentIntentId,
+        stripeChargeId: (intent.latest_charge as string) || null,
+        gatewayStatus: intent.status,
+        gatewayResponse: intent as unknown as Record<string, unknown>,
+        paidAt: new Date(),
+      });
+      await manager.save(Payment, payment);
+
+      // Create Shipment
+      if (warehouseId) {
+        await this.shipmentsService.createShipment(savedOrder.id, warehouseId, manager);
+      }
+
+      // Clear User Cart
+      if (effectiveUserId) {
+        const userCart = await manager.findOne(Cart, {
+          where: { userId: effectiveUserId },
+          relations: { items: true },
+        });
+        if (userCart && userCart.items?.length > 0) {
+          await manager.remove(CartItem, userCart.items);
+          userCart.items = [];
+          userCart.subtotal = 0;
+          userCart.totalItems = 0;
+          await manager.save(Cart, userCart);
+        }
+      }
+
+      return { savedOrder, payment };
+    });
+
+    const processingTimeMs = Date.now() - startTime;
+
+    // Production Audit Logging
+    this.logger.log(
+      `[ORDER_CREATED_AUDIT] SnapshotId: ${snapshot?.id ?? 'N/A'}, PaymentIntentId: ${paymentIntentId}, OrderId: ${transactionResult.savedOrder.id}, UserId: ${transactionResult.savedOrder.userId}, ProcessingTimeMs: ${processingTimeMs}ms, Timestamp: ${new Date().toISOString()}`,
     );
 
-    const payment = await this.paymentRepo.findOne({
-      where: { stripePaymentIntentId: dto.paymentIntentId },
-      relations: { refunds: true, logs: true },
+    // Asynchronous Email Notification (Decoupled post-commit)
+    this.sendPaymentNotification(transactionResult.savedOrder.id, 'success').catch((err) => {
+      this.logger.error('Async payment confirmation email failed to send:', err);
     });
-    if (!payment) {
-      throw new NotFoundException('Payment not found');
-    }
-
-    if (intent.status === 'succeeded') {
-      payment.status = PaymentStatus.PAID;
-      payment.stripeChargeId = intent.latest_charge as string;
-      payment.gatewayStatus = intent.status;
-      payment.gatewayResponse = intent;
-      payment.paidAt = new Date();
-
-      await this.paymentRepo.save(payment);
-
-      await this.syncOrderPayment(payment.orderId);
-      await this.createLog(payment.id, 'PAYMENT_SUCCESS', {
-        message: `Payment succeeded: ${intent.id}`,
-        performedBy: 'system',
-      });
-
-      this.sendPaymentNotification(payment.orderId, 'success').catch(() => {});
-    } else if (intent.status === 'processing') {
-      payment.status = PaymentStatus.PROCESSING;
-      payment.gatewayStatus = intent.status;
-      await this.paymentRepo.save(payment);
-      await this.createLog(payment.id, 'PAYMENT_PROCESSING', {
-        message: `Payment processing: ${intent.id}`,
-        performedBy: 'system',
-      });
-    } else if (intent.status === 'requires_payment_method') {
-      payment.status = PaymentStatus.FAILED;
-      payment.gatewayStatus = intent.status;
-      await this.paymentRepo.save(payment);
-      await this.createLog(payment.id, 'PAYMENT_FAILED', {
-        message: `Payment failed: ${intent.last_payment_error?.message ?? 'Card declined'}`,
-        performedBy: 'system',
-      });
-
-      this.sendPaymentNotification(payment.orderId, 'failed').catch(() => {});
-    }
 
     return {
       message: 'Payment confirmed successfully.',
-      data: payment,
+      alreadyProcessed: false,
+      orderId: transactionResult.savedOrder.id,
+      status: 'PAID',
+      data: transactionResult.savedOrder,
     };
   }
 
-  async handleWebhook(
-    eventId: string,
-    eventType: string,
-    payload: Record<string, unknown>,
-  ) {
-    const existing = await this.webhookRepo.findOne({
+  async handleWebhook(eventId: string, eventType: string, payload: any) {
+    let webhook = await this.webhookRepo.findOne({
       where: { eventId },
     });
-    if (existing) {
-      return { received: true, duplicate: true };
+
+    if (webhook?.processed) {
+      return { received: true, alreadyProcessed: true };
     }
 
-    const webhook = this.webhookRepo.create({
-      eventId,
-      eventType,
-      payload,
-      processed: false,
-    });
-    await this.webhookRepo.save(webhook);
+    if (!webhook) {
+      webhook = this.webhookRepo.create({
+        eventId,
+        eventType,
+        payload,
+        processed: false,
+      });
+    }
 
     switch (eventType) {
       case 'payment_intent.succeeded': {
-        const intent = payload.data as { object: { id: string } };
-        const paymentIntentId = intent?.object?.id;
-        if (paymentIntentId) {
-          await this.confirmPayment({ paymentIntentId });
+        const intent = payload.data?.object;
+        if (intent?.id) {
+          await this.processSuccessfulPayment(intent.id);
         }
         webhook.processed = true;
         webhook.processedAt = new Date();
         break;
       }
       case 'payment_intent.payment_failed': {
-        const failedIntent = payload.data as { object: { id: string } };
-        const failedId = failedIntent?.object?.id;
-        if (failedId) {
-          const payment = await this.paymentRepo.findOne({
-            where: { stripePaymentIntentId: failedId },
-          });
-          if (payment) {
-            payment.status = PaymentStatus.FAILED;
-            await this.paymentRepo.save(payment);
-            await this.createLog(payment.id, 'PAYMENT_FAILED', {
-              message: `Payment failed via webhook: ${failedId}`,
-              performedBy: 'system',
-            });
-      this.sendPaymentNotification(payment.orderId, 'failed').catch(() => {});
-          }
-        }
-        webhook.processed = true;
-        webhook.processedAt = new Date();
-        break;
-      }
-      case 'charge.refunded': {
-        const charge = payload.data as { object: { payment_intent: string } };
-        const piId = charge?.object?.payment_intent;
-        if (piId) {
-          const payment = await this.paymentRepo.findOne({
-            where: { stripePaymentIntentId: piId },
-            relations: { refunds: true },
-          });
-          if (payment) {
-            const totalRefunded = (payment.refunds ?? []).reduce(
-              (sum, r) => sum + Number(r.refundAmount),
-              0,
-            );
-            if (totalRefunded >= Number(payment.amount)) {
-              payment.status = PaymentStatus.REFUNDED;
-            } else {
-              payment.status = PaymentStatus.PARTIALLY_REFUNDED;
+        const failedIntent = payload.data?.object;
+        if (failedIntent?.id) {
+          const snapshotId = failedIntent.metadata?.snapshotId;
+          if (snapshotId) {
+            const snap = await this.snapshotRepo.findOne({ where: { id: snapshotId } });
+            if (snap) {
+              snap.status = CheckoutSnapshotStatus.FAILED;
+              await this.snapshotRepo.save(snap);
             }
-            await this.paymentRepo.save(payment);
-            await this.syncOrderPayment(payment.orderId);
-            this.sendPaymentNotification(payment.orderId, 'refunded').catch(() => {});
-            await this.createLog(payment.id, 'REFUND_COMPLETED', {
-              message: `Refund completed via webhook: ${piId}`,
-              performedBy: 'system',
-            });
           }
         }
         webhook.processed = true;
         webhook.processedAt = new Date();
         break;
       }
-      case 'payment_intent.created':
-      case 'payment_intent.processing':
-      case 'charge.dispute.created':
+      default:
         webhook.processed = true;
         webhook.processedAt = new Date();
         break;
     }
 
     await this.webhookRepo.save(webhook);
-
     return { received: true };
   }
 
@@ -345,56 +760,48 @@ export class PaymentsService {
     };
   }
 
-  private async syncOrderPayment(orderId: string) {
-    const payments = await this.paymentRepo.find({
-      where: { orderId },
+  private async generateOrderNumberInTx(manager: any): Promise<string> {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const prefix = `ORD-${y}${m}${d}-`;
+
+    const todayOrders = await manager.find(Order, {
+      where: { orderNumber: ILike(`${prefix}%`) },
+      order: { createdAt: 'DESC' },
     });
 
-    const totalPaid = payments
-      .filter(
-        (p) =>
-          p.status === PaymentStatus.PAID ||
-          p.status === PaymentStatus.REFUNDED ||
-          p.status === PaymentStatus.PARTIALLY_REFUNDED,
-      )
-      .reduce((sum, p) => sum + Number(p.amount), 0);
-
-    const refundedAmount = payments
-      .filter(
-        (p) =>
-          p.status === PaymentStatus.REFUNDED ||
-          p.status === PaymentStatus.PARTIALLY_REFUNDED,
-      )
-      .reduce((sum, p) => sum + Number(p.amount), 0);
-
-    const order = await this.orderRepo.findOne({ where: { id: orderId } });
-    if (!order) return;
-
-    const latestPayment =
-      payments.length > 0
-        ? payments.reduce((latest, p) =>
-            p.createdAt > latest.createdAt ? p : latest,
-          )
-        : null;
-
-    order.paidAmount = totalPaid - refundedAmount;
-    order.dueAmount = Math.max(0, Number(order.totalAmount) - order.paidAmount);
-
-    if (latestPayment) {
-      order.paymentStatus = latestPayment.status;
-      if (totalPaid >= Number(order.totalAmount)) {
-        order.paymentStatus = PaymentStatus.PAID;
-      } else if (
-        refundedAmount > 0 &&
-        refundedAmount < Number(order.totalAmount)
-      ) {
-        order.paymentStatus = PaymentStatus.PARTIALLY_REFUNDED;
-      } else if (refundedAmount >= Number(order.totalAmount)) {
-        order.paymentStatus = PaymentStatus.REFUNDED;
-      }
+    let nextSeq = 1;
+    if (todayOrders.length > 0) {
+      const lastNum = parseInt(todayOrders[0].orderNumber.slice(-6), 10);
+      if (!isNaN(lastNum)) nextSeq = lastNum + 1;
     }
 
-    await this.orderRepo.save(order);
+    return `${prefix}${String(nextSeq).padStart(6, '0')}`;
+  }
+
+  private haversine(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371;
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) *
+        Math.cos(this.toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 100) / 100;
+  }
+
+  private toRad(deg: number): number {
+    return (deg * Math.PI) / 180;
   }
 
   private async createLog(
@@ -423,35 +830,40 @@ export class PaymentsService {
       if (!order?.user) return;
 
       if (type === 'success') {
-        this.notificationsService.sendPaymentSuccess({
-          to: order.user.email,
-          userId: order.user.id,
-          firstName: order.user.firstName,
-          orderNumber: order.orderNumber,
-          amount: Number(order.totalAmount),
-        }).catch(() => {});
+        this.notificationsService
+          .sendPaymentSuccess({
+            to: order.user.email,
+            userId: order.user.id,
+            firstName: order.user.firstName,
+            orderNumber: order.orderNumber,
+            amount: Number(order.totalAmount),
+          })
+          .catch(() => {});
       } else if (type === 'failed') {
-        this.notificationsService.sendPaymentFailed({
-          to: order.user.email,
-          userId: order.user.id,
-          firstName: order.user.firstName,
-          orderNumber: order.orderNumber,
-        }).catch(() => {});
+        this.notificationsService
+          .sendPaymentFailed({
+            to: order.user.email,
+            userId: order.user.id,
+            firstName: order.user.firstName,
+            orderNumber: order.orderNumber,
+          })
+          .catch(() => {});
       } else if (type === 'refunded') {
-        this.notificationsService.sendRefundProcessed({
-          to: order.user.email,
-          userId: order.user.id,
-          firstName: order.user.firstName,
-          orderNumber: order.orderNumber,
-          amount: Number(order.totalAmount),
-          reason: 'Webhook refund',
-        }).catch(() => {});
+        this.notificationsService
+          .sendRefundProcessed({
+            to: order.user.email,
+            userId: order.user.id,
+            firstName: order.user.firstName,
+            orderNumber: order.orderNumber,
+            amount: Number(order.totalAmount),
+            reason: 'Webhook refund',
+          })
+          .catch(() => {});
       }
     } catch (error) {
-      Logger.error(
+      this.logger.error(
         'Failed to send payment notification:',
         error,
-        'PaymentsService',
       );
     }
   }

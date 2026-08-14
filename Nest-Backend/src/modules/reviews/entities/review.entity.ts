@@ -45,17 +45,17 @@ export class Review extends BaseEntity {
   @JoinColumn({ name: 'variant_id' })
   variant: ProductVariant;
 
-  @Column({ name: 'order_id', type: 'uuid' })
-  orderId: string;
+  @Column({ name: 'order_id', type: 'uuid', nullable: true })
+  orderId: string | null;
 
-  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ name: 'order_item_id', type: 'uuid', unique: true })
-  orderItemId: string;
+  @Column({ name: 'order_item_id', type: 'uuid', nullable: true, unique: true })
+  orderItemId: string | null;
 
-  @ManyToOne(() => OrderItem, { onDelete: 'CASCADE' })
+  @ManyToOne(() => OrderItem, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'order_item_id' })
   orderItem: OrderItem;
 

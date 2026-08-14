@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { plainToInstance } from 'class-transformer';
 import { Shipment } from './entities/shipment.entity';
@@ -28,23 +28,27 @@ export class ShipmentsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async createShipment(orderId: string, warehouseId: string) {
+  async createShipment(orderId: string, warehouseId: string, manager?: EntityManager) {
     const trackingNumber = `SHIP-${uuidv4().slice(0, 8).toUpperCase()}`;
 
-    const shipment = this.shipmentRepo.create({
+    const repo = manager ? manager.getRepository(Shipment) : this.shipmentRepo;
+    const logRepo = manager ? manager.getRepository(ShipmentTrackingLog) : this.logRepo;
+
+    const shipment = repo.create({
       orderId,
       warehouseId,
       trackingNumber,
       status: ShipmentStatus.PENDING,
     });
-    const saved = await this.shipmentRepo.save(shipment);
+    const saved = await repo.save(shipment);
 
-    await this.createLog(
-      saved.id,
-      ShipmentStatus.PENDING,
-      'Shipment created',
-      null,
-    );
+    const log = logRepo.create({
+      shipmentId: saved.id,
+      status: ShipmentStatus.PENDING,
+      note: 'Shipment created',
+      changedBy: null,
+    });
+    await logRepo.save(log);
 
     this.sendShipmentNotification(orderId, 'created', trackingNumber).catch(() => {});
 

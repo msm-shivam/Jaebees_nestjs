@@ -34,7 +34,7 @@ export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly stripeService: StripeService,
-  ) {}
+  ) { }
 
   @Post('create-intent')
   @UseGuards(JwtAuthGuard)
@@ -48,8 +48,12 @@ export class PaymentsController {
   })
   @ApiResponse({ status: 404, description: 'Order not found.' })
   @ApiResponse({ status: 400, description: 'Order already paid.' })
-  async createPaymentIntent(@Body() dto: CreatePaymentIntentDto) {
-    return this.paymentsService.createPaymentIntent(dto);
+  async createPaymentIntent(
+    @Body() dto: CreatePaymentIntentDto,
+    @Req() req: Request,
+  ) {
+    const userId = (req as any).user?.id || (req as any).user?.userId;
+    return this.paymentsService.createPaymentIntent(dto, userId);
   }
 
   @Post('confirm')

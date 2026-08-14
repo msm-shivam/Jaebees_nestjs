@@ -17,7 +17,7 @@ import { PaymentStatus } from './payment-status.enum';
 @Index(['orderId'])
 @Index(['status'])
 @Index(['transactionNumber'])
-@Index(['stripePaymentIntentId'])
+@Index(['stripePaymentIntentId'], { unique: true })
 export class Payment extends BaseEntity {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;

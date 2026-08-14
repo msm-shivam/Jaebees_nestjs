@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   validateSync,
 } from 'class-validator';
@@ -65,6 +66,18 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   RABBITMQ_URL: string;
+
+  @IsString()
+  @IsOptional()
+  TWILIO_ACCOUNT_SID?: string;
+
+  @IsString()
+  @IsOptional()
+  TWILIO_AUTH_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  TWILIO_PHONE_NUMBER?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

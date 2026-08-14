@@ -25,11 +25,17 @@ export class CouponUsageService {
     return this.usageRepository.save(usage);
   }
 
-  async getUserUsageCount(couponId: string, userId: string): Promise<number> {
+  async getUserUsageCount(couponId: string, userId?: string): Promise<number> {
+    if (!userId || userId === 'guest' || !/^[0-9a-fA-F-]{36}$/.test(userId)) {
+      return 0;
+    }
     return this.usageRepository.count({ where: { couponId, userId } });
   }
 
   async findByOrder(orderId: string): Promise<CouponUsage[]> {
+    if (!orderId || !/^[0-9a-fA-F-]{36}$/.test(orderId)) {
+      return [];
+    }
     return this.usageRepository.find({
       where: { orderId },
       relations: { coupon: true },
@@ -37,6 +43,9 @@ export class CouponUsageService {
   }
 
   async findByUser(userId: string): Promise<CouponUsage[]> {
+    if (!userId || userId === 'guest' || !/^[0-9a-fA-F-]{36}$/.test(userId)) {
+      return [];
+    }
     return this.usageRepository.find({
       where: { userId },
       relations: { coupon: true, order: true },

@@ -15,6 +15,7 @@ import { AdminAuthController } from './admin-auth.controller';
 import { JwtCustomerStrategy } from './strategies/jwt-customer.strategy';
 import { JwtAdminStrategy } from './strategies/jwt-admin.strategy';
 import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
+import { SmsModule } from '../sms/sms.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SecurityComplianceModule } from '../security-compliance/security-compli
       }),
     }),
     SecurityComplianceModule,
+    SmsModule,
     TypeOrmModule.forFeature([
       User,
       UserSession,
@@ -48,3 +50,4 @@ import { SecurityComplianceModule } from '../security-compliance/security-compli
   exports: [AuthService, AdminAuthService, JwtModule],
 })
 export class AuthModule {}
+

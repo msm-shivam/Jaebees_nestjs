@@ -34,47 +34,55 @@ export class ReviewsService {
   ) {}
 
   async create(userId: string, dto: CreateReviewDto) {
-    const order = await this.orderRepository.findOne({
-      where: { id: dto.orderId, userId },
-    });
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-    if (order.status !== OrderStatus.DELIVERED) {
-      throw new BadRequestException('Can only review delivered orders');
+    let isVerifiedPurchase = false;
+
+    if (dto.orderId) {
+      const order = await this.orderRepository.findOne({
+        where: { id: dto.orderId, userId },
+      });
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+      if (order.status !== OrderStatus.DELIVERED) {
+        throw new BadRequestException('Can only review delivered orders');
+      }
+      isVerifiedPurchase = true;
     }
 
-    const orderItem = await this.orderItemRepository.findOne({
-      where: {
-        id: dto.orderItemId,
-        orderId: dto.orderId,
-        productId: dto.productId,
-      },
-    });
-    if (!orderItem) {
-      throw new NotFoundException('Order item not found in this order');
-    }
+    if (dto.orderItemId) {
+      const orderItem = await this.orderItemRepository.findOne({
+        where: {
+          id: dto.orderItemId,
+          ...(dto.orderId ? { orderId: dto.orderId } : {}),
+          productId: dto.productId,
+        },
+      });
+      if (!orderItem) {
+        throw new NotFoundException('Order item not found in this order');
+      }
 
-    const existing = await this.reviewRepository.findOne({
-      where: { orderItemId: dto.orderItemId },
-    });
-    if (existing) {
-      throw new BadRequestException(
-        'Review already exists for this order item',
-      );
+      const existing = await this.reviewRepository.findOne({
+        where: { orderItemId: dto.orderItemId },
+      });
+      if (existing) {
+        throw new BadRequestException(
+          'Review already exists for this order item',
+        );
+      }
+      isVerifiedPurchase = true;
     }
 
     const review = this.reviewRepository.create({
       userId,
       productId: dto.productId,
       variantId: dto.variantId ?? null,
-      orderId: dto.orderId,
-      orderItemId: dto.orderItemId,
+      orderId: dto.orderId ?? null,
+      orderItemId: dto.orderItemId ?? null,
       rating: dto.rating,
       title: dto.title,
       comment: dto.comment,
       status: ReviewStatus.APPROVED,
-      isVerifiedPurchase: true,
+      isVerifiedPurchase,
       approvedBy: userId,
       approvedAt: new Date(),
     });

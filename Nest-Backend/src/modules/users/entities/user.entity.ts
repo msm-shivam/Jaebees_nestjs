@@ -1,6 +1,7 @@
 import { Column, DeleteDateColumn, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { UserSession } from './user-session.entity';
+import { AccountStatus } from '../enums/account-status.enum';
 
 @Entity('users')
 @Index(['email'], { unique: true })
@@ -19,10 +20,23 @@ export class User extends BaseEntity {
     unique: true,
     type: 'varchar',
     length: 20,
-    nullable: true,
-    default: null,
+    nullable: false,
   })
-  mobile: string | undefined;
+  mobile: string;
+
+  @Column({
+    name: 'account_status',
+    type: 'enum',
+    enum: AccountStatus,
+    default: AccountStatus.PENDING_VERIFICATION,
+  })
+  accountStatus: AccountStatus;
+
+  @Column({ name: 'is_mobile_verified', default: false })
+  isMobileVerified: boolean;
+
+  @Column({ name: 'mobile_verified_at', type: 'timestamptz', nullable: true, default: null })
+  mobileVerifiedAt: Date | null;
 
   @Column({ name: 'password_hash', length: 255 })
   passwordHash: string;
@@ -45,3 +59,4 @@ export class User extends BaseEntity {
   @OneToMany(() => UserSession, (session) => session.user)
   sessions: UserSession[];
 }
+

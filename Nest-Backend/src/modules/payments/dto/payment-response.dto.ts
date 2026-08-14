@@ -55,6 +55,10 @@ export class PaymentIntentResponseDto {
   @Expose()
   @ApiProperty({ example: 'pi_xxxxx_secret_xxxxx' })
   clientSecret: string;
+
+  @Expose()
+  @ApiProperty({ example: 'pi_3Pxxxxx' })
+  paymentIntentId: string;
 }
 
 @Exclude()

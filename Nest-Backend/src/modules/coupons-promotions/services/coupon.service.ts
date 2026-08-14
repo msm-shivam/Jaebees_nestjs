@@ -2,20 +2,67 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
+  OnModuleInit,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, DataSource } from 'typeorm';
 import { Coupon } from '../entities/coupon.entity';
+import { CouponRule } from '../entities/coupon-rule.entity';
 import { CreateCouponDto } from '../dto/create-coupon.dto';
 import { UpdateCouponDto } from '../dto/update-coupon.dto';
 import { CouponQueryDto } from '../dto/coupon-query.dto';
 
 @Injectable()
-export class CouponService {
+export class CouponService implements OnModuleInit {
+  private readonly logger = new Logger(CouponService.name);
+
   constructor(
     @InjectRepository(Coupon)
     private readonly couponRepository: Repository<Coupon>,
+    @InjectRepository(CouponRule)
+    private readonly ruleRepository: Repository<CouponRule>,
+    private readonly dataSource: DataSource,
   ) {}
+
+  private validateUuid(id: string) {
+    if (!id || id === 'undefined' || id === 'null' || !/^[0-9a-fA-F-]{36}$/.test(id)) {
+      throw new BadRequestException(`Invalid coupon ID "${id}"`);
+    }
+  }
+
+  private sanitizeTargetId(targetId?: string | null): string | null {
+    if (!targetId || targetId === 'undefined' || targetId === 'null') {
+      return null;
+    }
+    return targetId;
+  }
+
+  async onModuleInit() {
+    try {
+      await this.dataSource.query(`
+        CREATE TABLE IF NOT EXISTS coupon_rules (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          coupon_id uuid NOT NULL,
+          rule_type varchar NOT NULL,
+          target_type varchar NOT NULL,
+          target_id varchar,
+          created_at timestamptz DEFAULT now()
+        );
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS name varchar DEFAULT '';
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS description text;
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS status varchar DEFAULT 'ACTIVE';
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS priority int DEFAULT 0;
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS auto_apply boolean DEFAULT false;
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS admin_notes text;
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+      `);
+      this.logger.log('Database schema for coupons and coupon_rules verified.');
+    } catch (err) {
+      this.logger.error('Failed to initialize coupons table schema', err);
+    }
+  }
 
   async create(dto: CreateCouponDto): Promise<Coupon> {
     const code = dto.code.toUpperCase();
@@ -23,13 +70,30 @@ export class CouponService {
     if (existing) {
       throw new ConflictException(`Coupon code "${code}" already exists`);
     }
+
+    const { rules, startDate, endDate, ...rest } = dto;
     const coupon = this.couponRepository.create({
-      ...dto,
+      ...rest,
       code,
-      startDate: new Date(dto.startDate),
-      endDate: new Date(dto.endDate),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
     });
-    return this.couponRepository.save(coupon);
+
+    const savedCoupon = await this.couponRepository.save(coupon);
+
+    if (rules && rules.length > 0) {
+      const ruleEntities = rules.map((r) =>
+        this.ruleRepository.create({
+          couponId: savedCoupon.id,
+          ruleType: r.ruleType,
+          targetType: r.targetType,
+          targetId: this.sanitizeTargetId(r.targetId),
+        }),
+      );
+      await this.ruleRepository.save(ruleEntities);
+    }
+
+    return this.findById(savedCoupon.id);
   }
 
   async findAll(
@@ -48,6 +112,7 @@ export class CouponService {
     }
     const [items, total] = await this.couponRepository.findAndCount({
       where,
+      relations: { rules: true },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -56,7 +121,11 @@ export class CouponService {
   }
 
   async findById(id: string): Promise<Coupon> {
-    const coupon = await this.couponRepository.findOne({ where: { id } });
+    this.validateUuid(id);
+    const coupon = await this.couponRepository.findOne({
+      where: { id },
+      relations: { rules: true },
+    });
     if (!coupon) {
       throw new NotFoundException(`Coupon with ID "${id}" not found`);
     }
@@ -66,6 +135,7 @@ export class CouponService {
   async findByCode(code: string): Promise<Coupon> {
     const coupon = await this.couponRepository.findOne({
       where: { code: code.toUpperCase() },
+      relations: { rules: true },
     });
     if (!coupon) {
       throw new NotFoundException(`Coupon "${code}" not found`);
@@ -74,6 +144,7 @@ export class CouponService {
   }
 
   async update(id: string, dto: UpdateCouponDto): Promise<Coupon> {
+    this.validateUuid(id);
     const coupon = await this.findById(id);
     if (dto.code && dto.code.toUpperCase() !== coupon.code) {
       const existing = await this.couponRepository.findOne({
@@ -85,22 +156,43 @@ export class CouponService {
         );
       }
     }
-    const updateData: any = { ...dto };
+
+    const { rules, startDate, endDate, ...rest } = dto as any;
+    const updateData: any = { ...rest };
     if (dto.code) {
       updateData.code = dto.code.toUpperCase();
     }
-    if (dto.startDate) {
-      updateData.startDate = new Date(dto.startDate);
+    if (startDate) {
+      updateData.startDate = new Date(startDate);
     }
-    if (dto.endDate) {
-      updateData.endDate = new Date(dto.endDate);
+    if (endDate) {
+      updateData.endDate = new Date(endDate);
     }
+
     await this.couponRepository.update(id, updateData);
+
+    if (rules !== undefined) {
+      await this.ruleRepository.delete({ couponId: id });
+      if (rules.length > 0) {
+        const ruleEntities = rules.map((r: any) =>
+          this.ruleRepository.create({
+            couponId: id,
+            ruleType: r.ruleType,
+            targetType: r.targetType,
+            targetId: this.sanitizeTargetId(r.targetId),
+          }),
+        );
+        await this.ruleRepository.save(ruleEntities);
+      }
+    }
+
     return this.findById(id);
   }
 
   async remove(id: string): Promise<void> {
+    this.validateUuid(id);
     const coupon = await this.findById(id);
     await this.couponRepository.remove(coupon);
   }
 }
+

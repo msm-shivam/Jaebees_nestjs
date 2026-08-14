@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEnum,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -90,6 +91,20 @@ export class ProductQueryDto {
     return undefined;
   })
   isActive?: boolean;
+
+  @ApiPropertyOptional({ example: 100, description: 'Minimum price filter (applied on variant price)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
+
+  @ApiPropertyOptional({ example: 5000, description: 'Maximum price filter (applied on variant price)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
 
   @ApiPropertyOptional({
     example: 'name',

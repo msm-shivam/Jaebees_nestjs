@@ -166,6 +166,13 @@ export class Order extends BaseEntity {
     default: 0,
   })
   dueAmount: number;
+  @Column({ name: 'snapshot_id', type: 'varchar', nullable: true, unique: true })
+  @Index({ unique: true })
+  snapshotId: string | null;
+
+  @Column({ name: 'stripe_payment_intent_id', type: 'varchar', nullable: true, unique: true })
+  @Index({ unique: true })
+  stripePaymentIntentId: string | null;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];

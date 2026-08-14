@@ -39,6 +39,7 @@ import { DeliveryChargeAudit } from '../modules/delivery-charges/entities/delive
 import { Shipment } from '../modules/shipments/entities/shipment.entity';
 import { ShipmentTrackingLog } from '../modules/shipments/entities/shipment-tracking-log.entity';
 import { Coupon } from '../modules/coupons-promotions/entities/coupon.entity';
+import { CouponRule } from '../modules/coupons-promotions/entities/coupon-rule.entity';
 import { CouponUsage } from '../modules/coupons-promotions/entities/coupon-usage.entity';
 import { Promotion } from '../modules/coupons-promotions/entities/promotion.entity';
 import { PromotionProduct } from '../modules/coupons-promotions/entities/promotion-product.entity';
@@ -156,6 +157,7 @@ export const AppDataSource = new DataSource({
     Shipment,
     ShipmentTrackingLog,
     Coupon,
+    CouponRule,
     CouponUsage,
     Promotion,
     PromotionProduct,

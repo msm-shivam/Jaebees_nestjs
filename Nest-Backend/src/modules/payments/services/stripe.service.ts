@@ -27,13 +27,21 @@ export class StripeService {
     amount: number,
     currency: string = 'usd',
     metadata?: Record<string, string>,
+    idempotencyKey?: string,
   ) {
     const client = this.getClient();
-    return await client.paymentIntents.create({
-      amount: Math.round(amount * 100),
-      currency,
-      metadata,
-    });
+    const options: Record<string, unknown> = {};
+    if (idempotencyKey) {
+      options.idempotencyKey = idempotencyKey;
+    }
+    return await client.paymentIntents.create(
+      {
+        amount: Math.round(amount * 100),
+        currency,
+        metadata,
+      },
+      options,
+    );
   }
 
   async retrievePaymentIntent(paymentIntentId: string) {

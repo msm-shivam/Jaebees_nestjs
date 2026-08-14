@@ -14,6 +14,30 @@ import type { UpdateSettingsDto } from '../dto/update-settings.dto';
 export class AdminSettingsController {
   constructor(private readonly settingsService: SystemSettingsService) {}
 
+  @Get('announcement')
+  @Permissions(DefaultPermissions.SETTINGS_VIEW)
+  async getAnnouncement() {
+    const setting = await this.settingsService.findByKey('announcement_text');
+    return {
+      statusCode: 200,
+      message: 'Success',
+      data: {
+        text: setting?.value ?? 'FREE SHIPPING OVER $75 • 48-HOUR RETURNS',
+      },
+    };
+  }
+
+  @Patch('announcement')
+  @Permissions(DefaultPermissions.SETTINGS_MANAGE)
+  async updateAnnouncement(@Body('text') text: string) {
+    await this.settingsService.upsert({ announcement_text: text ?? '' });
+    return {
+      statusCode: 200,
+      message: 'Announcement header text updated successfully',
+      data: { text: text ?? '' },
+    };
+  }
+
   @Get()
   @Permissions(DefaultPermissions.SETTINGS_VIEW)
   async findAll(@Query('category') category?: string) {

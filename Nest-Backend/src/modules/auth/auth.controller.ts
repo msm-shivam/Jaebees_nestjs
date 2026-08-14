@@ -21,8 +21,9 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { VerifyEmailDto } from './dto/verify-email.dto';
-import { ResendOtpDto } from './dto/resend-otp.dto';
+import { VerifyMobileDto } from './dto/verify-mobile.dto';
+import { ResendMobileOtpDto } from './dto/resend-mobile-otp.dto';
+import { VerifyEmailProfileDto } from './dto/verify-email-profile.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -37,10 +38,10 @@ export class AuthController {
   @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new customer account' })
+  @ApiOperation({ summary: 'Register a new customer account (Requires Mobile)' })
   @ApiResponse({
     status: 201,
-    description: 'Registration successful. OTP sent to email.',
+    description: 'Registration successful. SMS OTP sent to mobile number.',
   })
   @ApiResponse({ status: 400, description: 'Email or mobile already taken.' })
   async register(@Body() dto: RegisterDto) {
@@ -48,35 +49,30 @@ export class AuthController {
   }
 
   @Public()
-  @Post('verify-email')
+  @Post('verify-mobile')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({
-    summary: 'Verify customer email with OTP — returns tokens (auto-login)',
+    summary: 'Verify customer mobile number with SMS OTP — returns tokens (auto-login)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Email verified. Access and refresh tokens returned.',
+    description: 'Mobile verified. Access and refresh tokens returned.',
   })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP.' })
-  async verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
-    return this.authService.verifyEmail(dto, req.ip, req.headers['user-agent']);
+  async verifyMobile(@Body() dto: VerifyMobileDto, @Req() req: Request) {
+    return this.authService.verifyMobile(dto, req.ip, req.headers['user-agent']);
   }
 
   @Public()
-  @Post('resend-otp')
+  @Post('resend-mobile-otp')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 2, ttl: 60000 } })
-  @ApiOperation({
-    summary: 'Resend OTP',
-    description:
-      'Resends an OTP for email verification or forgot password. ' +
-      'Use `type: EMAIL_VERIFY` after registration, or `type: FORGOT_PASSWORD` to re-trigger a password reset OTP.',
-  })
-  @ApiResponse({ status: 200, description: 'OTP resent successfully.' })
-  @ApiResponse({ status: 400, description: 'Email already verified.' })
-  async resendOtp(@Body() dto: ResendOtpDto) {
-    return this.authService.resendOtp(dto);
+  @ApiOperation({ summary: 'Resend SMS OTP for mobile verification' })
+  @ApiResponse({ status: 200, description: 'SMS OTP resent successfully.' })
+  @ApiResponse({ status: 400, description: 'Mobile already verified or cooldown active.' })
+  async resendMobileOtp(@Body() dto: ResendMobileOtpDto) {
+    return this.authService.resendMobileOtp(dto);
   }
 
   @SkipAuditLog()
@@ -87,6 +83,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Customer login — returns access + refresh tokens' })
   @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  @ApiResponse({ status: 403, description: 'Mobile verification required (returns maskedMobile).' })
   async login(@Body() dto: LoginDto, @Req() req: Request) {
     return this.authService.login(dto, req.ip, req.headers['user-agent']);
   }
@@ -123,10 +120,11 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Request password reset OTP' })
+  @Throttle({ default: { limit: 2, ttl: 60000 } })
+  @ApiOperation({ summary: 'Request password reset SMS OTP via registered email' })
   @ApiResponse({
     status: 200,
-    description: 'OTP sent to email if account exists.',
+    description: 'SMS OTP sent to user registered mobile if account exists.',
   })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
@@ -135,10 +133,36 @@ export class AuthController {
   @Public()
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Reset customer password using OTP' })
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({ summary: 'Reset customer password using SMS OTP' })
   @ApiResponse({ status: 200, description: 'Password reset successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP.' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT')
+  @Post('send-email-verification')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 2, ttl: 60000 } })
+  @ApiOperation({ summary: 'Request email verification OTP for customer profile' })
+  @ApiResponse({ status: 200, description: 'Verification OTP sent to user email.' })
+  async sendEmailVerification(@CurrentUser() user: User) {
+    return this.authService.sendEmailVerification(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT')
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({ summary: 'Verify customer email address with OTP' })
+  @ApiResponse({ status: 200, description: 'Email address verified successfully.' })
+  async verifyEmailProfile(
+    @CurrentUser() user: User,
+    @Body() dto: VerifyEmailProfileDto,
+  ) {
+    return this.authService.verifyEmailProfile(user.id, dto.otp);
   }
 }

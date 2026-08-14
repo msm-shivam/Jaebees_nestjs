@@ -250,9 +250,10 @@ export class OrdersService {
       where: { id: savedOrder.id },
       relations: {
         items: {
-          product: { images: true },
+          product: { images: true, category: true },
           variant: { attributes: { attribute: true, attributeValue: true } },
         },
+        shippingAddress: true,
         user: true,
       },
     })) as Order;
@@ -304,9 +305,10 @@ export class OrdersService {
       where,
       relations: {
         items: {
-          product: { images: true },
+          product: { images: true, category: true },
           variant: { attributes: { attribute: true, attributeValue: true } },
         },
+        shippingAddress: true,
         user: true,
       },
       order: { createdAt: 'DESC' },
@@ -327,9 +329,10 @@ export class OrdersService {
       where: { id: orderId, userId },
       relations: {
         items: {
-          product: { images: true },
+          product: { images: true, category: true },
           variant: { attributes: { attribute: true, attributeValue: true } },
         },
+        shippingAddress: true,
         user: true,
       },
     });
@@ -351,9 +354,10 @@ export class OrdersService {
       take: limit,
       relations: {
         items: {
-          product: { images: true },
+          product: { images: true, category: true },
           variant: { attributes: { attribute: true, attributeValue: true } },
         },
+        shippingAddress: true,
         user: true,
       },
     });
@@ -389,9 +393,10 @@ export class OrdersService {
       where: { id: orderId },
       relations: {
         items: {
-          product: { images: true },
+          product: { images: true, category: true },
           variant: { attributes: { attribute: true, attributeValue: true } },
         },
+        shippingAddress: true,
         user: true,
       },
     });
@@ -587,11 +592,31 @@ export class OrdersService {
     const userName = order.user
       ? `${order.user.firstName} ${order.user.lastName}`
       : '';
+    const shipping = Number(order.shippingAmount || order.deliveryCharge || 0);
+    const tax = Number(order.taxAmount || 0);
+    const discount = Number(order.discountAmount || 0);
+
     return plainToInstance(
       OrderResponseDto,
       {
         ...order,
         userName,
+        shipping,
+        tax,
+        discount,
+        shippingAddress: order.shippingAddress
+          ? {
+              id: order.shippingAddress.id,
+              fullName: order.shippingAddress.fullName,
+              phone: order.shippingAddress.phone,
+              addressLine1: order.shippingAddress.addressLine1,
+              addressLine2: order.shippingAddress.addressLine2,
+              city: order.shippingAddress.city,
+              state: order.shippingAddress.state,
+              country: order.shippingAddress.country,
+              postalCode: order.shippingAddress.postalCode,
+            }
+          : null,
         items: (order.items ?? []).map((item) => {
           let imageUrl: string | undefined;
           if (item.product?.images?.length) {
@@ -601,15 +626,28 @@ export class OrdersService {
               : item.product.images[0].imageUrl;
           }
           if (!imageUrl) {
-            imageUrl = 'https://placehold.co/200x200?text=No+Image';
+            imageUrl = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80';
           }
           const variantName = item.variant?.attributes
             ?.map((a) => a.attributeValue?.value ?? '')
             .filter(Boolean)
             .join(' / ');
+          const price = Number(item.unitPrice || 0);
+          const name = item.productName || item.product?.name || 'Sportswear Item';
+          const categoryName = item.product?.category?.name || 'Sportswear';
+          const slug = item.product?.slug || '';
           return plainToInstance(
             OrderItemResponseDto,
-            { ...item, imageUrl, variantName },
+            {
+              ...item,
+              imageUrl,
+              image: imageUrl,
+              price,
+              name,
+              variantName,
+              categoryName,
+              slug,
+            },
             { excludeExtraneousValues: true },
           );
         }),

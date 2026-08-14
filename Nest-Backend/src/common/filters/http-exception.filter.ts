@@ -21,6 +21,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: unknown = undefined;
+    let customData: unknown = undefined;
 
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
@@ -36,19 +37,25 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           message = (resp['message'] as string) ?? exception.message;
           errors = resp['errors'] ?? undefined;
         }
+
+        if (resp['data'] !== undefined) {
+          customData = resp['data'];
+        }
       } else {
         message = exceptionResponse as string;
       }
     } else if (exception instanceof QueryFailedError) {
       statusCode = HttpStatus.CONFLICT;
-      message = 'A database constraint was violated.';
+      const dbError = exception as QueryFailedError & { code?: string; detail?: string; driverError?: any };
+      const detailMsg = dbError.detail || dbError.driverError?.detail || exception.message;
 
-      const dbError = exception as QueryFailedError & { code?: string };
       if (dbError.code === '23505') {
-        message = 'A record with the provided value already exists.';
+        message = detailMsg || 'A record with the provided value already exists.';
+      } else {
+        message = detailMsg ? `A database constraint was violated: ${detailMsg}` : 'A database constraint was violated.';
       }
 
-      this.logger.error(`DB Error: ${exception.message}`, exception.stack);
+      this.logger.error(`DB Error (${dbError.code}): ${exception.message}`, exception.stack);
     } else if (exception instanceof Error) {
       message = 'Internal server error';
       this.logger.error(
@@ -60,7 +67,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(statusCode).json({
       statusCode,
       message,
-      data: null,
+      data: customData ?? null,
       ...(errors ? { errors } : {}),
       timestamp: new Date().toISOString(),
     });

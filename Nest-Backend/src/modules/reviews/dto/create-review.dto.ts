@@ -19,13 +19,15 @@ export class CreateReviewDto {
   @IsUUID()
   variantId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsUUID()
-  orderId: string;
+  orderId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsUUID()
-  orderItemId: string;
+  orderItemId?: string;
 
   @ApiProperty({ minimum: 1, maximum: 5 })
   @IsNumber()

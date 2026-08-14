@@ -4,6 +4,7 @@ import { CmsPageService } from '../services/cms-page.service';
 import { HomepageService } from '../services/homepage.service';
 import { ContactSettingsService } from '../services/contact-settings.service';
 import { StoreSettingsService } from '../services/store-settings.service';
+import { SystemSettingsService } from '../services/system-settings.service';
 
 @ApiTags('Public — Content')
 @Controller('content')
@@ -13,7 +14,18 @@ export class PublicContentController {
     private readonly homepageService: HomepageService,
     private readonly contactSettingsService: ContactSettingsService,
     private readonly storeSettingsService: StoreSettingsService,
+    private readonly systemSettingsService: SystemSettingsService,
   ) {}
+
+  @Get('announcement')
+  async getAnnouncement() {
+    const setting = await this.systemSettingsService.findByKey('announcement_text');
+    return {
+      data: {
+        text: setting?.value ?? 'FREE SHIPPING OVER $75 • 48-HOUR RETURNS',
+      },
+    };
+  }
 
   @Get('pages/:slug')
   async getPage(@Param('slug') slug: string) {

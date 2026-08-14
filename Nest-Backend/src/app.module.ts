@@ -47,14 +47,18 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ImagesModule } from './modules/images';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { PublicCatalogModule } from './modules/public-catalog/public-catalog.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { SlidersModule } from './modules/sliders/sliders.module';
+import { SmsModule } from './modules/sms/sms.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule,
 
     DatabaseModule,
     AuthModule,
+    SmsModule,
     UsersModule,
     AdminModule,
     RbacModule,
