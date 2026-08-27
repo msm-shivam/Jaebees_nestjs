@@ -29,6 +29,10 @@ export class UserResponseDto {
 
   @Expose()
   @ApiProperty()
+  isMobileVerified: boolean;
+
+  @Expose()
+  @ApiProperty()
   isActive: boolean;
 
   @Expose()
