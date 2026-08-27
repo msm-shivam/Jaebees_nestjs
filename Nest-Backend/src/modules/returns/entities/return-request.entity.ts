@@ -46,7 +46,11 @@ export class ReturnRequest extends BaseEntity {
   })
   status: ReturnRequestStatus;
 
-  @Column({ type: 'enum', enum: ReturnReason })
+  @Column({
+    type: 'enum',
+    enum: ReturnReason,
+    default: ReturnReason.OTHER,
+  })
   reason: ReturnReason;
 
   @Column({ type: 'text', nullable: true })

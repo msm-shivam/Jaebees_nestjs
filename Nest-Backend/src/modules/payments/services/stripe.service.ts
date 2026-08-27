@@ -53,6 +53,7 @@ export class StripeService {
     paymentIntentId: string,
     amount?: number,
     reason?: string,
+    idempotencyKey?: string,
   ) {
     const client = this.getClient();
     const params: Record<string, unknown> = {
@@ -60,7 +61,11 @@ export class StripeService {
     };
     if (amount) params.amount = Math.round(amount * 100);
     if (reason) params.reason = reason;
-    return await client.refunds.create(params);
+    const options: Record<string, unknown> = {};
+    if (idempotencyKey) {
+      options.idempotencyKey = idempotencyKey;
+    }
+    return await client.refunds.create(params, options);
   }
 
   constructWebhookEvent(payload: Buffer, signature: string) {

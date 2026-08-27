@@ -93,6 +93,7 @@ export class OrderResponseDto {
   @ApiProperty({ type: [OrderItemResponseDto] })
   items: OrderItemResponseDto[];
 
+  @Expose() @ApiProperty() isCancellable: boolean;
   @Expose() @ApiProperty() createdAt: Date;
   @Expose() @ApiProperty() updatedAt: Date;
 }

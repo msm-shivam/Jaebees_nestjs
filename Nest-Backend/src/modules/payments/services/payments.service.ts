@@ -121,8 +121,10 @@ export class PaymentsService implements OnModuleInit {
         ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id varchar UNIQUE;
         ALTER TABLE checkout_snapshots ADD COLUMN IF NOT EXISTS coupon_id varchar;
         ALTER TABLE checkout_snapshots ADD COLUMN IF NOT EXISTS coupon_code varchar;
+        ALTER TABLE payment_refunds ADD COLUMN IF NOT EXISTS status varchar DEFAULT 'COMPLETED';
+        ALTER TABLE payment_refunds ADD COLUMN IF NOT EXISTS idempotency_key varchar UNIQUE;
       `);
-      this.logger.log('Database schema for checkout snapshots verified.');
+      this.logger.log('Database schema for checkout snapshots and payment refunds verified.');
     } catch (err) {
       this.logger.error('Failed to initialize checkout_snapshots table', err);
     }
@@ -185,19 +187,29 @@ export class PaymentsService implements OnModuleInit {
         });
       }
 
-      const warehouse = await this.warehousesService.findNearest(
-        address.latitude,
-        address.longitude,
-      );
-      const distanceKm = this.haversine(
-        address.latitude,
-        address.longitude,
-        warehouse.latitude,
-        warehouse.longitude,
-      );
+      let warehouse: Warehouse | null = null;
+      let distanceKm: number | null = null;
+      try {
+        if (address.latitude && address.longitude) {
+          warehouse = await this.warehousesService.findNearest(
+            address.latitude,
+            address.longitude,
+          );
+          if (warehouse) {
+            distanceKm = this.haversine(
+              address.latitude,
+              address.longitude,
+              warehouse.latitude,
+              warehouse.longitude,
+            );
+          }
+        }
+      } catch {
+        // Warehouse lookup optional
+      }
 
       const settings = await this.deliverySettingsService.getActive();
-      if (!this.deliverySettingsService.isServiceable(distanceKm, settings)) {
+      if (distanceKm !== null && !this.deliverySettingsService.isServiceable(distanceKm, settings)) {
         throw new BadRequestException('Delivery is not available in your area.');
       }
 
@@ -469,10 +481,14 @@ export class PaymentsService implements OnModuleInit {
       if (shippingAddrId) {
         const addr = await manager.findOne(Address, { where: { id: shippingAddrId } });
         if (addr) {
-          const wh = await this.warehousesService.findNearest(addr.latitude, addr.longitude);
-          if (wh) {
-            warehouseId = wh.id;
-            distanceKm = this.haversine(addr.latitude, addr.longitude, wh.latitude, wh.longitude);
+          try {
+            const wh = await this.warehousesService.findNearest(addr.latitude, addr.longitude);
+            if (wh) {
+              warehouseId = wh.id;
+              distanceKm = this.haversine(addr.latitude, addr.longitude, wh.latitude, wh.longitude);
+            }
+          } catch {
+            // Warehouse lookup optional
           }
         }
       }

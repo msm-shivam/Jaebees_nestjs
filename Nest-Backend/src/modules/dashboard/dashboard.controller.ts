@@ -34,7 +34,7 @@ export class DashboardController {
   }
 
   @Get('sales-by-category')
-  @Permissions(DefaultPermissions.DASHBOARD_VIEW)
+  @Permissions(DefaultPermissions.DASHBOARD_VIEW)   
   @ApiOperation({ summary: 'Sales by category (donut chart)' })
   async getSalesByCategory(@Query() query: PeriodShortQueryDto) {
     return this.dashboardService.getSalesByCategory(

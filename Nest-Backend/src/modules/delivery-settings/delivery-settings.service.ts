@@ -40,7 +40,7 @@ export class DeliverySettingsService {
   }
 
   calculateCharge(
-    distanceKm: number,
+    distanceKm: number | null,
     orderAmount: number,
     settings: DeliverySetting,
   ): number {
@@ -51,11 +51,13 @@ export class DeliverySettingsService {
       return 0;
     }
 
-    return distanceKm * Number(settings.perKmCharge);
+    return distanceKm ? distanceKm * Number(settings.perKmCharge) : 0;
   }
 
-  isServiceable(distanceKm: number, settings: DeliverySetting): boolean {
+  isServiceable(distanceKm: number | null, settings: DeliverySetting): boolean {
     if (
+      distanceKm !== null &&
+      distanceKm !== undefined &&
       settings.maxDeliveryDistanceKm > 0 &&
       distanceKm > Number(settings.maxDeliveryDistanceKm)
     ) {

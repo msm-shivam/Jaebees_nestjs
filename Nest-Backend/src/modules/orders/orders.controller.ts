@@ -110,8 +110,7 @@ export class OrdersController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CancelOrderDto,
-    @CurrentAdmin() admin: any
   ) {
-    return this.ordersService.cancelOrder(id,admin.sub, dto, false);
+    return this.ordersService.cancelOrder(id, user.sub, dto, false);
   }
 }

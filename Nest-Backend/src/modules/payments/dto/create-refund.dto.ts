@@ -12,4 +12,9 @@ export class CreateRefundDto {
   @IsOptional()
   @IsString()
   reason?: string;
+
+  @ApiPropertyOptional({ example: 'ref_123456789' })
+  @IsOptional()
+  @IsString()
+  idempotencyKey?: string;
 }

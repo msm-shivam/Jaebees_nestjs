@@ -811,7 +811,7 @@ export class ProductsService {
     return product;
   }
 
-  private async createVariants(productId: string, variants: Array<{ sku: string; price: number; compareAtPrice?: number; costPrice?: number; isDefault?: boolean; attributes?: Array<{ attributeId: string; attributeValueId: string }> }>) {
+  private async createVariants(productId: string, variants: Array<{ sku: string; price: number; compareAtPrice?: number; costPrice?: number; stockQuantity?: number; isDefault?: boolean; attributes?: Array<{ attributeId: string; attributeValueId: string }> }>) {
     for (const v of variants) {
       const existingSku = await this.variantRepo.findOne({
         where: { sku: v.sku },
@@ -834,6 +834,18 @@ export class ProductsService {
         isDefault: v.isDefault || false,
       });
       const saved = await this.variantRepo.save(variant);
+
+      const stockQty = v.stockQuantity ?? 0;
+      const inventory = this.inventoryRepo.create({
+        variantId: saved.id,
+        quantity: stockQty,
+        availableQuantity: stockQty,
+        reservedQuantity: 0,
+        lowStockThreshold: 5,
+        reorderPoint: 10,
+        reorderQuantity: 50,
+      });
+      await this.inventoryRepo.save(inventory);
 
       if (v.attributes && v.attributes.length > 0) {
         const mappings = v.attributes.map((a) =>

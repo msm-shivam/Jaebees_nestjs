@@ -2,11 +2,12 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Payment } from '../entities/payment.entity';
-import { PaymentRefund } from '../entities/payment-refund.entity';
+import { PaymentRefund, RefundStatus } from '../entities/payment-refund.entity';
 import { PaymentLog } from '../entities/payment-log.entity';
 import { PaymentStatus } from '../entities/payment-status.enum';
 import { Order } from '../../orders/entities/order.entity';
@@ -17,6 +18,8 @@ import { NotificationsService } from '../../notifications/notifications.service'
 
 @Injectable()
 export class RefundsService {
+  private readonly logger = new Logger(RefundsService.name);
+
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
@@ -30,80 +33,171 @@ export class RefundsService {
     private readonly userRepo: Repository<User>,
     private readonly stripeService: StripeService,
     private readonly notificationsService: NotificationsService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createRefund(
     paymentId: string,
     dto: CreateRefundDto,
     performedBy: string,
+    idempotencyKeyOverride?: string,
   ) {
-    const payment = await this.paymentRepo.findOne({
-      where: { id: paymentId },
-      relations: { refunds: true },
+    const key = dto.idempotencyKey || idempotencyKeyOverride || `refund_${paymentId}_${dto.amount ?? 'full'}_${Date.now()}`;
+
+    // 1. Idempotency Check for existing reservation/refund
+    let existingRefund = await this.refundRepo.findOne({
+      where: { idempotencyKey: key },
     });
-    if (!payment) {
-      throw new NotFoundException('Payment not found');
+
+    if (existingRefund) {
+      if (
+        existingRefund.paymentId !== paymentId ||
+        (dto.amount && Number(existingRefund.refundAmount) !== Number(dto.amount))
+      ) {
+        throw new BadRequestException(
+          'Idempotency conflict: existing refund parameters do not match request.',
+        );
+      }
+
+      if (existingRefund.status === RefundStatus.COMPLETED) {
+        const paymentObj = await this.paymentRepo.findOne({
+          where: { id: paymentId },
+          relations: { refunds: true },
+        });
+        return {
+          message: 'Refund already processed.',
+          alreadyProcessed: true,
+          data: paymentObj,
+        };
+      }
     }
 
-    if (payment.status === PaymentStatus.REFUNDED) {
-      throw new BadRequestException('Payment is already fully refunded');
-    }
+    // 2. Phase 1: DB Lock & Reservation Transaction
+    let refundReservation: PaymentRefund;
+    if (!existingRefund || existingRefund.status === RefundStatus.FAILED) {
+      refundReservation = await this.dataSource.transaction(async (manager) => {
+        const paymentLocked = await manager.findOne(Payment, {
+          where: { id: paymentId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!paymentLocked) {
+          throw new NotFoundException('Payment not found');
+        }
 
-    const totalRefunded = (payment.refunds ?? []).reduce(
-      (sum, r) => sum + Number(r.refundAmount),
-      0,
-    );
-    const remaining = Number(payment.amount) - totalRefunded;
-    if (remaining <= 0) {
-      throw new BadRequestException('No remaining amount to refund');
-    }
+        if (paymentLocked.status === PaymentStatus.REFUNDED) {
+          throw new BadRequestException('Payment is already fully refunded');
+        }
 
-    const refundAmount = dto.amount ?? remaining;
-    if (refundAmount > remaining) {
-      throw new BadRequestException(
-        `Refund amount exceeds remaining balance of ${remaining}`,
-      );
-    }
+        if (!paymentLocked.stripePaymentIntentId) {
+          throw new BadRequestException(
+            'Cannot refund: no Stripe payment intent associated',
+          );
+        }
 
-    if (!payment.stripePaymentIntentId) {
-      throw new BadRequestException(
-        'Cannot refund: no Stripe payment intent associated',
-      );
-    }
+        const existingRefunds = await manager.find(PaymentRefund, {
+          where: {
+            paymentId,
+            status: In([RefundStatus.COMPLETED, RefundStatus.PROCESSING]),
+          },
+        });
 
-    const stripeRefund = await this.stripeService.createRefund(
-      payment.stripePaymentIntentId,
-      refundAmount,
-      dto.reason,
-    );
+        const totalReservedAndRefunded = existingRefunds.reduce(
+          (sum, r) => sum + Number(r.refundAmount),
+          0,
+        );
 
-    const refund = this.refundRepo.create({
-      paymentId: payment.id,
-      stripeRefundId: stripeRefund.id,
-      refundAmount,
-      reason: dto.reason ?? null,
-      processedBy: performedBy,
-      processedAt: new Date(),
-    });
-    await this.refundRepo.save(refund);
+        const remaining = Number(paymentLocked.amount) - totalReservedAndRefunded;
+        if (remaining <= 0) {
+          throw new BadRequestException('No remaining amount to refund');
+        }
 
-    const newTotalRefunded = totalRefunded + refundAmount;
-    if (newTotalRefunded >= Number(payment.amount)) {
-      payment.status = PaymentStatus.REFUNDED;
+        const refundAmt = dto.amount ?? remaining;
+        if (refundAmt <= 0) {
+          throw new BadRequestException('Refund amount must be greater than 0');
+        }
+        if (refundAmt > remaining) {
+          throw new BadRequestException(
+            `Refund amount exceeds remaining balance of ${remaining}`,
+          );
+        }
+
+        const reservation = manager.create(PaymentRefund, {
+          paymentId,
+          refundAmount: refundAmt,
+          status: RefundStatus.PROCESSING,
+          idempotencyKey: key,
+          reason: dto.reason ?? null,
+          processedBy: performedBy,
+        });
+
+        return await manager.save(PaymentRefund, reservation);
+      });
     } else {
-      payment.status = PaymentStatus.PARTIALLY_REFUNDED;
+      refundReservation = existingRefund;
     }
-    await this.paymentRepo.save(payment);
 
-    await this.createLog(
-      payment.id,
-      'REFUND_CREATED',
-      `Refund of ${refundAmount} created. Reason: ${dto.reason ?? 'N/A'}`,
-      performedBy,
-    );
+    const paymentObj = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    if (!paymentObj || !paymentObj.stripePaymentIntentId) {
+      throw new BadRequestException('Payment or Stripe intent missing.');
+    }
+
+    // 3. Phase 2: Call Stripe API outside DB transaction lock
+    let stripeRefund: any;
+    try {
+      stripeRefund = await this.stripeService.createRefund(
+        paymentObj.stripePaymentIntentId,
+        Number(refundReservation.refundAmount),
+        dto.reason,
+        key,
+      );
+    } catch (err: any) {
+      this.logger.error(`Stripe refund failed for key ${key}:`, err);
+      refundReservation.status = RefundStatus.FAILED;
+      await this.refundRepo.save(refundReservation);
+      throw new BadRequestException(
+        err?.message || 'Stripe refund creation failed.',
+      );
+    }
+
+    // 4. Phase 3: Finalize DB State & Commit Completion
+    const updatedPayment = await this.dataSource.transaction(async (manager) => {
+      refundReservation.stripeRefundId = stripeRefund.id;
+      refundReservation.status = RefundStatus.COMPLETED;
+      refundReservation.processedAt = new Date();
+      await manager.save(PaymentRefund, refundReservation);
+
+      const allCompleted = await manager.find(PaymentRefund, {
+        where: { paymentId, status: RefundStatus.COMPLETED },
+      });
+
+      const totalCompleted = allCompleted.reduce(
+        (sum, r) => sum + Number(r.refundAmount),
+        0,
+      );
+
+      const targetPayment = await manager.findOne(Payment, { where: { id: paymentId } });
+      if (targetPayment) {
+        if (totalCompleted >= Number(targetPayment.amount)) {
+          targetPayment.status = PaymentStatus.REFUNDED;
+        } else {
+          targetPayment.status = PaymentStatus.PARTIALLY_REFUNDED;
+        }
+        await manager.save(Payment, targetPayment);
+      }
+
+      const log = manager.create(PaymentLog, {
+        paymentId,
+        action: 'REFUND_CREATED',
+        message: `Refund of ${refundReservation.refundAmount} created. Reason: ${dto.reason ?? 'N/A'}`,
+        performedBy,
+      });
+      await manager.save(PaymentLog, log);
+
+      return targetPayment;
+    });
 
     const order = await this.orderRepo.findOne({
-      where: { id: payment.orderId },
+      where: { id: paymentObj.orderId },
       relations: { user: true },
     });
     if (order?.user) {
@@ -112,14 +206,15 @@ export class RefundsService {
         userId: order.user.id,
         firstName: order.user.firstName,
         orderNumber: order.orderNumber,
-        amount: refundAmount,
+        amount: Number(refundReservation.refundAmount),
         reason: dto.reason ?? 'Customer request',
       }).catch(() => {});
     }
 
     return {
       message: 'Refund processed successfully.',
-      data: payment,
+      alreadyProcessed: false,
+      data: updatedPayment,
     };
   }
 

@@ -13,8 +13,8 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../common/decorators/current-user.decorator';
-import type { CreateReturnDto } from '../dto/create-return.dto';
-import type { ReturnQueryDto } from '../dto/return-query.dto';
+import { CreateReturnDto } from '../dto/create-return.dto';
+import { ReturnQueryDto } from '../dto/return-query.dto';
 import { ReturnService } from '../services/return.service';
 
 @ApiTags('Customer — Returns')
@@ -37,12 +37,20 @@ export class CustomerReturnController {
     return this.returnService.findMyReturns(user.sub, query);
   }
 
+  @Get('by-order/:orderId')
+  async findByOrder(
+    @CurrentUser() user: JwtPayload,
+    @Param('orderId', ParseUUIDPipe) orderId: string,
+  ) {
+    return this.returnService.findByOrderDetailed(orderId, user.sub);
+  }
+
   @Get(':id')
   async findOne(
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.returnService.findOne(id, user.sub);
+    return this.returnService.findOneDetailed(id, user.sub);
   }
 
   @Delete(':id')

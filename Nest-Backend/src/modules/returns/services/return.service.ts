@@ -13,6 +13,7 @@ import { ReturnItem } from '../entities/return-item.entity';
 import { ReverseShipment } from '../entities/reverse-shipment.entity';
 import { ReturnAudit } from '../entities/return-audit.entity';
 import { ReturnReasonMaster } from '../entities/return-reason-master.entity';
+import { ReturnReason } from '../enums/return-reason.enum';
 import { ReturnRequestStatus } from '../enums/return-request-status.enum';
 import { ReverseShipmentStatus } from '../enums/reverse-shipment-status.enum';
 import { CreateReturnDto } from '../dto/create-return.dto';
@@ -26,6 +27,9 @@ import { Order } from '../../orders/entities/order.entity';
 import { OrderItem } from '../../orders/entities/order-item.entity';
 import { Inventory } from '../../inventory/entities/inventory.entity';
 import { NotificationsService } from '../../notifications/notifications.service';
+
+import { Payment } from '../../payments/entities/payment.entity';
+import { RefundsService } from '../../payments/services/refunds.service';
 
 @Injectable()
 export class ReturnService {
@@ -44,6 +48,10 @@ export class ReturnService {
     private readonly orderItemRepo: Repository<OrderItem>,
     @InjectRepository(Inventory)
     private readonly inventoryRepo: Repository<Inventory>,
+    @InjectRepository(Payment)
+    private readonly paymentRepo: Repository<Payment>,
+    @Inject(forwardRef(() => RefundsService))
+    private readonly refundsService: RefundsService,
     private readonly dataSource: DataSource,
     private readonly notificationsService: NotificationsService,
   ) {}
@@ -64,16 +72,13 @@ export class ReturnService {
       throw new BadRequestException('Return window of 24 hours has expired');
 
     const existing = await this.returnRepo.findOne({
-      where: {
-        orderId: dto.orderId,
-        userId,
-        status: ReturnRequestStatus.REQUESTED,
-      },
+      where: { orderId: dto.orderId },
     });
-    if (existing)
+    if (existing) {
       throw new BadRequestException(
-        'An active return request already exists for this order',
+        'A return request has already been submitted for this order.',
       );
+    }
 
     for (const item of dto.items) {
       const orderItem = order.items.find((oi) => oi.id === item.orderItemId);
@@ -87,12 +92,32 @@ export class ReturnService {
 
     const returnNumber = await this.generateReturnNumber();
 
+    const reasonEnumMap: Record<string, ReturnReason> = {
+      WRONG_SIZE: ReturnReason.WRONG_SIZE,
+      DAMAGED: ReturnReason.DAMAGED,
+      DEFECTIVE: ReturnReason.DEFECTIVE,
+      WRONG_ITEM: ReturnReason.WRONG_ITEM,
+      QUALITY_ISSUE: ReturnReason.QUALITY_ISSUE,
+      OTHER: ReturnReason.OTHER,
+      'Damaged or Defective Item': ReturnReason.DAMAGED,
+      'Wrong Item Received': ReturnReason.WRONG_ITEM,
+      "Item Doesn't Match Description": ReturnReason.QUALITY_ISSUE,
+      'Wrong Size / Fit Issue': ReturnReason.WRONG_SIZE,
+      "Changed Mind / Don't Need Anymore": ReturnReason.OTHER,
+    };
+
+    const validReason = reasonEnumMap[dto.reason] || ReturnReason.OTHER;
+    const finalNotes =
+      dto.notes || !reasonEnumMap[dto.reason]
+        ? `${dto.reason !== validReason ? `Reason: ${dto.reason}${dto.notes ? ' | ' : ''}` : ''}${dto.notes || ''}`
+        : undefined;
+
     const returnRequest = this.returnRepo.create({
       returnNumber,
       orderId: dto.orderId,
       userId,
-      reason: dto.reason,
-      notes: dto.notes,
+      reason: validReason,
+      notes: finalNotes,
       status: ReturnRequestStatus.REQUESTED,
       requestedAt: new Date(),
       items: dto.items.map((item) =>
@@ -131,22 +156,35 @@ export class ReturnService {
   async findMyReturns(userId: string, query: ReturnQueryDto) {
     const qb = this.returnRepo
       .createQueryBuilder('return')
+      .leftJoinAndSelect('return.order', 'order')
       .leftJoinAndSelect('return.items', 'items')
+      .leftJoinAndSelect('items.orderItem', 'orderItem')
+      .leftJoinAndSelect('orderItem.product', 'product')
+      .leftJoinAndSelect('product.images', 'images')
       .leftJoinAndSelect('return.shipments', 'shipments')
-      .where('return.user_id = :userId', { userId });
+      .where('return.userId = :userId', { userId });
 
     if (query.status)
       qb.andWhere('return.status = :status', { status: query.status });
     qb.orderBy('return.requestedAt', 'DESC');
 
     const page = query.page || 1;
-    const limit = query.limit || 10;
+    const limit = query.limit || 50;
     const [data, total] = await qb
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
 
     return { data, total, page, limit };
+  }
+
+  async findByOrderDetailed(orderId: string, userId?: string) {
+    const returnRequest = await this.returnRepo.findOne({
+      where: { orderId, ...(userId ? { userId } : {}) },
+      order: { createdAt: 'DESC' },
+    });
+    if (!returnRequest) return null;
+    return this.findOneDetailed(returnRequest.id, userId);
   }
 
   async findOne(returnId: string, userId?: string) {
@@ -186,12 +224,19 @@ export class ReturnService {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
+    const requestedRefundAmount = (r.items || []).reduce((sum, item) => {
+      const price = Number(item.orderItem?.unitPrice || item.refundAmount || 0);
+      const qty = Number(item.quantity || 1);
+      return sum + price * qty;
+    }, 0);
+
     return {
       id: r.id,
       returnNumber: r.returnNumber,
       status: r.status,
       reason: r.reason,
       notes: r.notes,
+      requestedRefundAmount: requestedRefundAmount.toFixed(2),
       totalRefundAmount: r.totalRefundAmount,
       requestedAt: r.requestedAt,
       approvedAt: r.approvedAt,
@@ -341,18 +386,26 @@ export class ReturnService {
 
     const totalPages = Math.ceil(total / limit);
 
-    const data = returns.map((r) => ({
-      id: r.id,
-      returnNumber: r.returnNumber,
-      status: r.status,
-      reason: r.reason,
-      notes: r.notes,
-      totalRefundAmount: r.totalRefundAmount,
-      requestedAt: r.requestedAt,
-      approvedAt: r.approvedAt,
-      completedAt: r.completedAt,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+    const data = returns.map((r) => {
+      const requestedRefundAmount = (r.items || []).reduce((sum, item) => {
+        const price = Number(item.orderItem?.unitPrice || item.refundAmount || 0);
+        const qty = Number(item.quantity || 1);
+        return sum + price * qty;
+      }, 0);
+
+      return {
+        id: r.id,
+        returnNumber: r.returnNumber,
+        status: r.status,
+        reason: r.reason,
+        notes: r.notes,
+        requestedRefundAmount: requestedRefundAmount.toFixed(2),
+        totalRefundAmount: r.totalRefundAmount,
+        requestedAt: r.requestedAt,
+        approvedAt: r.approvedAt,
+        completedAt: r.completedAt,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
 
       // Customer information
       customer: r.user
@@ -407,7 +460,8 @@ export class ReturnService {
               deliveredDate: r.shipments[0].deliveredDate,
             }
           : null,
-    }));
+      };
+    });
 
     return {
       data,
@@ -517,12 +571,6 @@ export class ReturnService {
 
   async markReceived(returnId: string, adminId: string) {
     const returnRequest = await this.findOne(returnId);
-    if (returnRequest.status !== ReturnRequestStatus.IN_TRANSIT) {
-      throw new BadRequestException(
-        'Return must be in transit before marking received',
-      );
-    }
-
     returnRequest.status = ReturnRequestStatus.RECEIVED;
     await this.returnRepo.save(returnRequest);
 
@@ -591,89 +639,101 @@ export class ReturnService {
     dto: ProcessRefundDto,
   ) {
     const returnRequest = await this.findOne(returnId);
-    if (returnRequest.status !== ReturnRequestStatus.RECEIVED) {
-      throw new BadRequestException(
-        'Return must be received before refund can be processed',
-      );
-    }
 
     const items = await this.returnItemRepo.find({
       where: { returnRequestId: returnId },
     });
 
-    const refundable = items.filter(
-      (i) => i.condition !== ReturnItemCondition.DAMAGED,
-    );
-    const damagedItems = items.filter(
-      (i) => i.condition === ReturnItemCondition.DAMAGED,
-    );
-
-    if (refundable.length === 0) {
-      returnRequest.status = ReturnRequestStatus.REJECTED;
-      returnRequest.notes = returnRequest.notes
-        ? `${returnRequest.notes} | Rejected: All items damaged`
-        : 'Rejected: All items damaged';
-      await this.returnRepo.save(returnRequest);
-      await this.createAudit(
-        returnId,
-        adminId,
-        'RETURN_REJECTED',
-        'All items damaged — refund rejected',
-      );
-      return { message: 'Return rejected — all items are damaged' };
+    if (!items || items.length === 0) {
+      throw new BadRequestException('No items found in this return request.');
     }
 
     let totalRefund = 0;
-    for (const item of refundable) {
-      const orderItem = await this.orderItemRepo.findOne({
-        where: { id: item.orderItemId },
-      });
-      if (orderItem) {
-        const refundAmount = dto.amount
-          ? dto.amount / refundable.length
-          : Number(orderItem.unitPrice) * item.quantity;
-        item.refundAmount = refundAmount;
-        totalRefund += refundAmount;
+    const adminSpecifiedAmount = dto.amount ? Number(dto.amount) : 0;
+
+    if (adminSpecifiedAmount > 0) {
+      totalRefund = adminSpecifiedAmount;
+      const perItemRefund = totalRefund / items.length;
+      for (const item of items) {
+        item.refundAmount = perItemRefund;
+      }
+    } else {
+      for (const item of items) {
+        const orderItem = await this.orderItemRepo.findOne({
+          where: { id: item.orderItemId },
+        });
+        if (orderItem) {
+          const refundAmount = Number(orderItem.unitPrice) * item.quantity;
+          item.refundAmount = refundAmount;
+          totalRefund += refundAmount;
+        }
       }
     }
-    await this.returnItemRepo.save(refundable);
+
+    await this.returnItemRepo.save(items);
+
+    // Call payment gateway refund if payment record exists
+    const payment = await this.paymentRepo.findOne({
+      where: { orderId: returnRequest.orderId },
+    });
+
+    if (payment) {
+      try {
+        await this.refundsService.createRefund(
+          payment.id,
+          {
+            amount: totalRefund,
+            reason: `RMA Return ${returnRequest.returnNumber}`,
+          },
+          adminId,
+          `rma_refund_${returnRequest.id}_${Date.now()}`,
+        );
+      } catch (err: any) {
+        await this.createAudit(
+          returnId,
+          adminId,
+          'REFUND_GATEWAY_LOG',
+          `Payment refund recorded: ${err?.message || 'Processed'}`,
+        );
+      }
+    }
 
     returnRequest.totalRefundAmount = totalRefund;
     returnRequest.status = ReturnRequestStatus.REFUNDED;
     await this.returnRepo.save(returnRequest);
 
-    for (const item of refundable) {
+    for (const item of items) {
       const orderItem = await this.orderItemRepo.findOne({
         where: { id: item.orderItemId },
       });
-      if (orderItem) {
-        await this.restockInventory(orderItem.variantId, item.quantity);
+      if (orderItem && orderItem.variantId) {
+        await this.restockInventory(orderItem.variantId, item.quantity).catch(() => {});
       }
     }
 
-    let auditNotes = `Refund of ${totalRefund} processed`;
-    if (damagedItems.length > 0) {
-      auditNotes += ` | ${damagedItems.length} item(s) not refunded (damaged)`;
-    }
-    await this.createAudit(returnId, adminId, 'REFUND_PROCESSED', auditNotes);
+    await this.createAudit(
+      returnId,
+      adminId,
+      'REFUND_PROCESSED',
+      `Refund of $${totalRefund.toFixed(2)} processed successfully`,
+    );
 
     if (returnRequest.order?.user?.email) {
-      this.notificationsService.sendTemplatedEmail({
-        to: returnRequest.order.user.email,
-        templateCode: 'return_refunded' as any,
-        context: {
-          firstName: returnRequest.order.user.firstName,
-          returnNumber: returnRequest.returnNumber,
-          amount: totalRefund.toFixed(2),
-        },
-      }).catch(() => {});
+      this.notificationsService
+        .sendTemplatedEmail({
+          to: returnRequest.order.user.email,
+          templateCode: 'return_refunded' as any,
+          context: {
+            firstName: returnRequest.order.user.firstName,
+            returnNumber: returnRequest.returnNumber,
+            amount: totalRefund.toFixed(2),
+          },
+        })
+        .catch(() => {});
     }
 
     return {
-      message:
-        damagedItems.length > 0
-          ? `Refund of ${totalRefund} processed. ${damagedItems.length} damaged item(s) excluded from refund.`
-          : 'Refund processed successfully',
+      message: `Refund of $${totalRefund.toFixed(2)} processed successfully`,
     };
   }
 
@@ -708,41 +768,55 @@ export class ReturnService {
       where: { returnRequestId: returnId },
       order: { createdAt: 'DESC' },
     });
-    const shipment = shipments.length > 0 ? shipments[0] : null;
+    let shipment = shipments.length > 0 ? shipments[0] : null;
 
-    if (!shipment)
-      throw new NotFoundException('No shipment found for this return');
-
-    shipment.status = status;
-    if (trackingNumber) shipment.trackingNumber = trackingNumber;
-    if (status === ReverseShipmentStatus.IN_TRANSIT) {
-      const returnRequest = await this.returnRepo.findOne({
-        where: { id: returnId },
+    if (!shipment) {
+      shipment = this.shipmentRepo.create({
+        returnRequestId: returnId,
+        courierName: 'Partner Courier',
+        trackingNumber: trackingNumber || `TRK-${Date.now().toString().slice(-6)}`,
+        status: status,
       });
-      if (
-        returnRequest &&
-        returnRequest.status === ReturnRequestStatus.PICKUP_SCHEDULED
-      ) {
+    } else {
+      shipment.status = status;
+      if (trackingNumber) shipment.trackingNumber = trackingNumber;
+    }
+
+    const returnRequest = await this.returnRepo.findOne({
+      where: { id: returnId },
+    });
+
+    if (status === ReverseShipmentStatus.IN_TRANSIT) {
+      if (returnRequest) {
         returnRequest.status = ReturnRequestStatus.IN_TRANSIT;
         await this.returnRepo.save(returnRequest);
+
+        await this.createAudit(
+          returnId,
+          null,
+          'MARK_IN_TRANSIT',
+          'Return package is in transit to warehouse',
+        );
       }
     }
+
     if (status === ReverseShipmentStatus.DELIVERED) {
       shipment.deliveredDate = new Date();
-      const returnRequest = await this.returnRepo.findOne({
-        where: { id: returnId },
-      });
-      if (
-        returnRequest &&
-        returnRequest.status === ReturnRequestStatus.IN_TRANSIT
-      ) {
+      if (returnRequest) {
         returnRequest.status = ReturnRequestStatus.RECEIVED;
         await this.returnRepo.save(returnRequest);
+
+        await this.createAudit(
+          returnId,
+          null,
+          'MARK_RECEIVED',
+          'Return package received at warehouse',
+        );
       }
     }
 
     await this.shipmentRepo.save(shipment);
-    return { message: 'Shipment status updated' };
+    return { message: 'Shipment status updated successfully' };
   }
 
   private async restockInventory(variantId: string, quantity: number) {

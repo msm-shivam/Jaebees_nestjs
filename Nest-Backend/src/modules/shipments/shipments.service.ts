@@ -7,7 +7,7 @@ import { Shipment } from './entities/shipment.entity';
 import { ShipmentTrackingLog } from './entities/shipment-tracking-log.entity';
 import { ShipmentStatus } from './entities/shipment-status.enum';
 import { ShipmentResponseDto } from './dto/shipment-response.dto';
-import { Order } from '../orders/entities/order.entity';
+import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UpdateShipmentStatusDto } from './dto/update-shipment-status.dto';
@@ -26,7 +26,7 @@ export class ShipmentsService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async createShipment(orderId: string, warehouseId: string, manager?: EntityManager) {
     const trackingNumber = `SHIP-${uuidv4().slice(0, 8).toUpperCase()}`;
@@ -50,7 +50,7 @@ export class ShipmentsService {
     });
     await logRepo.save(log);
 
-    this.sendShipmentNotification(orderId, 'created', trackingNumber).catch(() => {});
+    this.sendShipmentNotification(orderId, 'created', trackingNumber).catch(() => { });
 
     return saved;
   }
@@ -206,17 +206,17 @@ export class ShipmentsService {
       ...shipment,
       order: shipment.order
         ? {
-            id: shipment.order.id,
-            orderNumber: shipment.order.orderNumber,
-            status: shipment.order.status,
-            totalAmount: shipment.order.totalAmount,
-            customerName: shipment.order.user
-              ? `${shipment.order.user.firstName} ${shipment.order.user.lastName}`
-              : null,
-          }
+          id: shipment.order.id,
+          orderNumber: shipment.order.orderNumber,
+          status: shipment.order.status,
+          totalAmount: shipment.order.totalAmount,
+          customerName: shipment.order.user
+            ? `${shipment.order.user.firstName} ${shipment.order.user.lastName}`
+            : null,
+        }
         : undefined
     });
-}
+  }
   private async findEntity(id: string): Promise<Shipment> {
     const shipment = await this.shipmentRepo
       .createQueryBuilder('shipment')
@@ -231,12 +231,13 @@ export class ShipmentsService {
   }
 
   private readonly validTransitions: Record<ShipmentStatus, ShipmentStatus[]> = {
-    [ShipmentStatus.PENDING]: [ShipmentStatus.PACKED, ShipmentStatus.FAILED_DELIVERY],
-    [ShipmentStatus.PACKED]: [ShipmentStatus.READY_FOR_DISPATCH, ShipmentStatus.FAILED_DELIVERY],
-    [ShipmentStatus.READY_FOR_DISPATCH]: [ShipmentStatus.OUT_FOR_DELIVERY, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.PENDING]: [ShipmentStatus.PACKED, ShipmentStatus.READY_FOR_DISPATCH, ShipmentStatus.SHIPPED, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.PACKED]: [ShipmentStatus.READY_FOR_DISPATCH, ShipmentStatus.SHIPPED, ShipmentStatus.OUT_FOR_DELIVERY, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.READY_FOR_DISPATCH]: [ShipmentStatus.SHIPPED, ShipmentStatus.OUT_FOR_DELIVERY, ShipmentStatus.DELIVERED, ShipmentStatus.FAILED_DELIVERY],
+    [ShipmentStatus.SHIPPED]: [ShipmentStatus.OUT_FOR_DELIVERY, ShipmentStatus.DELIVERED, ShipmentStatus.FAILED_DELIVERY],
     [ShipmentStatus.OUT_FOR_DELIVERY]: [ShipmentStatus.DELIVERED, ShipmentStatus.FAILED_DELIVERY],
     [ShipmentStatus.DELIVERED]: [],
-    [ShipmentStatus.FAILED_DELIVERY]: [ShipmentStatus.OUT_FOR_DELIVERY],
+    [ShipmentStatus.FAILED_DELIVERY]: [ShipmentStatus.SHIPPED, ShipmentStatus.OUT_FOR_DELIVERY],
   };
 
   private validateStatusTransition(
@@ -265,11 +266,12 @@ export class ShipmentsService {
       this.validateStatusTransition(shipment.status, dto.status);
       shipment.status = dto.status;
 
-      if (dto.status === ShipmentStatus.OUT_FOR_DELIVERY && !shipment.dispatchedAt) {
+      if ((dto.status === ShipmentStatus.READY_FOR_DISPATCH || dto.status === ShipmentStatus.SHIPPED || dto.status === ShipmentStatus.OUT_FOR_DELIVERY) && !shipment.dispatchedAt) {
         shipment.dispatchedAt = new Date();
       }
       if (dto.status === ShipmentStatus.DELIVERED) {
         shipment.deliveredAt = new Date();
+        if (!shipment.dispatchedAt) shipment.dispatchedAt = new Date();
       }
       if (dto.status === ShipmentStatus.PENDING || dto.status === ShipmentStatus.PACKED) {
         shipment.dispatchedAt = null;
@@ -278,6 +280,21 @@ export class ShipmentsService {
 
       const log = await this.createLog(id, dto.status, dto.notes ?? null, changedBy);
       shipment.trackingLogs = [...(shipment.trackingLogs ?? []), log];
+
+      // Sync shipment status with parent Order status across all places
+      const statusMap: Partial<Record<ShipmentStatus, OrderStatus>> = {
+        [ShipmentStatus.PACKED]: OrderStatus.PACKED,
+        [ShipmentStatus.READY_FOR_DISPATCH]: OrderStatus.DISPATCHED,
+        [ShipmentStatus.SHIPPED]: OrderStatus.SHIPPED,
+        [ShipmentStatus.OUT_FOR_DELIVERY]: OrderStatus.OUT_FOR_DELIVERY,
+        [ShipmentStatus.DELIVERED]: OrderStatus.DELIVERED,
+        [ShipmentStatus.FAILED_DELIVERY]: OrderStatus.FAILED_DELIVERY,
+      };
+
+      const targetOrderStatus = statusMap[dto.status];
+      if (targetOrderStatus && shipment.orderId) {
+        await this.orderRepo.update(shipment.orderId, { status: targetOrderStatus });
+      }
     }
 
     if (dto.notes) {
@@ -295,7 +312,7 @@ export class ShipmentsService {
             ? 'delivered'
             : 'status_update',
         shipment.trackingNumber,
-      ).catch(() => {});
+      ).catch(() => { });
     }
 
     const freshLogs = await this.logRepo.find({
@@ -310,24 +327,24 @@ export class ShipmentsService {
         trackingLogs: freshLogs,
         order: shipment.order
           ? {
-              id: shipment.order.id,
-              orderNumber: shipment.order.orderNumber,
-              status: shipment.order.status,
-              totalAmount: shipment.order.totalAmount,
-              customerName: shipment.order.user
-                ? `${shipment.order.user.firstName} ${shipment.order.user.lastName}`
-                : null,
-            }
+            id: shipment.order.id,
+            orderNumber: shipment.order.orderNumber,
+            status: shipment.order.status,
+            totalAmount: shipment.order.totalAmount,
+            customerName: shipment.order.user
+              ? `${shipment.order.user.firstName} ${shipment.order.user.lastName}`
+              : null,
+          }
           : undefined,
         warehouse: shipment.warehouse
           ? {
-              id: shipment.warehouse.id,
-              name: shipment.warehouse.name,
-              code: shipment.warehouse.code,
-              city: shipment.warehouse.city,
-              state: shipment.warehouse.state,
-              country: shipment.warehouse.country,
-            }
+            id: shipment.warehouse.id,
+            name: shipment.warehouse.name,
+            code: shipment.warehouse.code,
+            city: shipment.warehouse.city,
+            state: shipment.warehouse.state,
+            country: shipment.warehouse.country,
+          }
           : undefined,
       }),
     };
@@ -352,7 +369,7 @@ export class ShipmentsService {
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
           trackingNumber,
-        }).catch(() => {});
+        }).catch(() => { });
       } else if (type === 'out_for_delivery') {
         this.notificationsService.sendOutForDelivery({
           to: order.user.email,
@@ -360,14 +377,14 @@ export class ShipmentsService {
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
           trackingNumber,
-        }).catch(() => {});
+        }).catch(() => { });
       } else if (type === 'delivered') {
         this.notificationsService.sendDeliveryCompleted({
           to: order.user.email,
           userId: order.user.id,
           firstName: order.user.firstName,
           orderNumber: order.orderNumber,
-        }).catch(() => {});
+        }).catch(() => { });
       }
     } catch (error) {
       Logger.error(

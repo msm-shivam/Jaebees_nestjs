@@ -77,6 +77,6 @@ import { CouponsPromotionsModule } from '../coupons-promotions/coupons-promotion
     PaymentMethodsService,
     CheckoutCronService,
   ],
-  exports: [PaymentsService, StripeService, CheckoutCronService],
+  exports: [PaymentsService, StripeService, CheckoutCronService, RefundsService],
 })
 export class PaymentsModule {}

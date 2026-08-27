@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReturnRequest } from './entities/return-request.entity';
 import { ReturnItem } from './entities/return-item.entity';
@@ -8,6 +8,8 @@ import { ReturnReasonMaster } from './entities/return-reason-master.entity';
 import { Order } from '../orders/entities/order.entity';
 import { OrderItem } from '../orders/entities/order-item.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
+import { Payment } from '../payments/entities/payment.entity';
+import { PaymentsModule } from '../payments/payments.module';
 import { ReturnService } from './services/return.service';
 import { ReverseLogisticsService } from './services/reverse-logistics.service';
 import { ReturnAnalyticsService } from './services/return-analytics.service';
@@ -26,7 +28,9 @@ import { AdminReturnAnalyticsController } from './controllers/admin-return-analy
       Order,
       OrderItem,
       Inventory,
+      Payment,
     ]),
+    forwardRef(() => PaymentsModule),
   ],
   controllers: [
     CustomerReturnController,

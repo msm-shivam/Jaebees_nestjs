@@ -37,9 +37,9 @@ export class CreateReturnDto {
   @IsUUID()
   orderId: string;
 
-  @ApiProperty({ enum: ReturnReason })
-  @IsEnum(ReturnReason)
-  reason: ReturnReason;
+  @ApiProperty()
+  @IsString()
+  reason: string;
 
   @ApiPropertyOptional()
   @IsOptional()

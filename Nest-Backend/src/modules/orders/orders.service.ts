@@ -2,9 +2,13 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
+  Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, DataSource } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Order, OrderStatus } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
@@ -23,11 +27,16 @@ import { CartItem } from '../cart/entities/cart-item.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { ProductVariant } from '../product-variants/entities/product-variant.entity';
 import { StockAlert } from '../inventory-plus/entities/stock-alert.entity';
+import { Payment } from '../payments/entities/payment.entity';
+import { PaymentStatus } from '../payments/entities/payment-status.enum';
+import { Warehouse } from '../warehouses/entities/warehouse.entity';
+import { RefundsService } from '../payments/services/refunds.service';
 import { AddressesService } from '../addresses/addresses.service';
 import { WarehousesService } from '../warehouses/warehouses.service';
 import { DeliverySettingsService } from '../delivery-settings/delivery-settings.service';
 import { DeliveryChargesService } from '../delivery-charges/delivery-charges.service';
 import { ShipmentsService } from '../shipments/shipments.service';
+import { ShipmentStatus } from '../shipments/entities/shipment-status.enum';
 import { paginate } from '../../common/utils/pagination.util';
 import { AuditLogService } from '../security-compliance/services/audit-log.service';
 import { FirebaseService } from '../firebase/firebase.service';
@@ -36,7 +45,37 @@ import { AdminNotificationService } from '../notifications/admin-notification.se
 import { AdminNotificationType } from '../notifications/entities/admin-notification.entity';
 
 @Injectable()
-export class OrdersService {
+export class OrdersService implements OnModuleInit {
+  private readonly logger = new Logger(OrdersService.name);
+
+  async onModuleInit() {
+    try {
+      await this.dataSource.query(
+        `ALTER TYPE "public"."orders_status_enum" ADD VALUE IF NOT EXISTS 'DISPATCHED'`,
+      );
+    } catch (e) { }
+    try {
+      await this.dataSource.query(
+        `ALTER TYPE "public"."shipments_status_enum" ADD VALUE IF NOT EXISTS 'SHIPPED'`,
+      );
+    } catch (e) { }
+    try {
+      await this.dataSource.query(
+        `ALTER TYPE "public"."shipment_tracking_logs_status_enum" ADD VALUE IF NOT EXISTS 'SHIPPED'`,
+      );
+    } catch (e) { }
+    try {
+      await this.dataSource.query(
+        `ALTER TYPE "public"."shipment_tracking_logs_status_enum" ADD VALUE IF NOT EXISTS 'DISPATCHED'`,
+      );
+    } catch (e) { }
+    try {
+      await this.dataSource.query(
+        `ALTER TYPE "public"."orders_status_enum" ADD VALUE IF NOT EXISTS 'FAILED_DELIVERY'`,
+      );
+    } catch (e) { }
+  }
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
@@ -54,6 +93,10 @@ export class OrdersService {
     private readonly alertRepo: Repository<StockAlert>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(Payment)
+    private readonly paymentRepo: Repository<Payment>,
+    @Inject(forwardRef(() => RefundsService))
+    private readonly refundsService: RefundsService,
     private readonly addressesService: AddressesService,
     private readonly warehousesService: WarehousesService,
     private readonly deliverySettingsService: DeliverySettingsService,
@@ -63,6 +106,7 @@ export class OrdersService {
     private readonly auditLogService: AuditLogService,
     private readonly firebaseService: FirebaseService,
     private readonly adminNotificationService: AdminNotificationService,
+    private readonly dataSource: DataSource,
   ) { }
 
   async createOrder(
@@ -111,21 +155,30 @@ export class OrdersService {
       }
     }
 
-    const warehouse = await this.warehousesService.findNearest(
-      address.latitude,
-      address.longitude,
-    );
-
-    const distanceKm = this.haversine(
-      address.latitude,
-      address.longitude,
-      warehouse.latitude,
-      warehouse.longitude,
-    );
+    let warehouse: Warehouse | null = null;
+    let distanceKm: number | null = null;
+    try {
+      if (address.latitude && address.longitude) {
+        warehouse = await this.warehousesService.findNearest(
+          address.latitude,
+          address.longitude,
+        );
+        if (warehouse) {
+          distanceKm = this.haversine(
+            address.latitude,
+            address.longitude,
+            warehouse.latitude,
+            warehouse.longitude,
+          );
+        }
+      }
+    } catch {
+      // Warehouse lookup optional
+    }
 
     const settings = await this.deliverySettingsService.getActive();
 
-    if (!this.deliverySettingsService.isServiceable(distanceKm, settings)) {
+    if (distanceKm !== null && !this.deliverySettingsService.isServiceable(distanceKm, settings)) {
       throw new BadRequestException('Delivery not available in your area.');
     }
 
@@ -162,7 +215,7 @@ export class OrdersService {
       codCharge,
       handlingCharge,
       shippingAddressId: dto.shippingAddressId,
-      warehouseId: warehouse.id,
+      warehouseId: warehouse?.id ?? null,
       distanceKm,
       taxAmount,
       totalAmount,
@@ -238,7 +291,9 @@ export class OrdersService {
     }
     await this.orderItemRepo.save(orderItems);
 
-    await this.shipmentsService.createShipment(savedOrder.id, warehouse.id);
+    if (warehouse) {
+      await this.shipmentsService.createShipment(savedOrder.id, warehouse.id);
+    }
 
     await this.cartItemRepo.remove(cart.items);
     cart.items = [];
@@ -269,7 +324,7 @@ export class OrdersService {
         userId: user.id,
         orderNumber: savedOrder.orderNumber,
         firstName: user.firstName,
-      }).catch(() => {});
+      }).catch(() => { });
       this.firebaseService.sendPushToUser(
         userId,
         FcmUserType.CUSTOMER,
@@ -278,7 +333,7 @@ export class OrdersService {
           body: `Your order ${savedOrder.orderNumber} has been placed successfully.`,
           data: { orderId: savedOrder.id, orderNumber: savedOrder.orderNumber },
         },
-      ).catch(() => {});
+      ).catch(() => { });
     }
 
     await this.adminNotificationService.create({
@@ -419,6 +474,36 @@ export class OrdersService {
     order.status = dto.status;
     const saved = await this.orderRepo.save(order);
 
+    if (dto.status === OrderStatus.PACKED) {
+      try {
+        const shipment = await this.shipmentsService.findByOrderId(orderId);
+        if (shipment && shipment.status === ShipmentStatus.PENDING) {
+          await this.shipmentsService.updateStatus(
+            shipment.id,
+            { status: ShipmentStatus.PACKED },
+            adminId || 'system',
+          );
+        }
+      } catch (err) {
+        // Shipment may not exist or already updated
+      }
+    }
+
+    if (dto.status === OrderStatus.DISPATCHED) {
+      try {
+        const shipment = await this.shipmentsService.findByOrderId(orderId);
+        if (shipment && (shipment.status === ShipmentStatus.PENDING || shipment.status === ShipmentStatus.PACKED)) {
+          await this.shipmentsService.updateStatus(
+            shipment.id,
+            { status: ShipmentStatus.READY_FOR_DISPATCH },
+            adminId || 'system',
+          );
+        }
+      } catch (err) {
+        // Shipment may not exist or already updated
+      }
+    }
+
     if (order.user) {
       this.firebaseService.sendPushToUser(
         order.user.id,
@@ -428,7 +513,7 @@ export class OrdersService {
           body: `Your order ${saved.orderNumber} is now ${saved.status}.`,
           data: { orderId: saved.id, orderNumber: saved.orderNumber, status: saved.status },
         },
-      ).catch(() => {});
+      ).catch(() => { });
       this.notificationsService.sendOrderStatusUpdate({
         to: order.user.email,
         userId: order.user.id,
@@ -437,7 +522,7 @@ export class OrdersService {
         oldStatus,
         newStatus: saved.status,
         orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     await this.adminNotificationService.create({
@@ -469,7 +554,6 @@ export class OrdersService {
     adminId: string,
     dto?: CancelOrderDto,
     isAdmin = false,
-
   ): Promise<{ message: string; data: OrderResponseDto }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
@@ -483,30 +567,90 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Order not found.');
 
+    if (order.status === OrderStatus.CANCELLED) {
+      return {
+        message: 'Order is already cancelled.',
+        data: this.toResponse(order),
+      };
+    }
+
     if (!isAdmin) {
-      const cancellable = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
-      if (!cancellable.includes(order.status)) {
+      const uncancellable = [
+        OrderStatus.DISPATCHED,
+        OrderStatus.SHIPPED,
+        OrderStatus.OUT_FOR_DELIVERY,
+        OrderStatus.DELIVERED,
+        OrderStatus.CANCELLED,
+        OrderStatus.RETURN_REQUESTED,
+        OrderStatus.RETURNED,
+      ];
+      if (uncancellable.includes(order.status)) {
         throw new BadRequestException(
-          'Order can only be cancelled when status is PENDING or CONFIRMED.',
+          `Order cannot be cancelled once it is ${order.status.replace(/_/g, ' ').toLowerCase()}.`,
+        );
+      }
+
+      const hoursSincePlacement =
+        (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSincePlacement > 24) {
+        throw new BadRequestException(
+          'Cancellation window of 24 hours has expired.',
         );
       }
     }
 
     const oldStatus = order.status;
-    order.status = OrderStatus.CANCELLED;
-    if (dto?.reason) {
-      order.notes = dto.reason;
-    }
-    const saved = await this.orderRepo.save(order);
 
-    const items = await this.orderItemRepo.find({ where: { orderId } });
-    for (const item of items) {
-      const inventory = await this.inventoryRepo.findOne({
-        where: { variantId: item.variantId },
+    // Transaction-safe state update & inventory restoration
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const targetOrder = await manager.findOne(Order, {
+        where: { id: orderId },
+        lock: { mode: 'pessimistic_write' },
       });
-      if (inventory) {
-        inventory.availableQuantity += item.quantity;
-        await this.inventoryRepo.save(inventory);
+      if (!targetOrder || targetOrder.status === OrderStatus.CANCELLED) {
+        return targetOrder || order;
+      }
+
+      targetOrder.status = OrderStatus.CANCELLED;
+      if (dto?.reason) {
+        targetOrder.notes = dto.reason;
+      }
+      const updatedOrder = await manager.save(Order, targetOrder);
+
+      const items = await manager.find(OrderItem, { where: { orderId } });
+      for (const item of items) {
+        const inventory = await manager.findOne(Inventory, {
+          where: { variantId: item.variantId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (inventory) {
+          inventory.availableQuantity = Number(inventory.availableQuantity) + item.quantity;
+          await manager.save(Inventory, inventory);
+        }
+      }
+      return updatedOrder;
+    });
+
+    // Trigger Stripe Refund if order was paid
+    if (order.paymentStatus === PaymentStatus.PAID || order.paymentStatus === PaymentStatus.PARTIALLY_REFUNDED) {
+      const payment = await this.paymentRepo.findOne({ where: { orderId } });
+      if (payment) {
+        try {
+          await this.refundsService.createRefund(
+            payment.id,
+            {
+              amount: Number(order.totalAmount),
+              reason: dto?.reason || 'Order cancellation',
+            },
+            adminId,
+            `cancel_order_${order.id}`,
+          );
+        } catch (refundErr: any) {
+          this.logger.error(
+            `Stripe refund trigger failed during cancellation of order ${order.id}:`,
+            refundErr,
+          );
+        }
       }
     }
 
@@ -519,7 +663,7 @@ export class OrdersService {
           body: `Your order ${saved.orderNumber} has been cancelled.`,
           data: { orderId: saved.id, orderNumber: saved.orderNumber },
         },
-      ).catch(() => {});
+      ).catch(() => { });
       this.notificationsService.sendOrderStatusUpdate({
         to: order.user.email,
         userId: order.user.id,
@@ -528,7 +672,7 @@ export class OrdersService {
         oldStatus,
         newStatus: OrderStatus.CANCELLED,
         orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     await this.adminNotificationService.create({
@@ -538,9 +682,20 @@ export class OrdersService {
       data: { orderId: saved.id, orderNumber: saved.orderNumber, reason: dto?.reason ?? null, cancelledBy: adminId },
     });
 
+    const reloaded = await this.orderRepo.findOne({
+      where: { id: orderId },
+      relations: {
+        items: {
+          product: { images: true },
+          variant: { attributes: { attribute: true, attributeValue: true } },
+        },
+        user: true,
+      },
+    });
+
     return {
       message: 'Order cancelled successfully.',
-      data: this.toResponse(saved),
+      data: this.toResponse(reloaded || saved),
     };
   }
 
@@ -596,6 +751,17 @@ export class OrdersService {
     const tax = Number(order.taxAmount || 0);
     const discount = Number(order.discountAmount || 0);
 
+    const uncancellableStatuses = [
+      OrderStatus.DISPATCHED,
+      OrderStatus.SHIPPED,
+      OrderStatus.OUT_FOR_DELIVERY,
+      OrderStatus.DELIVERED,
+      OrderStatus.CANCELLED,
+      OrderStatus.RETURN_REQUESTED,
+      OrderStatus.RETURNED,
+    ];
+    const isCancellable = !uncancellableStatuses.includes(order.status);
+
     return plainToInstance(
       OrderResponseDto,
       {
@@ -604,18 +770,19 @@ export class OrdersService {
         shipping,
         tax,
         discount,
+        isCancellable,
         shippingAddress: order.shippingAddress
           ? {
-              id: order.shippingAddress.id,
-              fullName: order.shippingAddress.fullName,
-              phone: order.shippingAddress.phone,
-              addressLine1: order.shippingAddress.addressLine1,
-              addressLine2: order.shippingAddress.addressLine2,
-              city: order.shippingAddress.city,
-              state: order.shippingAddress.state,
-              country: order.shippingAddress.country,
-              postalCode: order.shippingAddress.postalCode,
-            }
+            id: order.shippingAddress.id,
+            fullName: order.shippingAddress.fullName,
+            phone: order.shippingAddress.phone,
+            addressLine1: order.shippingAddress.addressLine1,
+            addressLine2: order.shippingAddress.addressLine2,
+            city: order.shippingAddress.city,
+            state: order.shippingAddress.state,
+            country: order.shippingAddress.country,
+            postalCode: order.shippingAddress.postalCode,
+          }
           : null,
         items: (order.items ?? []).map((item) => {
           let imageUrl: string | undefined;
