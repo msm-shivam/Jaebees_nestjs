@@ -208,13 +208,16 @@ export class SupportService {
 
   async close(customerId: string, ticketId: string) {
     const ticket = await this.findOne(ticketId, customerId);
-    if (ticket.status !== TicketStatus.RESOLVED) {
-      throw new BadRequestException(
-        'Only resolved tickets can be closed by customer',
-      );
+    if (ticket.status === TicketStatus.CLOSED) {
+      throw new BadRequestException('Ticket is already closed');
     }
-    ticket.status = TicketStatus.CLOSED;
-    await this.ticketRepo.save(ticket);
+    const updateData: Partial<SupportTicket> = {
+      status: TicketStatus.CLOSED,
+    };
+    if (!ticket.resolvedAt) {
+      updateData.resolvedAt = new Date();
+    }
+    await this.ticketRepo.update(ticketId, updateData);
     return { message: 'Ticket closed' };
   }
 
@@ -386,9 +389,10 @@ export class SupportService {
 
     const previousStatus = ticket.status;
 
-    ticket.status = TicketStatus.RESOLVED;
-    ticket.resolvedAt = new Date();
-    await this.ticketRepo.save(ticket);
+    await this.ticketRepo.update(ticketId, {
+      status: TicketStatus.RESOLVED,
+      resolvedAt: new Date(),
+    });
 
     await this.updateSlaResolution(ticket);
 
@@ -407,13 +411,20 @@ export class SupportService {
 
   async reopen(ticketId: string, adminId?: string) {
     const ticket = await this.findOne(ticketId);
-    if (ticket.status !== TicketStatus.RESOLVED) {
-      throw new BadRequestException('Only resolved tickets can be reopened');
+    if (
+      ticket.status !== TicketStatus.RESOLVED &&
+      ticket.status !== TicketStatus.CLOSED
+    ) {
+      throw new BadRequestException(
+        'Only resolved or closed tickets can be reopened',
+      );
     }
     const previousStatus = ticket.status;
-    ticket.status = TicketStatus.REOPENED;
-    ticket.resolvedAt = null;
-    await this.ticketRepo.save(ticket);
+
+    await this.ticketRepo.update(ticketId, {
+      status: TicketStatus.REOPENED,
+      resolvedAt: null,
+    });
 
     await this.auditRepo.save(
       this.auditRepo.create({
