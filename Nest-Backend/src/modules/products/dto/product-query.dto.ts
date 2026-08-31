@@ -70,6 +70,24 @@ export class ProductQueryDto {
   subCategoryId?: string;
 
   @ApiPropertyOptional({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Filter by collection ID',
+  })
+  @IsOptional()
+  @IsUUID()
+  @Transform(({ value }: { value: string }) => value || undefined)
+  collectionId?: string;
+
+  @ApiPropertyOptional({
+    example: 'summer-collection',
+    description: 'Filter by collection slug or ID',
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }: { value: string }) => value || undefined)
+  collectionSlug?: string;
+
+  @ApiPropertyOptional({
     example: true,
     description: 'Filter featured products',
   })

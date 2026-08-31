@@ -249,6 +249,19 @@ export class ProductsService {
       });
     }
 
+    // Collection filter
+    if (query.collectionId) {
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM product_collections pc WHERE pc.product_id = product.id AND pc.collection_id = :collectionId)',
+        { collectionId: query.collectionId },
+      );
+    } else if (query.collectionSlug) {
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM product_collections pc INNER JOIN collections col ON col.id = pc.collection_id WHERE pc.product_id = product.id AND (col.slug = :collectionSlug OR col.id = :collectionSlug))',
+        { collectionSlug: query.collectionSlug },
+      );
+    }
+
     // Featured filter
     if (query.isFeatured !== undefined) {
       queryBuilder.andWhere('product.isFeatured = :isFeatured', {
@@ -294,6 +307,11 @@ export class ProductsService {
       if (query.brandId) priceQb.andWhere('product.brandId = :brandId', { brandId: query.brandId });
       if (query.categoryId) priceQb.andWhere('product.categoryId = :categoryId', { categoryId: query.categoryId });
       if (query.subCategoryId) priceQb.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: query.subCategoryId });
+      if (query.collectionId) {
+        priceQb.andWhere('EXISTS (SELECT 1 FROM product_collections pc WHERE pc.product_id = product.id AND pc.collection_id = :collectionId)', { collectionId: query.collectionId });
+      } else if (query.collectionSlug) {
+        priceQb.andWhere('EXISTS (SELECT 1 FROM product_collections pc INNER JOIN collections col ON col.id = pc.collection_id WHERE pc.product_id = product.id AND (col.slug = :collectionSlug OR col.id = :collectionSlug))', { collectionSlug: query.collectionSlug });
+      }
       if (query.isFeatured !== undefined) priceQb.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured });
       if (query.isActive !== undefined) priceQb.andWhere('product.isActive = :isActive', { isActive: query.isActive });
 
@@ -321,6 +339,11 @@ export class ProductsService {
       if (query.brandId) countQb.andWhere('product.brandId = :brandId', { brandId: query.brandId });
       if (query.categoryId) countQb.andWhere('product.categoryId = :categoryId', { categoryId: query.categoryId });
       if (query.subCategoryId) countQb.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: query.subCategoryId });
+      if (query.collectionId) {
+        countQb.andWhere('EXISTS (SELECT 1 FROM product_collections pc WHERE pc.product_id = product.id AND pc.collection_id = :collectionId)', { collectionId: query.collectionId });
+      } else if (query.collectionSlug) {
+        countQb.andWhere('EXISTS (SELECT 1 FROM product_collections pc INNER JOIN collections col ON col.id = pc.collection_id WHERE pc.product_id = product.id AND (col.slug = :collectionSlug OR col.id = :collectionSlug))', { collectionSlug: query.collectionSlug });
+      }
       if (query.isFeatured !== undefined) countQb.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured });
       if (query.search) countQb.andWhere('(product.name ILIKE :search OR product.description ILIKE :search OR product.shortDescription ILIKE :search)', { search: `%${query.search}%` });
       const total = await countQb.getCount();
