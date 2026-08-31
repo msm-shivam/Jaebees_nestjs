@@ -24,6 +24,7 @@ class MessageInfo {
   @Expose() @ApiProperty() id: string;
   @Expose() @ApiProperty() senderId: string;
   @Expose() @ApiProperty() senderType: string;
+  @Expose() @ApiPropertyOptional() senderName: string | null;
   @Expose() @ApiProperty() message: string;
   @Expose() @ApiProperty() createdAt: Date;
 }

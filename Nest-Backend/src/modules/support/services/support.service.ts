@@ -158,6 +158,24 @@ export class SupportService {
     if (!ticket) throw new NotFoundException('Ticket not found');
     if (customerId && ticket.customerId !== customerId)
       throw new ForbiddenException('Access denied');
+
+    if (ticket.messages && ticket.messages.length > 0) {
+      ticket.messages.sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+      for (const m of ticket.messages) {
+        if (m.senderType === SenderType.CUSTOMER) {
+          (m as any).senderName = ticket.customer
+            ? `${ticket.customer.firstName} ${ticket.customer.lastName}`.trim()
+            : 'Customer';
+        } else if (m.senderType === SenderType.ADMIN) {
+          (m as any).senderName = ticket.assignedAdmin
+            ? ticket.assignedAdmin.name
+            : 'Support Agent';
+        }
+      }
+    }
+
     return ticket;
   }
 
@@ -180,8 +198,9 @@ export class SupportService {
       ticket.status === TicketStatus.REOPENED ||
       ticket.status === TicketStatus.OPEN
     ) {
-      ticket.status = TicketStatus.IN_PROGRESS;
-      await this.ticketRepo.save(ticket);
+      await this.ticketRepo.update(ticketId, {
+        status: TicketStatus.IN_PROGRESS,
+      });
     }
 
     return { message: 'Reply added' };
@@ -322,8 +341,11 @@ export class SupportService {
     });
     await this.messageRepo.save(msg);
 
+    const updateData: Partial<SupportTicket> = {};
+
     if (!ticket.firstResponseAt) {
-      ticket.firstResponseAt = new Date();
+      updateData.firstResponseAt = new Date();
+      ticket.firstResponseAt = updateData.firstResponseAt;
       await this.updateSlaResponse(ticket);
     }
 
@@ -331,9 +353,12 @@ export class SupportService {
       ticket.status === TicketStatus.ASSIGNED ||
       ticket.status === TicketStatus.OPEN
     ) {
-      ticket.status = TicketStatus.IN_PROGRESS;
+      updateData.status = TicketStatus.IN_PROGRESS;
     }
-    await this.ticketRepo.save(ticket);
+
+    if (Object.keys(updateData).length > 0) {
+      await this.ticketRepo.update(ticketId, updateData);
+    }
 
     const customer = await this.userRepo.findOne({
       where: { id: ticket.customerId },
