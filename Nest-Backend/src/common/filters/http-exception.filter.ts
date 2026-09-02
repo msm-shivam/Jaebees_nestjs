@@ -4,14 +4,19 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Inject,
 } from '@nestjs/common';
+import type { LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+  constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -54,16 +59,26 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else {
         message = detailMsg ? `A database constraint was violated: ${detailMsg}` : 'A database constraint was violated.';
       }
-
-      this.logger.error(`DB Error (${dbError.code}): ${exception.message}`, exception.stack);
     } else if (exception instanceof Error) {
       message = 'Internal server error';
-      this.logger.error(
-        `Unhandled error: ${exception.message}`,
-        exception.stack,
-      );
     }
 
+    // ─── Structured logging with safe request context ──────────────────────
+    const logContext = this.buildLogContext(request, statusCode, message, exception);
+
+    if (statusCode >= 500) {
+      // 5xx — unexpected errors: log at ERROR level with full stack
+      this.logger.error(
+        logContext.summary,
+        exception instanceof Error ? exception.stack : undefined,
+        'ExceptionFilter',
+      );
+    } else if (statusCode >= 400 && statusCode !== 401 && statusCode !== 403) {
+      // 4xx (excluding routine auth failures) — log at WARN level
+      this.logger.warn(logContext.summary, 'ExceptionFilter');
+    }
+
+    // ─── Send the response (format unchanged from original) ────────────────
     response.status(statusCode).json({
       statusCode,
       message,
@@ -71,5 +86,34 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       ...(errors ? { errors } : {}),
       timestamp: new Date().toISOString(),
     });
+  }
+
+  /**
+   * Build a safe log context object with request metadata.
+   * NEVER includes: authorization headers, cookies, tokens, passwords, 
+   * Stripe secrets, payment details, or raw request bodies.
+   */
+  private buildLogContext(
+    request: Request,
+    statusCode: number,
+    message: string,
+    exception: unknown,
+  ) {
+    const user = (request as any).user as { sub?: string } | undefined;
+
+    const summary = [
+      `[${request.method}]`,
+      request.originalUrl || request.url,
+      `→ ${statusCode}`,
+      `| ${message}`,
+      user?.sub ? `| userId: ${user.sub}` : '',
+      exception instanceof Error && exception.stack
+        ? `\n${exception.stack}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    return { summary };
   }
 }

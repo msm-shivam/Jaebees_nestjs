@@ -1,8 +1,9 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ClassSerializerInterceptor, VersioningType } from '@nestjs/common';
+import { ClassSerializerInterceptor, LoggerService, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { AppModule } from './app.module';
 import { AppValidationPipe } from './common/pipes/validation.pipe';
 import {
@@ -15,8 +16,12 @@ import {
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['error', 'warn', 'log', 'verbose'],
+    bufferLogs: true,
   });
+
+  // ─── Use Winston as the application-level logger ──────────────────────
+  const logger: LoggerService = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  app.useLogger(logger);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') ?? 3000;
@@ -182,10 +187,8 @@ async function bootstrap() {
   // ─── Start ───────────────────────────────────────────────────────────────
   await app.listen(port);
 
-  console.log(`\n🚀 Application running on: http://localhost:${port}/api/v1`);
-  console.log(
-    `📄 Swagger docs:            http://localhost:${port}/api/docs\n`,
-  );
+  logger.log(`🚀 Application running on: http://localhost:${port}/api/v1`, 'Bootstrap');
+  logger.log(`📄 Swagger docs:            http://localhost:${port}/api/docs`, 'Bootstrap');
 }
 
 bootstrap();

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './common/logger/winston.config';
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -54,6 +56,7 @@ import { SmsModule } from './modules/sms/sms.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    WinstonModule.forRoot(winstonConfig),
     ConfigModule,
 
     DatabaseModule,
