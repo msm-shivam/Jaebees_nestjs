@@ -22,7 +22,7 @@ import { ReviewStatus } from '../enums/review-status.enum';
 @Index(['productId'])
 @Index(['userId'])
 @Index(['status'])
-@Index(['orderItemId'])
+@Index(['orderItemId'], { unique: true })
 export class Review extends BaseEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
@@ -52,7 +52,7 @@ export class Review extends BaseEntity {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ name: 'order_item_id', type: 'uuid', nullable: true })
+  @Column({ name: 'order_item_id', type: 'uuid', nullable: true, unique: true })
   orderItemId: string | null;
 
   @ManyToOne(() => OrderItem, { onDelete: 'CASCADE', nullable: true })

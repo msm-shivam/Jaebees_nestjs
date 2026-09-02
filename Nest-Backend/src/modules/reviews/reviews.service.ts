@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Review } from './entities/review.entity';
 import { ReviewImage } from './entities/review-image.entity';
@@ -35,21 +35,20 @@ export class ReviewsService implements OnModuleInit {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async onModuleInit() {
     try {
-      await this.reviewRepository.query(`
-        ALTER TABLE "reviews" DROP CONSTRAINT IF EXISTS "UQ_reviews_order_item_id";
-        ALTER TABLE "reviews" DROP CONSTRAINT IF EXISTS "reviews_order_item_id_key";
-        ALTER TABLE "reviews" DROP CONSTRAINT IF EXISTS "uq_reviews_order_item_id";
-        DROP INDEX IF EXISTS "idx_reviews_order_item_unique";
-        DROP INDEX IF EXISTS "idx_reviews_order_item_id";
-        CREATE INDEX IF NOT EXISTS "idx_reviews_order_item" ON "reviews" ("order_item_id");
+      await this.dataSource.query(`
+        ALTER TABLE reviews ALTER COLUMN order_id DROP NOT NULL;
+        ALTER TABLE reviews ALTER COLUMN order_item_id DROP NOT NULL;
       `);
-      this.logger.log('Database schema for reviews verified (removed strict unique order_item_id constraint).');
-    } catch (e) {
-      this.logger.warn(`Failed to align reviews table schema constraints: ${e.message}`);
+      this.logger.log(
+        'Database schema for reviews verified (order_id and order_item_id set to nullable).',
+      );
+    } catch (err) {
+      this.logger.warn(`Reviews schema init warning: ${err.message}`);
     }
   }
 
@@ -85,30 +84,11 @@ export class ReviewsService implements OnModuleInit {
         where: { orderItemId: dto.orderItemId },
       });
       if (existing) {
-        existing.rating = dto.rating;
-        if (dto.title !== undefined) existing.title = dto.title;
-        if (dto.comment !== undefined) existing.comment = dto.comment;
-        existing.status = ReviewStatus.APPROVED;
-        const updated = await this.reviewRepository.save(existing);
-        await this.recalculateProductRating(dto.productId);
-        return this.toResponse(updated);
+        throw new BadRequestException(
+          'Review already exists for this order item',
+        );
       }
       isVerifiedPurchase = true;
-    } else {
-      // Check if user already reviewed this product without an orderItemId
-      const existing = await this.reviewRepository.findOne({
-        where: { userId, productId: dto.productId, orderItemId: IsNull() },
-      });
-      if (existing) {
-        existing.rating = dto.rating;
-        if (dto.title !== undefined) existing.title = dto.title;
-        if (dto.comment !== undefined) existing.comment = dto.comment;
-        if (dto.variantId) existing.variantId = dto.variantId;
-        existing.status = ReviewStatus.APPROVED;
-        const updated = await this.reviewRepository.save(existing);
-        await this.recalculateProductRating(dto.productId);
-        return this.toResponse(updated);
-      }
     }
 
     const review = this.reviewRepository.create({

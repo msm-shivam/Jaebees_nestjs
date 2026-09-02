@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsBoolean, Min, IsArray } from 'class-validator';
+import { IsString, IsNumber, IsInt, IsOptional, IsBoolean, Min, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class AttributeMapping {
@@ -36,6 +36,13 @@ export class VariantInputDto {
   @Min(0)
   @Type(() => Number)
   costPrice?: number;
+
+  @ApiPropertyOptional({ example: 50 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Type(() => Number)
+  stockQuantity?: number;
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()
