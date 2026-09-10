@@ -1,4 +1,5 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EmailQueueService } from './email-queue.service';
 import { EmailService } from './email.service';
 import { EmailTemplateService } from './email-template.service';
@@ -12,6 +13,8 @@ import { StoreSettingsService } from '../system-settings-cms/services/store-sett
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
+  private readonly appUrl: string;
+
   constructor(
     private readonly emailQueueService: EmailQueueService,
     private readonly emailService: EmailService,
@@ -20,7 +23,20 @@ export class NotificationsService {
     private readonly notificationPreferenceService: NotificationPreferenceService,
     @Inject(forwardRef(() => StoreSettingsService))
     private readonly storeSettingsService: StoreSettingsService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.appUrl = (this.configService.get<string>('APP_URL') || 'https://jaebees.com').replace(/\/+$/, '');
+  }
+
+  /** Returns base URL variables injected into every email context */
+  private baseContext(extra: Record<string, any> = {}): Record<string, any> {
+    return {
+      shopUrl: this.appUrl,
+      loginUrl: `${this.appUrl}/login`,
+      ordersUrl: `${this.appUrl}/account/orders`,
+      ...extra,
+    };
+  }
 
   private getCategoryFromTemplateOrPreference(
     templateCode: string,
@@ -146,7 +162,7 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.WELCOME,
-      context: { firstName },
+      context: this.baseContext({ firstName }),
     });
   }
 
@@ -154,7 +170,7 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.VERIFY_EMAIL,
-      context: { otp },
+      context: this.baseContext({ otp }),
     });
   }
 
@@ -162,7 +178,7 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.EMAIL_VERIFIED,
-      context: { firstName },
+      context: this.baseContext({ firstName }),
     });
   }
 
@@ -170,7 +186,7 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.PASSWORD_RESET,
-      context: { otp },
+      context: this.baseContext({ otp }),
     });
   }
 
@@ -181,7 +197,7 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.PASSWORD_RESET_CONFIRM,
-      context: { firstName },
+      context: this.baseContext({ firstName }),
     });
   }
 
@@ -195,10 +211,12 @@ export class NotificationsService {
       userId: options.userId,
       to: options.to,
       templateCode: EmailTemplateCode.ORDER_CONFIRMATION,
-      context: {
+      context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
-      },
+        orderUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+        orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      }),
       preferenceType: 'order',
     });
   }
@@ -214,11 +232,12 @@ export class NotificationsService {
       userId: options.userId,
       to: options.to,
       templateCode: EmailTemplateCode.PAYMENT_SUCCESS,
-      context: {
+      context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
         amount: options.amount.toFixed(2),
-      },
+        orderUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+      }),
       preferenceType: 'payment',
     });
   }
@@ -233,10 +252,11 @@ export class NotificationsService {
       userId: options.userId,
       to: options.to,
       templateCode: EmailTemplateCode.PAYMENT_FAILED,
-      context: {
+      context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
-      },
+        retryUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+      }),
       preferenceType: 'payment',
     });
   }
@@ -274,11 +294,12 @@ export class NotificationsService {
       userId: options.userId,
       to: options.to,
       templateCode: EmailTemplateCode.SHIPMENT_CREATED,
-      context: {
+      context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
         trackingNumber: options.trackingNumber,
-      },
+        trackingUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+      }),
       preferenceType: 'shipment',
     });
   }
@@ -294,11 +315,12 @@ export class NotificationsService {
       userId: options.userId,
       to: options.to,
       templateCode: EmailTemplateCode.SHIPMENT_OUT_FOR_DELIVERY,
-      context: {
+      context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
         trackingNumber: options.trackingNumber,
-      },
+        trackingUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+      }),
       preferenceType: 'shipment',
     });
   }
@@ -313,10 +335,11 @@ export class NotificationsService {
       userId: options.userId,
       to: options.to,
       templateCode: EmailTemplateCode.ORDER_DELIVERED,
-      context: {
+      context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
-      },
+        reviewUrl: `${this.appUrl}/products`,
+      }),
       preferenceType: 'shipment',
     });
   }
@@ -344,7 +367,19 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to: recipient,
       templateCode: templateCode as EmailTemplateCode,
-      context: { firstName: 'Test User' },
+      context: this.baseContext({
+        firstName: 'Test User',
+        otp: '123456',
+        orderNumber: 'ORD-TEST-001',
+        orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        orderTotal: '999.00',
+        amount: '999.00',
+        trackingNumber: 'TRK123456',
+        orderUrl: `${this.appUrl}/account/orders/ORD-TEST-001`,
+        trackingUrl: `${this.appUrl}/account/orders/ORD-TEST-001`,
+        retryUrl: `${this.appUrl}/account/orders/ORD-TEST-001`,
+        reviewUrl: `${this.appUrl}/products`,
+      }),
     });
   }
 
@@ -359,12 +394,11 @@ export class NotificationsService {
     return this.sendTemplatedEmail({
       to,
       templateCode: EmailTemplateCode.WELCOME_DISCOUNT,
-      context: {
+      context: this.baseContext({
         firstName,
         discountCode,
         discountAmount,
-        shopUrl: '{{shopUrl}}',
-      },
+      }),
     });
   }
 
