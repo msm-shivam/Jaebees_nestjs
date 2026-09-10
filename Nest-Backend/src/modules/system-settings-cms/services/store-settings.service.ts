@@ -30,7 +30,9 @@ export class StoreSettingsService implements OnModuleInit {
         const secure = settings.smtpSecure ?? (port === 465);
         const user = settings.smtpUser ?? '';
         const pass = settings.smtpPass ?? '';
-        this.emailService.configure({ host, port, secure, user, pass });
+        const fromName = settings.fromName ?? undefined;
+        const fromEmail = settings.fromEmail ?? undefined;
+        this.emailService.configure({ host, port, secure, user, pass, fromName, fromEmail });
         this.logger.log(
           `SMTP transporter initialized from database settings (${host}:${port})`,
         );
@@ -211,7 +213,9 @@ export class StoreSettingsService implements OnModuleInit {
       settings.smtpSecure ?? process.env.MAIL_SECURE === 'true';
     const user = settings.smtpUser ?? process.env.MAIL_USER ?? '';
     const pass = settings.smtpPass ?? process.env.MAIL_PASS ?? '';
-    this.emailService.configure({ host, port, secure, user, pass });
+    const fromName = settings.fromName ?? undefined;
+    const fromEmail = settings.fromEmail ?? undefined;
+    this.emailService.configure({ host, port, secure, user, pass, fromName, fromEmail });
 
     return this.getSmtpConfig();
   }

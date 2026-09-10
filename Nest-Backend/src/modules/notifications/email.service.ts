@@ -8,12 +8,16 @@ import { mailerConfig } from '../../config/mailer.config';
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
+  private fromName: string;
+  private fromEmail: string;
 
   constructor(
     @Inject(mailerConfig.KEY)
     private readonly mailConfig: ConfigType<typeof mailerConfig>,
   ) {
     this.transporter = this.createTransport(this.mailConfig);
+    this.fromName = this.mailConfig.fromName;
+    this.fromEmail = this.mailConfig.from;
   }
 
   private createTransport(config: {
@@ -60,9 +64,15 @@ export class EmailService {
     secure: boolean;
     user: string;
     pass: string;
+    fromName?: string;
+    fromEmail?: string;
   }): void {
     this.transporter = this.createTransport(options);
-    this.logger.log('SMTP transporter reconfigured');
+    if (options.fromName !== undefined) this.fromName = options.fromName;
+    if (options.fromEmail !== undefined) this.fromEmail = options.fromEmail;
+    this.logger.log(
+      `SMTP transporter reconfigured — sender: "${this.fromName}" <${this.fromEmail}>`,
+    );
   }
 
   async sendEmail(options: {
@@ -75,7 +85,7 @@ export class EmailService {
     try {
       const from =
         options.from ||
-        `"${this.mailConfig.fromName}" <${this.mailConfig.from}>`;
+        `"${this.fromName}" <${this.fromEmail}>`;
       const mailOptions: nodemailer.SendMailOptions = {
         from,
         to: options.to,
@@ -138,9 +148,9 @@ export class EmailService {
     const testTransporter = nodemailer.createTransport(transportOpts);
 
     try {
-      const fromAddr = user || this.mailConfig.from || 'support@jaebees.com';
+      const fromAddr = user || this.fromEmail || 'support@jaebees.com';
       await testTransporter.sendMail({
-        from: `"${this.mailConfig.fromName || 'Jaebees'}" <${fromAddr}>`,
+        from: `"${this.fromName || 'Jaebees'}" <${fromAddr}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
