@@ -99,8 +99,9 @@ export class SupportService {
         templateCode: 'ticket_created' as any,
         context: {
           firstName: user.firstName,
+          customerName: `${user.firstName} ${user.lastName || ''}`.trim(),
           ticketNumber: saved.ticketNumber,
-          subject: saved.subject,
+          ticketSubject: saved.subject,
         },
       }).catch(() => {});
     }
@@ -372,7 +373,10 @@ export class SupportService {
         templateCode: 'ticket_reply' as any,
         context: {
           firstName: customer.firstName,
+          customerName: `${customer.firstName} ${customer.lastName || ''}`.trim(),
           ticketNumber: ticket.ticketNumber,
+          ticketSubject: ticket.subject,
+          replyMessage: dto.message,
         },
       }).catch(() => {});
     }

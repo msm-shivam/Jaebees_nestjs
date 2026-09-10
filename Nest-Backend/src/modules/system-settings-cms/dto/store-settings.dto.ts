@@ -5,6 +5,8 @@ import {
   IsEmail,
   IsNumber,
   IsBoolean,
+  IsArray,
+  IsObject,
   Min,
   Max,
 } from 'class-validator';
@@ -225,16 +227,42 @@ export class UpdateSmtpConfigDto {
   @IsString()
   fromName?: string;
 
-  @ApiPropertyOptional({ example: 'support@sportecom.com' })
+  @ApiPropertyOptional({ example: 'support@jaebees.com' })
   @IsOptional()
   @IsEmail()
   fromEmail?: string;
+
+  @ApiPropertyOptional({ example: 'support@jaebees.com' })
+  @IsOptional()
+  @IsEmail()
+  replyToEmail?: string;
+}
+
+export class UpdateSenderConfigDto {
+  @ApiPropertyOptional({
+    example: ['support@jaebees.com', 'orders@jaebees.com'],
+  })
+  @IsOptional()
+  @IsArray()
+  allowedSenders?: string[];
+
+  @ApiPropertyOptional({
+    example: { order: 'orders@jaebees.com', support: 'support@jaebees.com' },
+  })
+  @IsOptional()
+  @IsObject()
+  senderMappings?: Record<string, string>;
 }
 
 export class TestSmtpDto {
   @ApiProperty({ example: 'recipient@example.com' })
   @IsEmail()
   to: string;
+
+  @ApiPropertyOptional({ example: 'order' })
+  @IsOptional()
+  @IsString()
+  category?: string;
 
   @ApiPropertyOptional({ example: 'smtp.gmail.com' })
   @IsOptional()
@@ -248,7 +276,7 @@ export class TestSmtpDto {
   @Max(65535)
   smtpPort?: number;
 
-  @ApiPropertyOptional({ example: 'admin@sportecom.com' })
+  @ApiPropertyOptional({ example: 'admin@jaebees.com' })
   @IsOptional()
   @IsString()
   smtpUser?: string;

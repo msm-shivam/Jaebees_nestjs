@@ -54,5 +54,6 @@ import { PublicFaqController } from './controllers/public-faq.controller';
     StoreSettingsService,
     FaqService,
   ],
+  exports: [StoreSettingsService],
 })
 export class SystemSettingsCmsModule {}

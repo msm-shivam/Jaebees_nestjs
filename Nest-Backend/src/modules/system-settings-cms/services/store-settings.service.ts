@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StoreSetting } from '../entities/store-setting.entity';
@@ -12,7 +12,7 @@ import {
 } from '../dto/store-settings.dto';
 
 @Injectable()
-export class StoreSettingsService {
+export class StoreSettingsService implements OnModuleInit {
   private readonly logger = new Logger(StoreSettingsService.name);
 
   constructor(
@@ -20,6 +20,27 @@ export class StoreSettingsService {
     private readonly storeSettingRepo: Repository<StoreSetting>,
     private readonly emailService: EmailService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      const settings = await this.getOrCreateStoreSettings();
+      if (settings.smtpHost) {
+        const host = settings.smtpHost;
+        const port = settings.smtpPort ?? 587;
+        const secure = settings.smtpSecure ?? (port === 465);
+        const user = settings.smtpUser ?? '';
+        const pass = settings.smtpPass ?? '';
+        this.emailService.configure({ host, port, secure, user, pass });
+        this.logger.log(
+          `SMTP transporter initialized from database settings (${host}:${port})`,
+        );
+      }
+    } catch (e) {
+      this.logger.warn(
+        `Failed to initialize SMTP transporter on boot: ${(e as Error).message}`,
+      );
+    }
+  }
 
   async getOrCreateStoreSettings(): Promise<StoreSetting> {
     const records = await this.storeSettingRepo.find({
@@ -146,19 +167,22 @@ export class StoreSettingsService {
 
   async getSmtpConfig() {
     const settings = await this.getOrCreateStoreSettings();
+    const rawPass = settings.smtpPass ?? process.env.MAIL_PASS ?? '';
     return {
       smtpHost:
         settings.smtpHost ?? process.env.MAIL_HOST ?? 'smtp.ethereal.email',
       smtpPort:
         settings.smtpPort ?? parseInt(process.env.MAIL_PORT ?? '587', 10),
       smtpUser: settings.smtpUser ?? process.env.MAIL_USER ?? '',
-      smtpPass: settings.smtpPass ?? process.env.MAIL_PASS ?? '',
+      smtpPass: rawPass ? '********' : '',
+      smtpPassConfigured: !!rawPass,
       smtpSecure: settings.smtpSecure ?? process.env.MAIL_SECURE === 'true',
       emailProvider:
         settings.emailProvider ?? process.env.EMAIL_PROVIDER ?? 'smtp',
-      fromName: settings.fromName ?? process.env.MAIL_FROM_NAME ?? 'Sport Ecom',
+      fromName: settings.fromName ?? process.env.MAIL_FROM_NAME ?? 'Jaebees',
       fromEmail:
-        settings.fromEmail ?? process.env.MAIL_FROM ?? 'support@sportecom.com',
+        settings.fromEmail ?? process.env.MAIL_FROM ?? 'support@jaebees.com',
+      replyToEmail: settings.replyToEmail ?? 'support@jaebees.com',
     };
   }
 
@@ -167,39 +191,114 @@ export class StoreSettingsService {
     if (dto.smtpHost !== undefined) settings.smtpHost = dto.smtpHost;
     if (dto.smtpPort !== undefined) settings.smtpPort = dto.smtpPort;
     if (dto.smtpUser !== undefined) settings.smtpUser = dto.smtpUser;
-    if (dto.smtpPass !== undefined) settings.smtpPass = dto.smtpPass;
+    if (dto.smtpPass !== undefined && dto.smtpPass !== '********' && dto.smtpPass !== '') {
+      settings.smtpPass = dto.smtpPass;
+    }
     if (dto.smtpSecure !== undefined) settings.smtpSecure = dto.smtpSecure;
     if (dto.emailProvider !== undefined)
       settings.emailProvider = dto.emailProvider;
     if (dto.fromName !== undefined) settings.fromName = dto.fromName;
     if (dto.fromEmail !== undefined) settings.fromEmail = dto.fromEmail;
+    if (dto.replyToEmail !== undefined) settings.replyToEmail = dto.replyToEmail;
     await this.storeSettingRepo.save(settings);
 
     // Hot-reload the SMTP transporter
     const host =
-      dto.smtpHost ??
-      settings.smtpHost ??
-      process.env.MAIL_HOST ??
-      'smtp.ethereal.email';
+      settings.smtpHost ?? process.env.MAIL_HOST ?? 'smtp.ethereal.email';
     const port =
-      dto.smtpPort ??
-      settings.smtpPort ??
-      parseInt(process.env.MAIL_PORT ?? '587', 10);
+      settings.smtpPort ?? parseInt(process.env.MAIL_PORT ?? '587', 10);
     const secure =
-      dto.smtpSecure ??
-      settings.smtpSecure ??
-      process.env.MAIL_SECURE === 'true';
-    const user =
-      dto.smtpUser ?? settings.smtpUser ?? process.env.MAIL_USER ?? '';
-    const pass =
-      dto.smtpPass ?? settings.smtpPass ?? process.env.MAIL_PASS ?? '';
+      settings.smtpSecure ?? process.env.MAIL_SECURE === 'true';
+    const user = settings.smtpUser ?? process.env.MAIL_USER ?? '';
+    const pass = settings.smtpPass ?? process.env.MAIL_PASS ?? '';
     this.emailService.configure({ host, port, secure, user, pass });
 
     return this.getSmtpConfig();
   }
 
+  getDefaultAllowedSenders(): string[] {
+    // No hardcoded defaults — allowedSenders comes solely from Email Config page
+    return [];
+  }
+
+  getDefaultSenderMappings(): Record<string, string> {
+    // No hardcoded defaults — category mappings come solely from Email Config page
+    return {};
+  }
+
+  async getSenderConfig() {
+    const settings = await this.getOrCreateStoreSettings();
+    // Return only what is saved in the DB — no hardcoded merging.
+    // The Email Config page is the sole source of truth.
+    const allowedSenders = settings.allowedSenders ?? [];
+    const senderMappings = settings.senderMappings ?? {};
+    return {
+      allowedSenders,
+      senderMappings,
+      fromName: settings.fromName ?? process.env.MAIL_FROM_NAME ?? '',
+      defaultFromEmail: settings.fromEmail ?? process.env.MAIL_FROM ?? '',
+      replyToEmail: settings.replyToEmail ?? '',
+    };
+  }
+
+  async updateSenderConfig(dto: { allowedSenders?: string[]; senderMappings?: Record<string, string>; fromName?: string; defaultFromEmail?: string; replyToEmail?: string }) {
+    const settings = await this.getOrCreateStoreSettings();
+    if (dto.allowedSenders !== undefined) settings.allowedSenders = dto.allowedSenders;
+    if (dto.senderMappings !== undefined) settings.senderMappings = dto.senderMappings;
+    if (dto.fromName !== undefined) settings.fromName = dto.fromName;
+    if (dto.defaultFromEmail !== undefined) settings.fromEmail = dto.defaultFromEmail;
+    if (dto.replyToEmail !== undefined) settings.replyToEmail = dto.replyToEmail;
+    await this.storeSettingRepo.save(settings);
+    return this.getSenderConfig();
+  }
+
+  async resolveCategorySender(category?: string): Promise<{ from: string; replyTo?: string }> {
+    const settings = await this.getOrCreateStoreSettings();
+    const fromName = settings.fromName ?? process.env.MAIL_FROM_NAME ?? '';
+
+    // The default sender is ALWAYS from the Email Config page.
+    // Fall back to MAIL_FROM env only as absolute last resort.
+    const defaultEmail =
+      settings.fromEmail ??
+      process.env.MAIL_FROM ??
+      '';
+
+    const replyTo = settings.replyToEmail ?? undefined;
+
+    // Allowed senders from Email Config page only (no hardcoded fallbacks)
+    const allowedSenders: string[] =
+      settings.allowedSenders && settings.allowedSenders.length > 0
+        ? settings.allowedSenders
+        : defaultEmail
+          ? [defaultEmail]
+          : [];
+
+    // Category mappings from Email Config page only (no hardcoded fallbacks)
+    const mappings: Record<string, string> = settings.senderMappings || {};
+
+    let targetEmail = defaultEmail;
+    if (category && mappings[category]) {
+      const mappedEmail = mappings[category];
+      // Only use the mapped email if it is in the allowed senders list.
+      // This prevents sending from addresses that are not configured in Email Config.
+      if (allowedSenders.includes(mappedEmail)) {
+        targetEmail = mappedEmail;
+      } else {
+        this.logger.warn(
+          `Category sender "${mappedEmail}" for "${category}" is not in allowedSenders. ` +
+          `Falling back to default sender "${defaultEmail}". ` +
+          `Please update your Email Config page.`,
+        );
+      }
+    }
+
+    const from = fromName ? `"${fromName}" <${targetEmail}>` : targetEmail;
+    return { from, replyTo };
+  }
+
   async testSmtpConnection(options: {
     to: string;
+    category?: string;
     smtpHost?: string;
     smtpPort?: number;
     smtpSecure?: boolean;
@@ -207,38 +306,72 @@ export class StoreSettingsService {
     smtpPass?: string;
   }): Promise<{ success: boolean; message: string }> {
     const settings = await this.getOrCreateStoreSettings();
+    const { from } = await this.resolveCategorySender(options.category);
+
+    const host =
+      options.smtpHost ??
+      settings.smtpHost ??
+      process.env.MAIL_HOST ??
+      'smtp.ethereal.email';
+    const port =
+      options.smtpPort ??
+      settings.smtpPort ??
+      parseInt(process.env.MAIL_PORT ?? '587', 10);
+    const secure =
+      options.smtpSecure ??
+      settings.smtpSecure ??
+      process.env.MAIL_SECURE === 'true';
+    const user =
+      options.smtpUser ?? settings.smtpUser ?? process.env.MAIL_USER ?? '';
+    const pass =
+      options.smtpPass && options.smtpPass !== '********'
+        ? options.smtpPass
+        : settings.smtpPass ?? process.env.MAIL_PASS ?? '';
+
+    if (!user || !pass) {
+      return {
+        success: false,
+        message:
+          'SMTP Username and Password are required. Please configure your valid SMTP credentials in Admin Settings -> General -> Email Config.',
+      };
+    }
+
     try {
       const success = await this.emailService.sendTestEmail({
         to: options.to,
-        subject: 'SMTP Configuration Test',
-        html: '<h2>SMTP Test Email</h2><p>If you are reading this, your SMTP configuration is working correctly.</p>',
-        smtpHost:
-          options.smtpHost ??
-          settings.smtpHost ??
-          process.env.MAIL_HOST ??
-          'smtp.ethereal.email',
-        smtpPort:
-          options.smtpPort ??
-          settings.smtpPort ??
-          parseInt(process.env.MAIL_PORT ?? '587', 10),
-        smtpSecure:
-          options.smtpSecure ??
-          settings.smtpSecure ??
-          process.env.MAIL_SECURE === 'true',
-        smtpUser:
-          options.smtpUser ?? settings.smtpUser ?? process.env.MAIL_USER ?? '',
-        smtpPass:
-          options.smtpPass ?? settings.smtpPass ?? process.env.MAIL_PASS ?? '',
+        subject: `SMTP & Sender Configuration Test (${options.category || 'default'})`,
+        html: `<h2>SMTP Test Email</h2><p>If you are reading this, your SMTP configuration and sender mapping (${from}) are working correctly.</p>`,
+        smtpHost: host,
+        smtpPort: port,
+        smtpSecure: secure,
+        smtpUser: user,
+        smtpPass: pass,
       });
       return {
         success,
         message: success
-          ? `Test email sent successfully to ${options.to}`
-          : 'Failed to send test email. Check SMTP configuration.',
+          ? `Test email sent successfully to ${options.to} from ${from}`
+          : 'Failed to send test email. Please check your SMTP configuration.',
       };
     } catch (error) {
-      this.logger.error(`SMTP test failed: ${(error as Error).message}`);
-      return { success: false, message: (error as Error).message };
+      const errMsg = (error as Error).message || 'Unknown SMTP error';
+      let userFriendlyMsg = errMsg;
+      if (errMsg.includes('Greeting never received')) {
+        userFriendlyMsg = `SMTP connection timed out ("Greeting never received"). Please check SMTP Host (${host}) and Port (${port}). If using Port 465, enable SSL/TLS. If using Port 587, disable SSL/TLS (STARTTLS).`;
+      } else if (
+        errMsg.includes('Invalid login') ||
+        errMsg.includes('535') ||
+        errMsg.includes('Authentication failed')
+      ) {
+        userFriendlyMsg = `SMTP Authentication failed. Please verify your SMTP Username (${user}) and Password/App Password.`;
+      } else if (
+        errMsg.includes('ENOTFOUND') ||
+        errMsg.includes('EHOSTUNREACH')
+      ) {
+        userFriendlyMsg = `SMTP Host "${host}" could not be reached. Please verify the host address.`;
+      }
+      this.logger.error(`SMTP test failed: ${errMsg}`);
+      return { success: false, message: userFriendlyMsg };
     }
   }
 }

@@ -254,4 +254,18 @@ export class StoreSetting extends BaseEntity {
     default: 'smtp',
   })
   emailProvider: string | null;
+
+  @Column({
+    name: 'allowed_senders',
+    type: 'jsonb',
+    nullable: true,
+  })
+  allowedSenders: string[] | null;
+
+  @Column({
+    name: 'sender_mappings',
+    type: 'jsonb',
+    nullable: true,
+  })
+  senderMappings: Record<string, string> | null;
 }

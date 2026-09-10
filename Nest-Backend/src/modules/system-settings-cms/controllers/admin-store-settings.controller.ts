@@ -30,6 +30,7 @@ import {
   UpdateEmailConfigDto,
   UpdateBusinessInfoDto,
   UpdateSmtpConfigDto,
+  UpdateSenderConfigDto,
   TestSmtpDto,
 } from '../dto/store-settings.dto';
 
@@ -166,6 +167,20 @@ export class AdminStoreSettingsController {
   })
   async updateSmtpConfig(@Body() dto: UpdateSmtpConfigDto) {
     return this.storeSettingsService.updateSmtpConfig(dto);
+  }
+
+  @Get('email-senders')
+  @Permissions(DefaultPermissions.SETTINGS_VIEW)
+  @ApiOperation({ summary: 'Get allowed senders and category mapping' })
+  async getSenderConfig() {
+    return this.storeSettingsService.getSenderConfig();
+  }
+
+  @Patch('email-senders')
+  @Permissions(DefaultPermissions.SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Update allowed senders and category mapping' })
+  async updateSenderConfig(@Body() dto: UpdateSenderConfigDto) {
+    return this.storeSettingsService.updateSenderConfig(dto);
   }
 
   @Post('email-smtp/test')

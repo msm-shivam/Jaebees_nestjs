@@ -20,6 +20,8 @@ import { CustomerNotificationsController } from './controllers/customer-notifica
 import { AdminNotificationsV2Controller } from './controllers/admin-notifications-v2.controller';
 import { AdminNotificationService } from './admin-notification.service';
 
+import { SystemSettingsCmsModule } from '../system-settings-cms/system-settings-cms.module';
+
 @Global()
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { AdminNotificationService } from './admin-notification.service';
       }),
     }),
     BullModule.registerQueue({ name: EMAIL_QUEUE }),
+    SystemSettingsCmsModule,
   ],
   controllers: [
     AdminEmailTemplatesController,

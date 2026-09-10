@@ -38,8 +38,28 @@ export class AdminEmailTemplatesController {
   findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('isActive') isActive?: boolean,
   ) {
-    return this.emailTemplateService.findAll(page, limit);
+    const pageNum = page ? Number(page) : 1;
+    const limitNum = limit ? Number(limit) : 20;
+
+    let isActiveBool: boolean | undefined = undefined;
+    if (isActive !== undefined) {
+      isActiveBool = String(isActive) === 'true' || String(isActive) === '1';
+    } else if (status === 'active') {
+      isActiveBool = true;
+    } else if (status === 'inactive') {
+      isActiveBool = false;
+    }
+
+    return this.emailTemplateService.findAll(
+      pageNum,
+      limitNum,
+      search,
+      isActiveBool,
+    );
   }
 
   @Get(':id')

@@ -121,10 +121,10 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 2, ttl: 60000 } })
-  @ApiOperation({ summary: 'Request password reset SMS OTP via registered email' })
+  @ApiOperation({ summary: 'Request password reset OTP via registered email' })
   @ApiResponse({
     status: 200,
-    description: 'SMS OTP sent to user registered mobile if account exists.',
+    description: 'OTP sent to registered email if account exists.',
   })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
@@ -134,7 +134,7 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  @ApiOperation({ summary: 'Reset customer password using SMS OTP' })
+  @ApiOperation({ summary: 'Reset customer password using Email OTP' })
   @ApiResponse({ status: 200, description: 'Password reset successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP.' })
   async resetPassword(@Body() dto: ResetPasswordDto) {

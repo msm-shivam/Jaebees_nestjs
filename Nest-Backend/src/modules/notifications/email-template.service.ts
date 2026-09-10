@@ -32,12 +32,31 @@ export class EmailTemplateService {
     return this.templateRepo.save(template);
   }
 
-  async findAll(page = 1, limit = 20): Promise<any> {
-    const [templates, total] = await this.templateRepo.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+  async findAll(
+    page = 1,
+    limit = 20,
+    search?: string,
+    isActive?: boolean,
+  ): Promise<any> {
+    const qb = this.templateRepo.createQueryBuilder('template');
+
+    if (search && search.trim() !== '') {
+      const searchTerm = `%${search.trim().toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(template.name) LIKE :search OR LOWER(template.code) LIKE :search OR LOWER(template.subject) LIKE :search OR LOWER(template.description) LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    if (isActive !== undefined) {
+      qb.andWhere('template.isActive = :isActive', { isActive });
+    }
+
+    qb.orderBy('template.createdAt', 'DESC');
+    qb.skip((page - 1) * limit);
+    qb.take(limit);
+
+    const [templates, total] = await qb.getManyAndCount();
 
     const [totalTemplates, activeTemplates, inactiveTemplates] =
       await Promise.all([

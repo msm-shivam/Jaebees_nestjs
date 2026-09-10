@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { EmailQueueService } from './email-queue.service';
 import { EmailService } from './email.service';
 import { EmailTemplateService } from './email-template.service';
@@ -6,6 +6,7 @@ import { NotificationLogService } from './notification-log.service';
 import { NotificationPreferenceService } from './notification-preference.service';
 import { EmailTemplateCode } from './entities/email-template.entity';
 import { NotificationStatus } from './entities/notification-log.entity';
+import { StoreSettingsService } from '../system-settings-cms/services/store-settings.service';
 
 @Injectable()
 export class NotificationsService {
@@ -17,7 +18,60 @@ export class NotificationsService {
     private readonly emailTemplateService: EmailTemplateService,
     private readonly notificationLogService: NotificationLogService,
     private readonly notificationPreferenceService: NotificationPreferenceService,
+    @Inject(forwardRef(() => StoreSettingsService))
+    private readonly storeSettingsService: StoreSettingsService,
   ) {}
+
+  private getCategoryFromTemplateOrPreference(
+    templateCode: string,
+    preferenceType?: string,
+  ): string {
+    if (preferenceType) return preferenceType;
+    switch (templateCode) {
+      case EmailTemplateCode.WELCOME:
+      case EmailTemplateCode.VERIFY_EMAIL:
+      case EmailTemplateCode.EMAIL_VERIFIED:
+      case EmailTemplateCode.PASSWORD_RESET:
+      case EmailTemplateCode.PASSWORD_RESET_CONFIRM:
+        return 'auth';
+      case EmailTemplateCode.ORDER_CONFIRMATION:
+      case EmailTemplateCode.ORDER_PLACED:
+      case EmailTemplateCode.ORDER_STATUS_UPDATE:
+        return 'order';
+      case EmailTemplateCode.PAYMENT_SUCCESS:
+      case EmailTemplateCode.PAYMENT_FAILED:
+      case EmailTemplateCode.PAYMENT_PROCESSING:
+      case EmailTemplateCode.REFUND_PROCESSED:
+      case EmailTemplateCode.BILLING_INVOICE:
+        return 'payment';
+      case EmailTemplateCode.SHIPMENT_CREATED:
+      case EmailTemplateCode.SHIPMENT_OUT_FOR_DELIVERY:
+      case EmailTemplateCode.ORDER_DELIVERED:
+      case EmailTemplateCode.SHIPMENT_STATUS_UPDATE:
+        return 'shipment';
+      case EmailTemplateCode.RETURN_REQUESTED:
+      case EmailTemplateCode.RETURN_APPROVED:
+      case EmailTemplateCode.RETURN_REJECTED:
+      case EmailTemplateCode.RETURN_REFUNDED:
+        return 'return';
+      case EmailTemplateCode.TICKET_CREATED:
+      case EmailTemplateCode.TICKET_REPLY:
+        return 'support';
+      case EmailTemplateCode.REVIEW_REMINDER:
+        return 'review';
+      case EmailTemplateCode.CART_ABANDONMENT:
+      case EmailTemplateCode.WISHLIST_BACK_IN_STOCK:
+      case EmailTemplateCode.WISHLIST_PROMOTION:
+      case EmailTemplateCode.PRICE_DROP_ALERT:
+      case EmailTemplateCode.SALES_PROMOTION:
+      case EmailTemplateCode.WELCOME_DISCOUNT:
+        return 'marketing';
+      case EmailTemplateCode.LOW_STOCK_ALERT:
+        return 'admin';
+      default:
+        return 'auth';
+    }
+  }
 
   async sendTemplatedEmail(options: {
     userId?: string;
@@ -53,6 +107,14 @@ export class NotificationsService {
         options.context,
       );
 
+      const category = this.getCategoryFromTemplateOrPreference(
+        options.templateCode as string,
+        options.preferenceType,
+      );
+
+      const { from, replyTo } =
+        await this.storeSettingsService.resolveCategorySender(category);
+
       const log = await this.notificationLogService.create({
         userId: options.userId,
         recipient: options.to,
@@ -67,9 +129,10 @@ export class NotificationsService {
         html,
         userId: options.userId,
         templateCode: options.templateCode,
+        from,
+        replyTo,
+        logId: log.id,
       });
-
-      await this.notificationLogService.markSent(log.id);
     } catch (error) {
       this.logger.error(
         `Failed to send ${options.templateCode} email to ${options.to}: ${(error as Error).message}`,

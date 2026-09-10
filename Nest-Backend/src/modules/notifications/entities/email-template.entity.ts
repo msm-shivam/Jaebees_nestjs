@@ -28,6 +28,12 @@ export enum EmailTemplateCode {
   SALES_PROMOTION = 'sales_promotion',
   REVIEW_REMINDER = 'review_reminder',
   LOW_STOCK_ALERT = 'low_stock_alert',
+  RETURN_REQUESTED = 'return_requested',
+  RETURN_APPROVED = 'return_approved',
+  RETURN_REJECTED = 'return_rejected',
+  RETURN_REFUNDED = 'return_refunded',
+  TICKET_CREATED = 'ticket_created',
+  TICKET_REPLY = 'ticket_reply',
 }
 
 @Entity('email_templates')

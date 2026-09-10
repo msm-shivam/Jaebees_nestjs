@@ -348,20 +348,17 @@ export class AuthService {
     return { message: AuthMessages.LOGOUT_SUCCESS };
   }
 
-  // ─── 7. Forgot Password (via SMS OTP to Registered Mobile) ────────────────────
-  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string; maskedMobile?: string }> {
+  // ─── 7. Forgot Password (via Email OTP) ───────────────────────────────────────
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
     const user = await this.userRepo.findOne({
       where: { email: dto.email.toLowerCase() },
     });
     if (!user) return { message: AuthMessages.OTP_SENT };
 
-    const otp = await this.createAndSaveSmsOtp(user.mobile, OtpPurpose.PASSWORD_RESET);
-    this.smsService.sendOtp(user.mobile, otp).catch(() => {});
+    const otp = await this.createAndSaveEmailOtp(user.email, OtpPurpose.PASSWORD_RESET);
+    this.notificationsService.sendPasswordResetEmail(user.email, otp).catch(() => {});
 
-    return {
-      message: AuthMessages.OTP_SENT,
-      maskedMobile: maskMobile(user.mobile),
-    };
+    return { message: AuthMessages.OTP_SENT };
   }
 
   // ─── 8. Reset Password ───────────────────────────────────────────────────────
@@ -371,7 +368,7 @@ export class AuthService {
     });
     if (!user) throw new NotFoundException(UserMessages.USER_NOT_FOUND);
 
-    await this.consumeSmsOtp(user.mobile, dto.otp, OtpPurpose.PASSWORD_RESET);
+    await this.consumeEmailOtp(user.email, dto.otp, OtpPurpose.PASSWORD_RESET);
 
     const passwordHash = await hashPassword(dto.newPassword);
     await this.userRepo.update(user.id, { passwordHash });
@@ -489,6 +486,15 @@ export class AuthService {
   }
 
   private async createAndSaveEmailOtp(email: string, purpose: OtpPurpose): Promise<string> {
+    // Check 60-second cooldown
+    const latest = await this.otpRepo.findOne({
+      where: { email, purpose },
+      order: { createdAt: 'DESC' },
+    });
+    if (latest && dayjs().diff(dayjs(latest.createdAt), 'second') < 60) {
+      throw new BadRequestException('Please wait 60 seconds before requesting another OTP.');
+    }
+
     await this.otpRepo
       .createQueryBuilder()
       .update()

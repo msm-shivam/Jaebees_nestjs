@@ -22,7 +22,7 @@ function htmlWrap(subject: string, bodyHtml: string): string {
           <!-- Header -->
           <tr>
             <td style="background-color:#1a73e8;padding:30px 40px;text-align:center;">
-              <h1 style="color:#ffffff;margin:0;font-size:24px;">Sport Ecommerce</h1>
+              <h1 style="color:#ffffff;margin:0;font-size:24px;">Jaebees</h1>
             </td>
           </tr>
           <!-- Body -->
@@ -34,7 +34,7 @@ function htmlWrap(subject: string, bodyHtml: string): string {
           <!-- Footer -->
           <tr>
             <td style="background-color:#f8f8f8;padding:20px 40px;text-align:center;font-size:12px;color:#888888;">
-              <p style="margin:0 0 8px;">&copy; 2026 Sport Ecommerce. All rights reserved.</p>
+              <p style="margin:0 0 8px;">&copy; 2026 Jaebees. All rights reserved.</p>
               <p style="margin:0;">123 Sports Avenue, Athlete City, SP 10001</p>
               <p style="margin:8px 0 0;">
                 <a href="#" style="color:#1a73e8;text-decoration:none;">Unsubscribe</a> |
@@ -57,17 +57,17 @@ const templates: {
   body: string;
   description: string;
 }[] = [
-  // ── Welcome ──
-  {
-    name: 'Welcome Email',
-    code: 'welcome',
-    subject: 'Welcome to Sport Ecommerce, {{firstName}}!',
-    body: htmlWrap(
-      'Welcome',
-      `
+    // ── Welcome ──
+    {
+      name: 'Welcome Email',
+      code: 'welcome',
+      subject: 'Welcome to Jaebees, {{firstName}}!',
+      body: htmlWrap(
+        'Welcome',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Welcome, {{firstName}}! 👋</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
-        Thank you for joining Sport Ecommerce! We are thrilled to have you on board.
+        Thank you for joining Jaebees! We are thrilled to have you on board.
       </p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
         Explore our wide range of sports equipment, apparel, and accessories designed to help you perform at your best.
@@ -77,20 +77,20 @@ const templates: {
       </div>
       <p style="color:#555;line-height:1.6;margin:0;">If you have any questions, feel free to reply to this email.</p>
     `,
-    ),
-    description: 'Sent when a new user registers',
-  },
-  {
-    name: 'Welcome Email with Discount',
-    code: 'welcome_discount',
-    subject:
-      'Welcome to Sport Ecommerce – Get {{discountAmount}}% Off Your First Order!',
-    body: htmlWrap(
-      'Welcome Discount',
-      `
+      ),
+      description: 'Sent when a new user registers',
+    },
+    {
+      name: 'Welcome Email with Discount',
+      code: 'welcome_discount',
+      subject:
+        'Welcome to Jaebees – Get {{discountAmount}}% Off Your First Order!',
+      body: htmlWrap(
+        'Welcome Discount',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Welcome, {{firstName}}! 🎉</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
-        We are excited to have you as part of the Sport Ecommerce family. As a special welcome gift, here is an exclusive discount for your first order!
+        We are excited to have you as part of the Jaebees family. As a special welcome gift, here is an exclusive discount for your first order!
       </p>
       <div style="background-color:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:24px;text-align:center;margin:24px 0;">
         <p style="font-size:14px;color:#856404;margin:0 0 8px;">YOUR DISCOUNT CODE</p>
@@ -102,18 +102,18 @@ const templates: {
       </div>
       <p style="color:#888;font-size:13px;margin:0;">*Terms and conditions apply. Valid for first-time customers only.</p>
     `,
-    ),
-    description: 'Welcome email with a discount code for new users',
-  },
+      ),
+      description: 'Welcome email with a discount code for new users',
+    },
 
-  // ── Verification ──
-  {
-    name: 'Verify Email',
-    code: 'verify_email',
-    subject: 'Verify your email address',
-    body: htmlWrap(
-      'Verify Email',
-      `
+    // ── Verification ──
+    {
+      name: 'Verify Email',
+      code: 'verify_email',
+      subject: 'Verify your email address',
+      body: htmlWrap(
+        'Verify Email',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Verify Your Email</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
         Thank you for signing up! Please use the OTP below to verify your email address.
@@ -123,16 +123,16 @@ const templates: {
       </div>
       <p style="color:#888;font-size:13px;margin:0;">This OTP will expire in 10 minutes.</p>
     `,
-    ),
-    description: 'Sent when user needs to verify email address',
-  },
-  {
-    name: 'Email Verified',
-    code: 'email_verified',
-    subject: 'Your email has been verified, {{firstName}}!',
-    body: htmlWrap(
-      'Email Verified',
-      `
+      ),
+      description: 'Sent when user needs to verify email address',
+    },
+    {
+      name: 'Email Verified',
+      code: 'email_verified',
+      subject: 'Your email has been verified, {{firstName}}!',
+      body: htmlWrap(
+        'Email Verified',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Email Verified ✅</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
         Hi {{firstName}}, your email address has been successfully verified. Your account is now fully active!
@@ -141,18 +141,18 @@ const templates: {
         <a href="{{shopUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Continue Shopping</a>
       </div>
     `,
-    ),
-    description: 'Sent after email is successfully verified',
-  },
+      ),
+      description: 'Sent after email is successfully verified',
+    },
 
-  // ── Password ──
-  {
-    name: 'Password Reset',
-    code: 'password_reset',
-    subject: 'Reset your password',
-    body: htmlWrap(
-      'Password Reset',
-      `
+    // ── Password ──
+    {
+      name: 'Password Reset',
+      code: 'password_reset',
+      subject: 'Reset your password',
+      body: htmlWrap(
+        'Password Reset',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Reset Your Password</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
         We received a request to reset your password. Use the OTP below to proceed.
@@ -163,16 +163,16 @@ const templates: {
       <p style="color:#888;font-size:13px;margin:0 0 20px;">This OTP will expire in 10 minutes.</p>
       <p style="color:#888;font-size:13px;margin:0;">If you did not request this, please ignore this email.</p>
     `,
-    ),
-    description: 'Sent when user requests a password reset',
-  },
-  {
-    name: 'Password Reset Confirmation',
-    code: 'password_reset_confirm',
-    subject: 'Your password has been changed, {{firstName}}',
-    body: htmlWrap(
-      'Password Changed',
-      `
+      ),
+      description: 'Sent when user requests a password reset',
+    },
+    {
+      name: 'Password Reset Confirmation',
+      code: 'password_reset_confirm',
+      subject: 'Your password has been changed, {{firstName}}',
+      body: htmlWrap(
+        'Password Changed',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Password Changed Successfully 🔒</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
         Hi {{firstName}}, your password has been changed successfully.
@@ -184,18 +184,18 @@ const templates: {
         <a href="{{loginUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Log In</a>
       </div>
     `,
-    ),
-    description: 'Sent after password is successfully reset',
-  },
+      ),
+      description: 'Sent after password is successfully reset',
+    },
 
-  // ── Order ──
-  {
-    name: 'Order Confirmation',
-    code: 'order_confirmation',
-    subject: 'Order {{orderNumber}} Confirmed – Thank You!',
-    body: htmlWrap(
-      'Order Confirmation',
-      `
+    // ── Order ──
+    {
+      name: 'Order Confirmation',
+      code: 'order_confirmation',
+      subject: 'Order {{orderNumber}} Confirmed – Thank You!',
+      body: htmlWrap(
+        'Order Confirmation',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Order Confirmed! 🎉</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -219,16 +219,16 @@ const templates: {
         <a href="{{orderUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">View Order</a>
       </div>
     `,
-    ),
-    description: 'Sent when an order is confirmed',
-  },
-  {
-    name: 'Order Placed',
-    code: 'order_placed',
-    subject: 'Order #{{orderNumber}} Placed Successfully',
-    body: htmlWrap(
-      'Order Placed',
-      `
+      ),
+      description: 'Sent when an order is confirmed',
+    },
+    {
+      name: 'Order Placed',
+      code: 'order_placed',
+      subject: 'Order #{{orderNumber}} Placed Successfully',
+      body: htmlWrap(
+        'Order Placed',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Order Placed! 🛒</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -265,16 +265,16 @@ const templates: {
         <a href="{{orderUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Track Order</a>
       </div>
     `,
-    ),
-    description: 'Sent immediately after an order is placed with item details',
-  },
-  {
-    name: 'Order Status Update',
-    code: 'order_status_update',
-    subject: 'Order #{{orderNumber}} Status Updated to {{newStatus}}',
-    body: htmlWrap(
-      'Order Status Update',
-      `
+      ),
+      description: 'Sent immediately after an order is placed with item details',
+    },
+    {
+      name: 'Order Status Update',
+      code: 'order_status_update',
+      subject: 'Order #{{orderNumber}} Status Updated to {{newStatus}}',
+      body: htmlWrap(
+        'Order Status Update',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Order Status Update 🔄</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -294,18 +294,18 @@ const templates: {
         <a href="{{orderUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">View Order</a>
       </div>
     `,
-    ),
-    description: 'Sent when the status of an existing order changes',
-  },
+      ),
+      description: 'Sent when the status of an existing order changes',
+    },
 
-  // ── Payment / Billing ──
-  {
-    name: 'Payment Success',
-    code: 'payment_success',
-    subject: 'Payment Successful for Order #{{orderNumber}}',
-    body: htmlWrap(
-      'Payment Success',
-      `
+    // ── Payment / Billing ──
+    {
+      name: 'Payment Success',
+      code: 'payment_success',
+      subject: 'Payment Successful for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Payment Success',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Payment Successful ✅</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -315,16 +315,16 @@ const templates: {
         <a href="{{orderUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">View Order</a>
       </div>
     `,
-    ),
-    description: 'Sent when payment is successful',
-  },
-  {
-    name: 'Payment Failed',
-    code: 'payment_failed',
-    subject: 'Payment Failed for Order #{{orderNumber}}',
-    body: htmlWrap(
-      'Payment Failed',
-      `
+      ),
+      description: 'Sent when payment is successful',
+    },
+    {
+      name: 'Payment Failed',
+      code: 'payment_failed',
+      subject: 'Payment Failed for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Payment Failed',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Payment Failed ❌</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -337,16 +337,16 @@ const templates: {
         <a href="{{retryUrl}}" style="background-color:#dc3545;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Retry Payment</a>
       </div>
     `,
-    ),
-    description: 'Sent when payment fails',
-  },
-  {
-    name: 'Payment Processing',
-    code: 'payment_processing',
-    subject: 'Payment is being processed for Order #{{orderNumber}}',
-    body: htmlWrap(
-      'Payment Processing',
-      `
+      ),
+      description: 'Sent when payment fails',
+    },
+    {
+      name: 'Payment Processing',
+      code: 'payment_processing',
+      subject: 'Payment is being processed for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Payment Processing',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Payment Processing ⏳</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -354,16 +354,16 @@ const templates: {
       </p>
       <p style="color:#555;line-height:1.6;margin:0;">We will notify you once the payment is confirmed.</p>
     `,
-    ),
-    description: 'Sent when payment is processing',
-  },
-  {
-    name: 'Refund Processed',
-    code: 'refund_processed',
-    subject: 'Refund Processed for Order #{{orderNumber}}',
-    body: htmlWrap(
-      'Refund Processed',
-      `
+      ),
+      description: 'Sent when payment is processing',
+    },
+    {
+      name: 'Refund Processed',
+      code: 'refund_processed',
+      subject: 'Refund Processed for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Refund Processed',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Refund Processed 💰</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -374,16 +374,16 @@ const templates: {
         The refund will appear in your account within 5-10 business days depending on your payment provider.
       </p>
     `,
-    ),
-    description: 'Sent when a refund is processed',
-  },
-  {
-    name: 'Billing Invoice',
-    code: 'billing_invoice',
-    subject: 'Invoice #{{invoiceNumber}} for Order #{{orderNumber}}',
-    body: htmlWrap(
-      'Billing Invoice',
-      `
+      ),
+      description: 'Sent when a refund is processed',
+    },
+    {
+      name: 'Billing Invoice',
+      code: 'billing_invoice',
+      subject: 'Invoice #{{invoiceNumber}} for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Billing Invoice',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Invoice #{{invoiceNumber}} 📄</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -417,18 +417,18 @@ const templates: {
         <a href="{{invoiceUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Download Invoice</a>
       </div>
     `,
-    ),
-    description: 'Sent to customer with billing invoice',
-  },
+      ),
+      description: 'Sent to customer with billing invoice',
+    },
 
-  // ── Shipment ──
-  {
-    name: 'Shipment Created',
-    code: 'shipment_created',
-    subject: 'Your Order #{{orderNumber}} Has Been Shipped!',
-    body: htmlWrap(
-      'Shipment Created',
-      `
+    // ── Shipment ──
+    {
+      name: 'Shipment Created',
+      code: 'shipment_created',
+      subject: 'Your Order #{{orderNumber}} Has Been Shipped!',
+      body: htmlWrap(
+        'Shipment Created',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Your Order Has Been Shipped! 🚚</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -442,16 +442,16 @@ const templates: {
         <a href="{{trackingUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Track Shipment</a>
       </div>
     `,
-    ),
-    description: 'Sent when a shipment is created for an order',
-  },
-  {
-    name: 'Shipment Out for Delivery',
-    code: 'shipment_out_for_delivery',
-    subject: 'Your Order #{{orderNumber}} Is Out for Delivery!',
-    body: htmlWrap(
-      'Out for Delivery',
-      `
+      ),
+      description: 'Sent when a shipment is created for an order',
+    },
+    {
+      name: 'Shipment Out for Delivery',
+      code: 'shipment_out_for_delivery',
+      subject: 'Your Order #{{orderNumber}} Is Out for Delivery!',
+      body: htmlWrap(
+        'Out for Delivery',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Out for Delivery! 📬</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -465,16 +465,16 @@ const templates: {
         <a href="{{trackingUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Track Live</a>
       </div>
     `,
-    ),
-    description: 'Sent when package is out for delivery',
-  },
-  {
-    name: 'Order Delivered',
-    code: 'order_delivered',
-    subject: 'Your Order #{{orderNumber}} Has Been Delivered!',
-    body: htmlWrap(
-      'Order Delivered',
-      `
+      ),
+      description: 'Sent when package is out for delivery',
+    },
+    {
+      name: 'Order Delivered',
+      code: 'order_delivered',
+      subject: 'Your Order #{{orderNumber}} Has Been Delivered!',
+      body: htmlWrap(
+        'Order Delivered',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Delivered! ✅</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -487,16 +487,16 @@ const templates: {
         <a href="{{reviewUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Leave a Review</a>
       </div>
     `,
-    ),
-    description: 'Sent when order is delivered',
-  },
-  {
-    name: 'Shipment Status Update',
-    code: 'shipment_status_update',
-    subject: 'Shipment Update for Order #{{orderNumber}}',
-    body: htmlWrap(
-      'Shipment Status Update',
-      `
+      ),
+      description: 'Sent when order is delivered',
+    },
+    {
+      name: 'Shipment Status Update',
+      code: 'shipment_status_update',
+      subject: 'Shipment Update for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Shipment Status Update',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Shipment Update 📦</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -516,18 +516,18 @@ const templates: {
         <a href="{{trackingUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Track Shipment</a>
       </div>
     `,
-    ),
-    description: 'Sent when shipment status changes',
-  },
+      ),
+      description: 'Sent when shipment status changes',
+    },
 
-  // ── Cart & Wishlist ──
-  {
-    name: 'Cart Abandonment Reminder',
-    code: 'cart_abandonment',
-    subject: 'You Left Something in Your Cart!',
-    body: htmlWrap(
-      'Cart Abandonment',
-      `
+    // ── Cart & Wishlist ──
+    {
+      name: 'Cart Abandonment Reminder',
+      code: 'cart_abandonment',
+      subject: 'You Left Something in Your Cart!',
+      body: htmlWrap(
+        'Cart Abandonment',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Your Cart is Waiting! 🛒</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -560,16 +560,16 @@ const templates: {
         <a href="{{cartUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Return to Cart</a>
       </div>
     `,
-    ),
-    description: 'Sent when a user abandons their cart with items',
-  },
-  {
-    name: 'Wishlist Back in Stock',
-    code: 'wishlist_back_in_stock',
-    subject: 'An Item from Your Wishlist Is Back in Stock!',
-    body: htmlWrap(
-      'Back in Stock',
-      `
+      ),
+      description: 'Sent when a user abandons their cart with items',
+    },
+    {
+      name: 'Wishlist Back in Stock',
+      code: 'wishlist_back_in_stock',
+      subject: 'An Item from Your Wishlist Is Back in Stock!',
+      body: htmlWrap(
+        'Back in Stock',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Back in Stock! 🎉</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -583,16 +583,16 @@ const templates: {
         <a href="{{productUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">View Product</a>
       </div>
     `,
-    ),
-    description: 'Sent when a wishlist item is back in stock',
-  },
-  {
-    name: 'Wishlist Promotion',
-    code: 'wishlist_promotion',
-    subject: 'Items from Your Wishlist Are on Sale!',
-    body: htmlWrap(
-      'Wishlist Promotion',
-      `
+      ),
+      description: 'Sent when a wishlist item is back in stock',
+    },
+    {
+      name: 'Wishlist Promotion',
+      code: 'wishlist_promotion',
+      subject: 'Items from Your Wishlist Are on Sale!',
+      body: htmlWrap(
+        'Wishlist Promotion',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Wishlist Items on Sale! 🏷️</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -616,18 +616,18 @@ const templates: {
         <a href="{{wishlistUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">View Wishlist</a>
       </div>
     `,
-    ),
-    description: 'Sent when wishlist items go on sale with an extra discount',
-  },
+      ),
+      description: 'Sent when wishlist items go on sale with an extra discount',
+    },
 
-  // ── Promotions & Sales ──
-  {
-    name: 'Price Drop Alert',
-    code: 'price_drop_alert',
-    subject: 'Price Dropped on {{productName}}!',
-    body: htmlWrap(
-      'Price Drop',
-      `
+    // ── Promotions & Sales ──
+    {
+      name: 'Price Drop Alert',
+      code: 'price_drop_alert',
+      subject: 'Price Dropped on {{productName}}!',
+      body: htmlWrap(
+        'Price Drop',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Price Dropped! 📉</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -642,16 +642,16 @@ const templates: {
         <a href="{{productUrl}}" style="background-color:#dc3545;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Buy Now</a>
       </div>
     `,
-    ),
-    description: 'Sent when the price drops on a product the user is watching',
-  },
-  {
-    name: 'Sales Promotion',
-    code: 'sales_promotion',
-    subject: '{{saleName}} – Up to {{discountAmount}}% Off!',
-    body: htmlWrap(
-      'Sales Promotion',
-      `
+      ),
+      description: 'Sent when the price drops on a product the user is watching',
+    },
+    {
+      name: 'Sales Promotion',
+      code: 'sales_promotion',
+      subject: '{{saleName}} – Up to {{discountAmount}}% Off!',
+      body: htmlWrap(
+        'Sales Promotion',
+        `
       <h2 style="color:#333;margin:0 0 16px;">{{saleName}} 🎉</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -669,18 +669,18 @@ const templates: {
         <a href="{{shopUrl}}" style="background-color:#1a73e8;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">Shop the Sale</a>
       </div>
     `,
-    ),
-    description: 'Sent for sales promotions and campaigns',
-  },
+      ),
+      description: 'Sent for sales promotions and campaigns',
+    },
 
-  // ── Reviews ──
-  {
-    name: 'Review Reminder',
-    code: 'review_reminder',
-    subject: 'How Was Your Purchase? Leave a Review!',
-    body: htmlWrap(
-      'Review Reminder',
-      `
+    // ── Reviews ──
+    {
+      name: 'Review Reminder',
+      code: 'review_reminder',
+      subject: 'How Was Your Purchase? Leave a Review!',
+      body: htmlWrap(
+        'Review Reminder',
+        `
       <h2 style="color:#333;margin:0 0 16px;">We Value Your Feedback ⭐</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
@@ -693,18 +693,18 @@ const templates: {
         Your review will help thousands of sports enthusiasts like you!
       </p>
     `,
-    ),
-    description: 'Sent as a reminder to review purchased products',
-  },
+      ),
+      description: 'Sent as a reminder to review purchased products',
+    },
 
-  // ── Admin / Internal ──
-  {
-    name: 'Low Stock Alert',
-    code: 'low_stock_alert',
-    subject: 'Low Stock Alert: {{productName}} (SKU: {{sku}})',
-    body: htmlWrap(
-      'Low Stock Alert',
-      `
+    // ── Admin / Internal ──
+    {
+      name: 'Low Stock Alert',
+      code: 'low_stock_alert',
+      subject: 'Low Stock Alert: {{productName}} (SKU: {{sku}})',
+      body: htmlWrap(
+        'Low Stock Alert',
+        `
       <h2 style="color:#333;margin:0 0 16px;">Low Stock Alert ⚠️</h2>
       <p style="color:#555;line-height:1.6;margin:0 0 20px;">
         The following product is running low on stock:
@@ -731,10 +731,112 @@ const templates: {
         <a href="{{inventoryUrl}}" style="background-color:#dc3545;color:#ffffff;padding:14px 36px;border-radius:4px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">View Inventory</a>
       </div>
     `,
-    ),
-    description: 'Internal alert when product stock is low',
-  },
-];
+      ),
+      description: 'Internal alert when product stock is low',
+    },
+
+    // ── Returns ──
+    {
+      name: 'Return Requested',
+      code: 'return_requested',
+      subject: 'Return Requested for Order #{{orderNumber}}',
+      body: htmlWrap(
+        'Return Requested',
+        `
+      <h2 style="color:#333;margin:0 0 16px;">Return Requested 🔄</h2>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
+      <p style="color:#555;line-height:1.6;margin:0 0 20px;">
+        We have received your return request <strong>#{{returnNumber}}</strong> for order <strong>#{{orderNumber}}</strong>.
+      </p>
+      <p style="color:#555;line-height:1.6;margin:0;">Our team will review your request and get back to you shortly.</p>
+    `,
+      ),
+      description: 'Sent when customer requests a return',
+    },
+    {
+      name: 'Return Approved',
+      code: 'return_approved',
+      subject: 'Return Request #{{returnNumber}} Approved',
+      body: htmlWrap(
+        'Return Approved',
+        `
+      <h2 style="color:#333;margin:0 0 16px;">Return Approved ✅</h2>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
+      <p style="color:#555;line-height:1.6;margin:0 0 20px;">
+        Your return request <strong>#{{returnNumber}}</strong> has been approved. Please follow the instructions to send back your item.
+      </p>
+    `,
+      ),
+      description: 'Sent when admin approves a return request',
+    },
+    {
+      name: 'Return Rejected',
+      code: 'return_rejected',
+      subject: 'Return Request #{{returnNumber}} Status Update',
+      body: htmlWrap(
+        'Return Rejected',
+        `
+      <h2 style="color:#333;margin:0 0 16px;">Return Request Update ❌</h2>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
+      <p style="color:#555;line-height:1.6;margin:0 0 20px;">
+        Unfortunately, your return request <strong>#{{returnNumber}}</strong> could not be approved at this time.
+      </p>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;"><strong>Reason:</strong> {{reason}}</p>
+    `,
+      ),
+      description: 'Sent when admin rejects a return request',
+    },
+    {
+      name: 'Return Refunded',
+      code: 'return_refunded',
+      subject: 'Refund Processed for Return #{{returnNumber}}',
+      body: htmlWrap(
+        'Return Refunded',
+        `
+      <h2 style="color:#333;margin:0 0 16px;">Return Refund Processed 💰</h2>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
+      <p style="color:#555;line-height:1.6;margin:0 0 20px;">
+        A refund of <strong>\${{amount}}</strong> has been processed for your return <strong>#{{returnNumber}}</strong>.
+      </p>
+    `,
+      ),
+      description: 'Sent when refund for return is processed',
+    },
+
+    // ── Support ──
+    {
+      name: 'Support Ticket Created',
+      code: 'ticket_created',
+      subject: 'Support Ticket #{{ticketNumber}} Received',
+      body: htmlWrap(
+        'Ticket Created',
+        `
+      <h2 style="color:#333;margin:0 0 16px;">Support Ticket Created 🎫</h2>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
+      <p style="color:#555;line-height:1.6;margin:0 0 20px;">
+        Thank you for contacting us. Your ticket <strong>#{{ticketNumber}}</strong> ("{{subject}}") has been received.
+      </p>
+    `,
+      ),
+      description: 'Sent when a support ticket is created',
+    },
+    {
+      name: 'Support Ticket Reply',
+      code: 'ticket_reply',
+      subject: 'New Reply on Support Ticket #{{ticketNumber}}',
+      body: htmlWrap(
+        'Ticket Reply',
+        `
+      <h2 style="color:#333;margin:0 0 16px;">New Reply to Your Support Ticket 💬</h2>
+      <p style="color:#555;line-height:1.6;margin:0 0 8px;">Hi {{firstName}},</p>
+      <p style="color:#555;line-height:1.6;margin:0 0 20px;">
+        Our support team has replied to your ticket <strong>#{{ticketNumber}}</strong>.
+      </p>
+    `,
+      ),
+      description: 'Sent when admin replies to a support ticket',
+    },
+  ];
 
 async function seed() {
   console.log('Connecting...');

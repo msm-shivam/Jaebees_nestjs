@@ -23,15 +23,35 @@ export class EmailService {
     user: string;
     pass: string;
   }): nodemailer.Transporter {
-    return nodemailer.createTransport({
+    const port = Number(config.port) || 587;
+    // Auto-resolve secure setting based on standard SMTP ports to prevent Greeting Never Received errors
+    const secure =
+      port === 465
+        ? true
+        : port === 587 || port === 2525 || port === 25
+        ? false
+        : Boolean(config.secure);
+
+    const transportOpts: any = {
       host: config.host,
-      port: config.port,
-      secure: config.secure,
-      auth: {
+      port,
+      secure,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    };
+
+    if (config.user && config.pass) {
+      transportOpts.auth = {
         user: config.user,
         pass: config.pass,
-      },
-    });
+      };
+    }
+
+    return nodemailer.createTransport(transportOpts);
   }
 
   configure(options: {
@@ -49,15 +69,26 @@ export class EmailService {
     to: string;
     subject: string;
     html: string;
+    from?: string;
+    replyTo?: string;
   }): Promise<boolean> {
     try {
-      await this.transporter.sendMail({
-        from: `"${this.mailConfig.fromName}" <${this.mailConfig.from}>`,
+      const from =
+        options.from ||
+        `"${this.mailConfig.fromName}" <${this.mailConfig.from}>`;
+      const mailOptions: nodemailer.SendMailOptions = {
+        from,
         to: options.to,
         subject: options.subject,
         html: options.html,
-      });
-      this.logger.log(`Email sent to ${options.to}: ${options.subject}`);
+      };
+      if (options.replyTo) {
+        mailOptions.replyTo = options.replyTo;
+      }
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(
+        `Email sent to ${options.to} from ${from}: ${options.subject}`,
+      );
       return true;
     } catch (error) {
       this.logger.error(
@@ -78,21 +109,38 @@ export class EmailService {
     smtpPass?: string;
   }): Promise<boolean> {
     const host = options.smtpHost || this.mailConfig.host;
-    const port = options.smtpPort || this.mailConfig.port;
-    const secure = options.smtpSecure ?? this.mailConfig.secure;
+    const port = Number(options.smtpPort || this.mailConfig.port) || 587;
+    const secure =
+      port === 465
+        ? true
+        : port === 587 || port === 2525 || port === 25
+        ? false
+        : options.smtpSecure ?? this.mailConfig.secure;
     const user = options.smtpUser || this.mailConfig.user;
     const pass = options.smtpPass || this.mailConfig.pass;
 
-    const testTransporter = nodemailer.createTransport({
+    const transportOpts: any = {
       host,
       port,
       secure,
-      auth: { user, pass },
-    });
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    };
+
+    if (user && pass) {
+      transportOpts.auth = { user, pass };
+    }
+
+    const testTransporter = nodemailer.createTransport(transportOpts);
 
     try {
+      const fromAddr = user || this.mailConfig.from || 'support@jaebees.com';
       await testTransporter.sendMail({
-        from: `"${this.mailConfig.fromName}" <${user}>`,
+        from: `"${this.mailConfig.fromName || 'Jaebees'}" <${fromAddr}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -105,7 +153,7 @@ export class EmailService {
         `Test email failed to ${options.to}: ${(error as Error).message}`,
       );
       testTransporter.close();
-      return false;
+      throw error;
     }
   }
 

@@ -19,6 +19,9 @@ export class EmailQueueService {
     html: string;
     userId?: string;
     templateCode?: string;
+    from?: string;
+    replyTo?: string;
+    logId?: string;
   }): Promise<void> {
     try {
       await this.emailQueue.add('send', data, {
@@ -28,7 +31,7 @@ export class EmailQueueService {
         removeOnFail: false,
       });
     } catch (error) {
-      this.logger.error(`Failed to enqueue email: ${error.message}`);
+      this.logger.error(`Failed to enqueue email: ${(error as Error).message}`);
     }
   }
 }
