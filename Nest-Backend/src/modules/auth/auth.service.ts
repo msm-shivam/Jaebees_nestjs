@@ -23,13 +23,15 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendEmailOtpDto } from './dto/resend-email-otp.dto';
 import { VerifyMobileDto } from './dto/verify-mobile.dto';
 import { ResendMobileOtpDto } from './dto/resend-mobile-otp.dto';
 import {
   hashPassword,
   comparePassword,
 } from '../../common/utils/password.util';
-import { maskMobile } from '../../common/utils/phone.util';
+import { maskMobile, maskEmail } from '../../common/utils/phone.util';
 import {
   AuthMessages,
   UserMessages,
@@ -70,22 +72,23 @@ export class AuthService {
     private readonly fcmTokenService: FcmTokenService,
   ) {}
 
-  // ─── 1. Register ─────────────────────────────────────────────────────────────
-  async register(dto: RegisterDto): Promise<{ message: string; maskedMobile: string }> {
+  // ─── 1. Register (via Email OTP) ─────────────────────────────────────────────
+  async register(dto: RegisterDto): Promise<{ message: string; email: string; maskedEmail: string }> {
     const email = dto.email.toLowerCase();
     const mobile = this.formatPhone(dto.mobile);
 
     const existingEmail = await this.userRepo.findOne({ where: { email } });
     if (existingEmail) {
-      if (existingEmail.isMobileVerified && existingEmail.accountStatus === AccountStatus.ACTIVE) {
+      if (existingEmail.isEmailVerified && existingEmail.accountStatus === AccountStatus.ACTIVE) {
         throw new BadRequestException(UserMessages.EMAIL_TAKEN);
       }
-      // Unverified user trying again -> resend SMS OTP
-      const otp = await this.createAndSaveSmsOtp(mobile, OtpPurpose.MOBILE_VERIFICATION);
-      this.smsService.sendOtp(mobile, otp).catch(() => {});
+      // Unverified user trying again -> resend Email OTP
+      const otp = await this.createAndSaveEmailOtp(email, OtpPurpose.EMAIL_VERIFICATION);
+      this.notificationsService.sendVerifyEmail(email, otp).catch(() => {});
       return {
-        message: AuthMessages.REGISTER_SUCCESS,
-        maskedMobile: maskMobile(mobile),
+        message: 'Registration initiated. Verification code sent to your email address.',
+        email,
+        maskedEmail: maskEmail(email),
       };
     }
 
@@ -112,16 +115,73 @@ export class AuthService {
       this.fcmTokenService.register(user.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
     }
 
-    const otp = await this.createAndSaveSmsOtp(user.mobile, OtpPurpose.MOBILE_VERIFICATION);
-    this.smsService.sendOtp(user.mobile, otp).catch(() => {});
+    const otp = await this.createAndSaveEmailOtp(user.email, OtpPurpose.EMAIL_VERIFICATION);
+    this.notificationsService.sendVerifyEmail(user.email, otp).catch(() => {});
 
     return {
-      message: AuthMessages.REGISTER_SUCCESS,
-      maskedMobile: maskMobile(user.mobile),
+      message: 'Registration successful. Verification code sent to your email address.',
+      email: user.email,
+      maskedEmail: maskEmail(user.email),
     };
   }
 
-  // ─── 2. Verify Mobile (Auto-Login & Clean Session Creation) ──────────────────
+  // ─── 2. Verify Email (Registration & Auto-Login) ─────────────────────────────
+  async verifyEmail(
+    dto: VerifyEmailDto,
+    ipAddress: string | undefined,
+    userAgent: string | undefined,
+  ): Promise<{ message: string; data: TokenPair }> {
+    const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User account not found.');
+    }
+
+    // Consume Email OTP
+    await this.consumeEmailOtp(user.email, dto.otp, OtpPurpose.EMAIL_VERIFICATION);
+
+    // Activate User Account
+    await this.userRepo.update(user.id, {
+      accountStatus: AccountStatus.ACTIVE,
+      isEmailVerified: true,
+    });
+
+    const activeUser = await this.userRepo.findOneOrFail({ where: { id: user.id } });
+
+    // Generate Fresh Access & Refresh Tokens
+    const tokens = await this.generateCustomerTokens(activeUser, ipAddress, userAgent);
+
+    // Send Welcome Email asynchronously
+    this.notificationsService.sendWelcomeEmail(activeUser.email, activeUser.firstName).catch(() => {});
+
+    if (dto.fcmToken) {
+      this.fcmTokenService.register(activeUser.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
+    }
+
+    return { message: 'Email address verified successfully.', data: tokens };
+  }
+
+  // ─── 3. Resend Email OTP ─────────────────────────────────────────────────────
+  async resendEmailOtp(dto: ResendEmailOtpDto): Promise<{ message: string }> {
+    const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User account not found.');
+    }
+
+    if (user.isEmailVerified && user.accountStatus === AccountStatus.ACTIVE) {
+      throw new BadRequestException('Email address is already verified.');
+    }
+
+    const otp = await this.createAndSaveEmailOtp(user.email, OtpPurpose.EMAIL_VERIFICATION);
+    this.notificationsService.sendVerifyEmail(user.email, otp).catch(() => {});
+
+    return { message: 'Verification code sent to your email address.' };
+  }
+
+  // ─── Verify Mobile (Compatibility / Profile) ─────────────────────────────────
   async verifyMobile(
     dto: VerifyMobileDto,
     ipAddress: string | undefined,
@@ -142,32 +202,22 @@ export class AuthService {
       throw new NotFoundException('User account not found.');
     }
 
-    // Consume SMS OTP for the user's registered mobile number
+    // Consume SMS OTP
     await this.consumeSmsOtp(user.mobile, dto.otp, OtpPurpose.MOBILE_VERIFICATION);
 
-    // Activate User Account
+    // Update User Mobile Verification
     await this.userRepo.update(user.id, {
-      accountStatus: AccountStatus.ACTIVE,
       isMobileVerified: true,
       mobileVerifiedAt: new Date(),
     });
 
     const activeUser = await this.userRepo.findOneOrFail({ where: { id: user.id } });
-
-    // Generate Fresh Access & Refresh Tokens, creating a new session in user_sessions
     const tokens = await this.generateCustomerTokens(activeUser, ipAddress, userAgent);
-
-    // Send Welcome Email asynchronously
-    this.notificationsService.sendWelcomeEmail(activeUser.email, activeUser.firstName).catch(() => {});
-
-    if (dto.fcmToken) {
-      this.fcmTokenService.register(activeUser.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
-    }
 
     return { message: AuthMessages.OTP_VERIFIED, data: tokens };
   }
 
-  // ─── 3. Resend Mobile OTP ────────────────────────────────────────────────────
+  // ─── Resend Mobile OTP ───────────────────────────────────────────────────────
   async resendMobileOtp(dto: ResendMobileOtpDto): Promise<{ message: string }> {
     let user: User | null = null;
 
@@ -184,7 +234,7 @@ export class AuthService {
       throw new NotFoundException('User account not found.');
     }
 
-    if (user.isMobileVerified && user.accountStatus === AccountStatus.ACTIVE) {
+    if (user.isMobileVerified) {
       throw new BadRequestException('Mobile number is already verified.');
     }
 
@@ -194,7 +244,7 @@ export class AuthService {
     return { message: AuthMessages.OTP_SENT };
   }
 
-  // ─── 4. Login ────────────────────────────────────────────────────────────────
+  // ─── 4. Login (Checked via Email Verification) ───────────────────────────────
   async login(
     dto: LoginDto,
     ipAddress: string | undefined,
@@ -244,10 +294,10 @@ export class AuthService {
       throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
     }
 
-    // Check Mobile Verification Status
-    if (user.accountStatus === AccountStatus.PENDING_VERIFICATION || !user.isMobileVerified) {
+    // Check Email Verification Status
+    if (user.accountStatus === AccountStatus.PENDING_VERIFICATION || !user.isEmailVerified) {
       const latest = await this.otpRepo.findOne({
-        where: { mobile: user.mobile, purpose: OtpPurpose.MOBILE_VERIFICATION },
+        where: { email: user.email, purpose: OtpPurpose.EMAIL_VERIFICATION },
         order: { createdAt: 'DESC' },
       });
 
@@ -260,8 +310,8 @@ export class AuthService {
       }
 
       if (resendAfter === 0) {
-        const otp = await this.createAndSaveSmsOtp(user.mobile, OtpPurpose.MOBILE_VERIFICATION);
-        this.smsService.sendOtp(user.mobile, otp).catch(() => {});
+        const otp = await this.createAndSaveEmailOtp(user.email, OtpPurpose.EMAIL_VERIFICATION);
+        this.notificationsService.sendVerifyEmail(user.email, otp).catch(() => {});
         resendAfter = 60;
       }
 
@@ -272,15 +322,16 @@ export class AuthService {
         entityId: user.id,
         ipAddress,
         userAgent,
-        newValues: { email: dto.email, mobile: maskMobile(user.mobile) },
+        newValues: { email: dto.email, maskedEmail: maskEmail(user.email) },
       }).catch(() => {});
 
       throw new ForbiddenException({
         statusCode: 403,
-        message: 'Mobile verification required.',
+        message: 'Email verification required.',
         data: {
           requiresVerification: true,
-          maskedMobile: maskMobile(user.mobile),
+          email: user.email,
+          maskedEmail: maskEmail(user.email),
           resendAfter,
           expiresIn: OTP_EXPIRY_MINUTES * 60,
         },
@@ -301,6 +352,75 @@ export class AuthService {
 
     if (dto.fcmToken) {
       this.fcmTokenService.register(user.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
+    }
+
+    return { message: AuthMessages.LOGIN_SUCCESS, data: tokens };
+  }
+
+  // ─── 4b. Send Login OTP (Email OTP Login) ──────────────────────────────────
+  async sendLoginOtp(dto: ResendEmailOtpDto): Promise<{ message: string; email: string; maskedEmail: string }> {
+    const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User account not found with this email.');
+    }
+
+    if (!user.isActive || user.accountStatus === AccountStatus.SUSPENDED || user.accountStatus === AccountStatus.DEACTIVATED) {
+      throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
+    }
+
+    const otp = await this.createAndSaveEmailOtp(user.email, OtpPurpose.EMAIL_VERIFICATION);
+    this.notificationsService.sendVerifyEmail(user.email, otp).catch(() => {});
+
+    return {
+      message: 'Login OTP sent to your email address.',
+      email: user.email,
+      maskedEmail: maskEmail(user.email),
+    };
+  }
+
+  // ─── 4c. Login with Email OTP ──────────────────────────────────────────────
+  async loginWithOtp(
+    dto: VerifyEmailDto,
+    ipAddress: string | undefined,
+    userAgent: string | undefined,
+  ): Promise<{ message: string; data: TokenPair }> {
+    const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User account not found.');
+    }
+
+    if (!user.isActive || user.accountStatus === AccountStatus.SUSPENDED || user.accountStatus === AccountStatus.DEACTIVATED) {
+      throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
+    }
+
+    await this.consumeEmailOtp(user.email, dto.otp, OtpPurpose.EMAIL_VERIFICATION);
+
+    if (user.accountStatus === AccountStatus.PENDING_VERIFICATION || !user.isEmailVerified) {
+      await this.userRepo.update(user.id, {
+        accountStatus: AccountStatus.ACTIVE,
+        isEmailVerified: true,
+      });
+    }
+
+    const activeUser = await this.userRepo.findOneOrFail({ where: { id: user.id } });
+    const tokens = await this.generateCustomerTokens(activeUser, ipAddress, userAgent);
+
+    await this.auditLogService.log({
+      userId: activeUser.id,
+      action: 'LOGIN_OTP',
+      entityType: 'auth',
+      entityId: activeUser.id,
+      ipAddress,
+      userAgent,
+      newValues: { email: dto.email },
+    }).catch(() => {});
+
+    if (dto.fcmToken) {
+      this.fcmTokenService.register(activeUser.id, FcmUserType.CUSTOMER, dto.fcmToken, dto.deviceInfo).catch(() => {});
     }
 
     return { message: AuthMessages.LOGIN_SUCCESS, data: tokens };
@@ -384,7 +504,43 @@ export class AuthService {
     return { message: AuthMessages.PASSWORD_RESET_SUCCESS };
   }
 
-  // ─── 9. Profile Email Verification ───────────────────────────────────────────
+  // ─── 9. Profile Mobile Verification ───────────────────────────────────────────
+  async sendMobileVerification(userId: string): Promise<{ message: string; maskedMobile: string }> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+    if (!user.mobile) {
+      throw new BadRequestException('Please add a mobile number in your profile first.');
+    }
+    if (user.isMobileVerified) {
+      throw new BadRequestException('Mobile number is already verified.');
+    }
+
+    const otp = await this.createAndSaveSmsOtp(user.mobile, OtpPurpose.MOBILE_VERIFICATION);
+    this.smsService.sendOtp(user.mobile, otp).catch(() => {});
+    return {
+      message: 'SMS verification code sent to your mobile number.',
+      maskedMobile: maskMobile(user.mobile),
+    };
+  }
+
+  async verifyMobileProfile(userId: string, otp: string): Promise<{ message: string }> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException(UserMessages.USER_NOT_FOUND);
+    if (!user.mobile) {
+      throw new BadRequestException('Please add a mobile number in your profile first.');
+    }
+
+    await this.consumeSmsOtp(user.mobile, otp, OtpPurpose.MOBILE_VERIFICATION);
+
+    await this.userRepo.update(user.id, {
+      isMobileVerified: true,
+      mobileVerifiedAt: new Date(),
+    });
+
+    return { message: 'Mobile number verified successfully.' };
+  }
+
+  // ─── Profile Email Verification (Optional / Alias) ───────────────────────────
   async sendEmailVerification(userId: string): Promise<{ message: string }> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException(UserMessages.USER_NOT_FOUND);

@@ -46,20 +46,34 @@ export class AttributesService {
 
     // Create attribute values inline if provided
     if (dto.values && dto.values.length > 0) {
-      const valueEntities = dto.values.map((val, i) =>
+      const incoming = dto.values
+        .map((v) => (typeof v === 'string' ? v.trim() : ''))
+        .filter((v) => v.length > 0);
+
+      const uniqueIncoming: { value: string; slug: string }[] = [];
+      for (const val of incoming) {
+        const valueSlug = toSlug(val);
+        if (!uniqueIncoming.some((u) => u.slug === valueSlug)) {
+          uniqueIncoming.push({ value: val, slug: valueSlug });
+        }
+      }
+
+      const valueEntities = uniqueIncoming.map((item, i) =>
         this.attributeValueRepo.create({
           attributeId: saved.id,
-          value: val,
-          slug: toSlug(val),
+          value: item.value,
+          slug: item.slug,
           sortOrder: i,
         }),
       );
       await this.attributeValueRepo.save(valueEntities);
     }
 
+    const reloaded = await this.findByIdOrFail(saved.id);
+
     return {
       message: 'Attribute created successfully.',
-      data: this.toResponse(saved),
+      data: this.toResponse(reloaded),
     };
   }
 
@@ -145,16 +159,61 @@ export class AttributesService {
     if (dto.sortOrder !== undefined) attribute.sortOrder = dto.sortOrder;
 
     const saved = await this.attributeRepo.save(attribute);
-    //    await this.auditLogService.log({
-    //   userId: adminId,
-    //   action: 'UPDATE',
-    //   entityType: 'ATTRIBUTE',
-    //   entityId: saved.id,
-    //   newValues:{ name:saved.name,slug:saved.slug,isFilterable:saved.isFilterable,isRequired:saved.isRequired,sortOrder:saved.sortOrder }
-    // });
+
+    if (dto.values !== undefined) {
+      const incoming = (dto.values || [])
+        .map((v) => (typeof v === 'string' ? v.trim() : ''))
+        .filter((v) => v.length > 0);
+
+      const uniqueIncoming: { value: string; slug: string }[] = [];
+      for (const val of incoming) {
+        const valueSlug = toSlug(val);
+        if (!uniqueIncoming.some((u) => u.slug === valueSlug)) {
+          uniqueIncoming.push({ value: val, slug: valueSlug });
+        }
+      }
+
+      const existingValues = await this.attributeValueRepo.find({
+        where: { attributeId: id },
+        withDeleted: true,
+      });
+
+      const incomingSlugs = new Set(uniqueIncoming.map((u) => u.slug));
+
+      // Remove values that are no longer present
+      const toRemove = existingValues.filter(
+        (ev) => !incomingSlugs.has(ev.slug),
+      );
+      if (toRemove.length > 0) {
+        await this.attributeValueRepo.remove(toRemove);
+      }
+
+      // Upsert / update existing values or create new ones
+      for (let i = 0; i < uniqueIncoming.length; i++) {
+        const item = uniqueIncoming[i];
+        const existing = existingValues.find((ev) => ev.slug === item.slug);
+        if (existing) {
+          existing.value = item.value;
+          existing.sortOrder = i;
+          existing.deletedAt = null;
+          await this.attributeValueRepo.save(existing);
+        } else {
+          const newEntity = this.attributeValueRepo.create({
+            attributeId: id,
+            value: item.value,
+            slug: item.slug,
+            sortOrder: i,
+          });
+          await this.attributeValueRepo.save(newEntity);
+        }
+      }
+    }
+
+    const reloaded = await this.findByIdOrFail(saved.id);
+
     return {
       message: 'Attribute updated successfully.',
-      data: this.toResponse(saved),
+      data: this.toResponse(reloaded),
     };
   }
 
