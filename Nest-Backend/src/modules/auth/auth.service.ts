@@ -772,7 +772,14 @@ export class AuthService {
   }
 
   private formatPhone(phone: string): string {
-    const cleaned = phone.replace(/[^\d+]/g, '');
-    return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    if (!cleaned.startsWith('+')) {
+      if (cleaned.length === 10) {
+        cleaned = `+91${cleaned}`;
+      } else {
+        cleaned = `+${cleaned}`;
+      }
+    }
+    return cleaned;
   }
 }

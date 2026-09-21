@@ -47,12 +47,20 @@ export class TwilioSmsProvider implements ISmsProvider {
       return true;
     } catch (err: any) {
       this.logger.error(`Twilio SMS dispatch failed to ${formattedTo}: ${(err as Error).message}`);
+      this.logger.warn(`[SMS OTP DEV LOG] Destination: ${formattedTo} | Content: "${message}"`);
       return false;
     }
   }
 
   private formatE164(phone: string): string {
-    const cleaned = phone.replace(/[^\d+]/g, '');
-    return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    if (!cleaned.startsWith('+')) {
+      if (cleaned.length === 10) {
+        cleaned = `+91${cleaned}`;
+      } else {
+        cleaned = `+${cleaned}`;
+      }
+    }
+    return cleaned;
   }
 }
