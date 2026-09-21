@@ -20,9 +20,10 @@ export class User extends BaseEntity {
     unique: true,
     type: 'varchar',
     length: 20,
-    nullable: false,
+    nullable: true,
+    default: null,
   })
-  mobile: string;
+  mobile: string | null;
 
   @Column({
     name: 'account_status',

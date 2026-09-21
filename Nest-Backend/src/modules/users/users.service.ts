@@ -48,19 +48,28 @@ export class UsersService {
       if (existing) throw new BadRequestException(UserMessages.EMAIL_TAKEN);
     }
 
-    if (dto.mobile && dto.mobile !== user.mobile) {
-      const existing = await this.userRepo.findOne({
-        where: { mobile: dto.mobile },
-      });
-      if (existing) throw new BadRequestException(UserMessages.MOBILE_TAKEN);
+    if (dto.mobile !== undefined) {
+      const formattedMobile = dto.mobile?.trim() ? dto.mobile.trim() : null;
+      if (formattedMobile && formattedMobile !== user.mobile) {
+        const existing = await this.userRepo.findOne({
+          where: { mobile: formattedMobile },
+        });
+        if (existing && existing.id !== user.id) {
+          throw new BadRequestException(UserMessages.MOBILE_TAKEN);
+        }
+      }
+      if (formattedMobile !== user.mobile) {
+        user.mobile = formattedMobile;
+        user.isMobileVerified = false;
+        user.mobileVerifiedAt = null;
+      }
     }
 
-    Object.assign(user, {
-      ...(dto.firstName && { firstName: dto.firstName }),
-      ...(dto.lastName && { lastName: dto.lastName }),
-      ...(dto.email !== undefined && { email: dto.email.toLowerCase() }),
-      ...(dto.mobile !== undefined && { mobile: dto.mobile }),
-    });
+    if (dto.firstName !== undefined) user.firstName = dto.firstName;
+    if (dto.lastName !== undefined) user.lastName = dto.lastName;
+    if (dto.email !== undefined && dto.email.trim()) {
+      user.email = dto.email.toLowerCase().trim();
+    }
 
     const saved = await this.userRepo.save(user);
     const data = plainToInstance(UserResponseDto, saved, {

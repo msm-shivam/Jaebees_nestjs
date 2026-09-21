@@ -75,7 +75,7 @@ export class AuthService {
   // ─── 1. Register (via Email OTP) ─────────────────────────────────────────────
   async register(dto: RegisterDto): Promise<{ message: string; email: string; maskedEmail: string }> {
     const email = dto.email.toLowerCase();
-    const mobile = this.formatPhone(dto.mobile);
+    const mobile = dto.mobile ? this.formatPhone(dto.mobile) : null;
 
     const existingEmail = await this.userRepo.findOne({ where: { email } });
     if (existingEmail) {
@@ -92,9 +92,11 @@ export class AuthService {
       };
     }
 
-    const existingMobile = await this.userRepo.findOne({ where: { mobile } });
-    if (existingMobile) {
-      throw new BadRequestException(UserMessages.MOBILE_TAKEN);
+    if (mobile) {
+      const existingMobile = await this.userRepo.findOne({ where: { mobile } });
+      if (existingMobile) {
+        throw new BadRequestException(UserMessages.MOBILE_TAKEN);
+      }
     }
 
     const passwordHash = await hashPassword(dto.password);
@@ -102,7 +104,7 @@ export class AuthService {
       firstName: dto.firstName,
       lastName: dto.lastName,
       email,
-      mobile,
+      mobile: mobile || null,
       passwordHash,
       accountStatus: AccountStatus.PENDING_VERIFICATION,
       isMobileVerified: false,
@@ -202,6 +204,10 @@ export class AuthService {
       throw new NotFoundException('User account not found.');
     }
 
+    if (!user.mobile) {
+      throw new BadRequestException('User does not have a mobile number linked.');
+    }
+
     // Consume SMS OTP
     await this.consumeSmsOtp(user.mobile, dto.otp, OtpPurpose.MOBILE_VERIFICATION);
 
@@ -232,6 +238,10 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException('User account not found.');
+    }
+
+    if (!user.mobile) {
+      throw new BadRequestException('User does not have a mobile number linked.');
     }
 
     if (user.isMobileVerified) {

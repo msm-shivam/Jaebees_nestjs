@@ -31,13 +31,13 @@ export class RegisterDto {
   @MaxLength(255)
   email: string;
 
-  @ApiProperty({ example: '+919876543210' })
+  @ApiPropertyOptional({ example: '+919876543210' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Mobile phone number is required.' })
   @Matches(/^\+?[1-9]\d{7,14}$/, {
     message: 'Mobile number must be a valid 10-15 digit phone number (e.g. +919876543210).',
   })
-  mobile: string;
+  mobile?: string;
 
   @ApiProperty({ example: 'Str0ng@Pass!' })
   @IsString()
