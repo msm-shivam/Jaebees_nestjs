@@ -24,7 +24,7 @@ import { Category } from '../categories/entities/category.entity';
 import { SubCategory } from '../sub-categories/entities/sub-category.entity';
 import { ProductCollection } from '../collections/entities/product-collection.entity';
 import { ProductTagMapping } from '../product-tags/entities/product-tag-mapping.entity';
-import { ProductVariant } from '../product-variants/entities/product-variant.entity';
+import { ProductVariant, VariantStatus } from '../product-variants/entities/product-variant.entity';
 import { ProductVariantAttribute } from '../product-variants/entities/product-variant-attribute.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { StockAlert } from '../inventory-plus/entities/stock-alert.entity';
@@ -211,7 +211,8 @@ export class ProductsService {
       .leftJoinAndSelect('product.brand', 'brand')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.images', 'images')
-      .leftJoinAndSelect('product.variants', 'variants');
+      .leftJoinAndSelect('product.variants', 'variants')
+      .leftJoinAndSelect('variants.inventories', 'inventories');
 
     // Search filter
     if (query.search) {
@@ -329,7 +330,7 @@ export class ProductsService {
 
       const items = await this.productRepo.find({
         where: { id: In(orderedIds) },
-        relations: { brand: true, category: true, images: true, variants: true },
+        relations: { brand: true, category: true, images: true, variants: { inventories: true } },
       });
       const ordered = orderedIds.map((id) => items.find((p) => p.id === id)).filter(Boolean) as Product[];
 
@@ -828,7 +829,12 @@ export class ProductsService {
   private async findByIdOrFail(id: string): Promise<Product> {
     const product = await this.productRepo.findOne({
       where: { id },
-      relations: { brand: true, category: true, images: true, variants: true },
+      relations: {
+        brand: true,
+        category: true,
+        images: true,
+        variants: { inventories: true },
+      },
     });
     if (!product) throw new NotFoundException('Product not found.');
     return product;
@@ -886,7 +892,6 @@ export class ProductsService {
   private async generateUniqueSlug(baseSlug: string): Promise<string> {
     let slug = baseSlug;
     let counter = 1;
-
     while (true) {
       const existing = await this.productRepo.findOne({ where: { slug }, withDeleted: true });
       if (!existing) break;
@@ -914,6 +919,14 @@ export class ProductsService {
     const variants = (product.variants ?? []).map((v) =>
       this.variantToResponse(v),
     );
+
+    const totalStock = variants.reduce(
+      (sum, v) => sum + (v.availableQuantity ?? 0),
+      0,
+    );
+    const hasInStockVariant = variants.some((v) => v.inStock);
+    const isOutOfStock = variants.length > 0 ? !hasInStockVariant : false;
+
     return plainToInstance(
       ProductResponseDto,
       {
@@ -922,6 +935,9 @@ export class ProductsService {
         variants,
         brandName: brandName ?? product.brand?.name ?? null,
         categoryName: categoryName ?? product.category?.name ?? null,
+        totalStock,
+        isOutOfStock,
+        inStock: !isOutOfStock,
       },
       { excludeExtraneousValues: true },
     );
@@ -934,8 +950,28 @@ export class ProductsService {
   }
 
   private variantToResponse(variant: ProductVariant): ProductVariantResponseDto {
-    return plainToInstance(ProductVariantResponseDto, variant, {
-      excludeExtraneousValues: true,
-    });
+    const inv = variant.inventories?.[0];
+    const availableQuantity =
+      inv !== undefined
+        ? inv.availableQuantity
+        : (variant as any).availableQuantity ?? null;
+    const isOutOfStock =
+      variant.status === VariantStatus.OUT_OF_STOCK ||
+      (availableQuantity !== null && availableQuantity <= 0);
+    const inStock = !isOutOfStock && variant.status === VariantStatus.ACTIVE;
+
+    return plainToInstance(
+      ProductVariantResponseDto,
+      {
+        ...variant,
+        availableQuantity: availableQuantity !== null ? availableQuantity : null,
+        stockQuantity: inv ? inv.quantity : null,
+        isOutOfStock,
+        inStock,
+      },
+      {
+        excludeExtraneousValues: true,
+      },
+    );
   }
 }

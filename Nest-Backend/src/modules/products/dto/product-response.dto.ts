@@ -139,6 +139,18 @@ export class ProductResponseDto {
   variants: ProductVariantResponseDto[];
 
   @Expose()
+  @ApiPropertyOptional({ example: 10, description: 'Total available stock across variants' })
+  totalStock?: number;
+
+  @Expose()
+  @ApiPropertyOptional({ example: false, description: 'Whether product is out of stock' })
+  isOutOfStock?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ example: true, description: 'Whether product is in stock' })
+  inStock?: boolean;
+
+  @Expose()
   @ApiProperty({ example: '2024-01-15T10:30:00Z' })
   createdAt: Date;
 

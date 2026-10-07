@@ -385,30 +385,54 @@ export class SearchService {
         .leftJoinAndSelect('p.category', 'category')
         .leftJoinAndSelect('p.subCategory', 'subCategory')
         .leftJoinAndSelect('p.images', 'images')
-        .leftJoinAndMapMany(
-          'p.variants',
-          'p.variants',
-          'v',
-          'v.deleted_at IS NULL',
-        )
-        .leftJoin('v.inventories', 'inv')
+        .leftJoinAndSelect('p.variants', 'variants')
+        .leftJoinAndSelect('variants.inventories', 'inventories')
         .where('p.id IN (:...ids)', { ids })
         .andWhere('p.deleted_at IS NULL')
         .getMany();
       // Re-order to match pagination order
       const idOrder = new Map(ids.map((id, i) => [id, i]));
       products.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
-      items = products.map((p) =>
-        plainToInstance(
+      items = products.map((p) => {
+        const variants = (p.variants ?? []).map((v) => {
+          const inv = v.inventories?.[0];
+          const availableQuantity =
+            inv !== undefined
+              ? inv.availableQuantity
+              : (v as any).availableQuantity ?? null;
+          const isOutOfStock =
+            v.status === VariantStatus.OUT_OF_STOCK ||
+            (availableQuantity !== null && availableQuantity <= 0);
+          const inStock = !isOutOfStock && v.status === VariantStatus.ACTIVE;
+          return {
+            ...v,
+            availableQuantity: availableQuantity !== null ? availableQuantity : null,
+            stockQuantity: inv ? inv.quantity : null,
+            isOutOfStock,
+            inStock,
+          };
+        });
+        const totalStock = variants.reduce(
+          (sum, v) => sum + (v.availableQuantity ?? 0),
+          0,
+        );
+        const hasInStockVariant = variants.some((v) => v.inStock);
+        const isOutOfStock = variants.length > 0 ? !hasInStockVariant : false;
+
+        return plainToInstance(
           ProductResponseDto,
           {
             ...p,
+            variants,
+            totalStock,
+            isOutOfStock,
+            inStock: !isOutOfStock,
             brandName: p.brand?.name ?? '',
             categoryName: p.category?.name ?? '',
           },
           { excludeExtraneousValues: true },
-        ),
-      );
+        );
+      });
     }
 
     // Log the search

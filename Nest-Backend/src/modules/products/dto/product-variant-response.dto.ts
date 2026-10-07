@@ -44,6 +44,22 @@ export class ProductVariantResponseDto {
   isDefault: boolean;
 
   @Expose()
+  @ApiPropertyOptional({ example: 10, description: 'Available quantity in stock' })
+  availableQuantity?: number | null;
+
+  @Expose()
+  @ApiPropertyOptional({ example: 10, description: 'Total quantity in stock' })
+  stockQuantity?: number | null;
+
+  @Expose()
+  @ApiPropertyOptional({ example: false, description: 'Whether this variant is out of stock' })
+  isOutOfStock?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ example: true, description: 'Whether this variant is in stock' })
+  inStock?: boolean;
+
+  @Expose()
   @ApiProperty()
   createdAt: Date;
 
