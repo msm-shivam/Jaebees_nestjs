@@ -1,4 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
 import { BaseEntity } from '../../../shared/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -50,4 +57,7 @@ export class Address extends BaseEntity {
 
   @Column({ name: 'is_default', type: 'boolean', default: false })
   isDefault: boolean;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt: Date;
 }
