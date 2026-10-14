@@ -69,7 +69,7 @@ export class CheckoutSnapshot {
   @Column({ name: 'total_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
   totalAmount: number;
 
-  @Column({ type: 'varchar', default: 'usd' })
+  @Column({ type: 'varchar', default: 'aud' })
   currency: string;
 
   @Column({

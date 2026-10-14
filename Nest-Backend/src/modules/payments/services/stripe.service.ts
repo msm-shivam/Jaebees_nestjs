@@ -25,7 +25,7 @@ export class StripeService {
 
   async createPaymentIntent(
     amount: number,
-    currency: string = 'usd',
+    currency: string = 'aud',
     metadata?: Record<string, string>,
     idempotencyKey?: string,
   ) {

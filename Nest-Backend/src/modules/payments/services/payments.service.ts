@@ -110,7 +110,7 @@ export class PaymentsService implements OnModuleInit {
           tax_amount decimal(12,2) DEFAULT 0,
           discount_amount decimal(12,2) DEFAULT 0,
           total_amount decimal(12,2) DEFAULT 0,
-          currency varchar DEFAULT 'usd',
+          currency varchar DEFAULT 'aud',
           status varchar DEFAULT 'PENDING',
           expires_at timestamptz NOT NULL,
           created_at timestamptz DEFAULT now(),
@@ -131,7 +131,9 @@ export class PaymentsService implements OnModuleInit {
   }
 
   async createPaymentIntent(dto: CreatePaymentIntentDto, userId?: string) {
-    const currency = this.configService.get<string>('STRIPE_CURRENCY', 'usd');
+    const currency = (
+      this.configService.get<string>('STRIPE_CURRENCY', 'aud') || 'aud'
+    ).toLowerCase();
 
     // Customer Checkout Snapshot Flow (pre-order payment intent)
     if (dto.shippingAddressId || (!dto.orderId && userId)) {

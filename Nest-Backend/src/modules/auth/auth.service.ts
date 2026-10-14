@@ -22,6 +22,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyResetOtpDto } from './dto/verify-reset-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendEmailOtpDto } from './dto/resend-email-otp.dto';
@@ -491,6 +492,41 @@ export class AuthService {
     return { message: AuthMessages.OTP_SENT };
   }
 
+  // ─── 7b. Verify Reset OTP ─────────────────────────────────────────────────────
+  async verifyResetOtp(
+    dto: VerifyResetOtpDto,
+  ): Promise<{ message: string; resetToken: string; data: { resetToken: string } }> {
+    const user = await this.userRepo.findOne({
+      where: { email: dto.email.toLowerCase() },
+    });
+    if (!user) {
+      throw new BadRequestException(AuthMessages.OTP_INVALID);
+    }
+
+    await this.consumeEmailOtp(user.email, dto.otp, OtpPurpose.PASSWORD_RESET);
+
+    const jwtSecret = this.configService.getOrThrow<string>('jwt.secret');
+    const resetToken = this.jwtService.sign(
+      {
+        sub: user.id,
+        email: user.email,
+        purpose: 'password_reset',
+      },
+      {
+        secret: jwtSecret,
+        expiresIn: '15m',
+      },
+    );
+
+    return {
+      message: AuthMessages.OTP_VERIFIED,
+      resetToken,
+      data: {
+        resetToken,
+      },
+    };
+  }
+
   // ─── 8. Reset Password ───────────────────────────────────────────────────────
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     const user = await this.userRepo.findOne({
@@ -498,7 +534,24 @@ export class AuthService {
     });
     if (!user) throw new NotFoundException(UserMessages.USER_NOT_FOUND);
 
-    await this.consumeEmailOtp(user.email, dto.otp, OtpPurpose.PASSWORD_RESET);
+    if (dto.resetToken) {
+      try {
+        const jwtSecret = this.configService.getOrThrow<string>('jwt.secret');
+        const payload = this.jwtService.verify(dto.resetToken, { secret: jwtSecret });
+        if (
+          payload.purpose !== 'password_reset' ||
+          payload.email?.toLowerCase() !== user.email.toLowerCase()
+        ) {
+          throw new BadRequestException(AuthMessages.OTP_INVALID);
+        }
+      } catch {
+        throw new BadRequestException(AuthMessages.OTP_INVALID);
+      }
+    } else if (dto.otp) {
+      await this.consumeEmailOtp(user.email, dto.otp, OtpPurpose.PASSWORD_RESET);
+    } else {
+      throw new BadRequestException('Either resetToken or otp is required.');
+    }
 
     const passwordHash = await hashPassword(dto.newPassword);
     await this.userRepo.update(user.id, { passwordHash });
@@ -744,7 +797,7 @@ export class AuthService {
       expiresIn: jwtExpiresIn as never,
     });
 
-    const expiresAt: Date = dayjs().add(7, 'day').toDate();
+    const expiresAt: Date = dayjs().add(30, 'day').toDate();
     const session = this.userSessionRepo.create({
       userId: user.id,
       refreshToken: 'pending',

@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -16,11 +17,17 @@ export class ResetPasswordDto {
   @MaxLength(255)
   email: string;
 
-  @ApiProperty({ example: '123456' })
+  @ApiPropertyOptional({ example: '123456' })
+  @IsOptional()
   @IsString()
   @MinLength(6)
   @MaxLength(10)
-  otp: string;
+  otp?: string;
+
+  @ApiPropertyOptional({ example: 'eyJhbGciOi...' })
+  @IsOptional()
+  @IsString()
+  resetToken?: string;
 
   @ApiProperty({ example: 'NewStr0ng@Pass!' })
   @IsString()
