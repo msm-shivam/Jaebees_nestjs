@@ -13,6 +13,11 @@ class AttributeMapping {
 }
 
 export class VariantInputDto {
+  @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty({ example: 'NIKE-SHIRT-BLK-M' })
   @IsString()
   sku: string;

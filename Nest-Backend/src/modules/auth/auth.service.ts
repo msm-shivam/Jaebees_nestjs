@@ -797,7 +797,7 @@ export class AuthService {
       expiresIn: jwtExpiresIn as never,
     });
 
-    const expiresAt: Date = dayjs().add(30, 'day').toDate();
+    const expiresAt: Date = dayjs().add(60, 'day').toDate();
     const session = this.userSessionRepo.create({
       userId: user.id,
       refreshToken: 'pending',

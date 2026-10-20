@@ -60,6 +60,14 @@ export class ProductVariantResponseDto {
   inStock?: boolean;
 
   @Expose()
+  @ApiPropertyOptional({ description: 'Attribute mappings with nested attribute and attributeValue objects' })
+  attributes?: any[];
+
+  @Expose()
+  @ApiPropertyOptional({ description: 'Flat attribute value objects for convenient frontend mapping' })
+  attributeValues?: any[];
+
+  @Expose()
   @ApiProperty()
   createdAt: Date;
 

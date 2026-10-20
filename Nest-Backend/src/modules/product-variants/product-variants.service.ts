@@ -287,6 +287,39 @@ export class ProductVariantsService {
   }
 
   private toResponse(variant: ProductVariant): ProductVariantResponseDto {
+    const inv = variant.inventories?.[0];
+    const availableQuantity =
+      inv !== undefined
+        ? inv.availableQuantity
+        : (variant as any).availableQuantity ?? null;
+    const stockQuantity = inv ? inv.quantity : ((variant as any).stockQuantity ?? null);
+
+    const attributeValues = (variant.attributes ?? []).map((va) => ({
+      id: va.attributeValue?.id ?? va.attributeValueId,
+      attributeValueId: va.attributeValueId,
+      attributeId: va.attributeId,
+      value: va.attributeValue?.value ?? '',
+      attribute: va.attribute
+        ? {
+            id: va.attribute.id,
+            name: va.attribute.name,
+          }
+        : undefined,
+    }));
+
+    const attributes = (variant.attributes ?? []).map((va) => ({
+      id: va.id,
+      variantId: va.variantId,
+      attributeId: va.attributeId,
+      attributeValueId: va.attributeValueId,
+      attribute: va.attribute
+        ? { id: va.attribute.id, name: va.attribute.name }
+        : undefined,
+      attributeValue: va.attributeValue
+        ? { id: va.attributeValue.id, value: va.attributeValue.value }
+        : undefined,
+    }));
+
     return {
       id: variant.id,
       productId: variant.productId,
@@ -298,6 +331,10 @@ export class ProductVariantsService {
       weight: variant.weight,
       status: variant.status,
       isDefault: variant.isDefault,
+      availableQuantity,
+      stockQuantity,
+      attributes,
+      attributeValues,
       createdAt: variant.createdAt,
       updatedAt: variant.updatedAt,
       deletedAt: variant.deletedAt,

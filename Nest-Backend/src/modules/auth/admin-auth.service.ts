@@ -191,7 +191,7 @@ export class AdminAuthService {
       expiresIn: jwtExpiresIn as never,
     });
 
-    const expiresAt: Date = dayjs().add(30, 'day').toDate();
+    const expiresAt: Date = dayjs().add(60, 'day').toDate();
     const session = this.adminSessionRepo.create({
       adminId: admin.id,
       refreshToken: 'pending',

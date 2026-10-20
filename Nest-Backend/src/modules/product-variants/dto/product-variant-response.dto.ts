@@ -48,6 +48,22 @@ export class ProductVariantResponseDto {
   isDefault: boolean;
 
   @Expose()
+  @ApiPropertyOptional({ example: 10, description: 'Available quantity in stock' })
+  availableQuantity?: number | null;
+
+  @Expose()
+  @ApiPropertyOptional({ example: 10, description: 'Total quantity in stock' })
+  stockQuantity?: number | null;
+
+  @Expose()
+  @ApiPropertyOptional({ description: 'Attribute mappings with nested attribute and attributeValue objects' })
+  attributes?: any[];
+
+  @Expose()
+  @ApiPropertyOptional({ description: 'Flat attribute value objects for convenient frontend mapping' })
+  attributeValues?: any[];
+
+  @Expose()
   @ApiProperty({ example: '2024-01-15T10:30:00Z' })
   createdAt: Date;
 

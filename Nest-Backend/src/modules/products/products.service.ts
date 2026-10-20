@@ -212,7 +212,10 @@ export class ProductsService {
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.images', 'images')
       .leftJoinAndSelect('product.variants', 'variants')
-      .leftJoinAndSelect('variants.inventories', 'inventories');
+      .leftJoinAndSelect('variants.inventories', 'inventories')
+      .leftJoinAndSelect('variants.attributes', 'variantAttributes')
+      .leftJoinAndSelect('variantAttributes.attribute', 'variantAttr')
+      .leftJoinAndSelect('variantAttributes.attributeValue', 'variantAttrVal');
 
     // Search filter
     if (query.search) {
@@ -330,7 +333,19 @@ export class ProductsService {
 
       const items = await this.productRepo.find({
         where: { id: In(orderedIds) },
-        relations: { brand: true, category: true, images: true, variants: { inventories: true } },
+        relations: {
+          brand: true,
+          category: true,
+          subCategory: true,
+          images: true,
+          variants: {
+            inventories: true,
+            attributes: {
+              attribute: true,
+              attributeValue: true,
+            },
+          },
+        },
       });
       const ordered = orderedIds.map((id) => items.find((p) => p.id === id)).filter(Boolean) as Product[];
 
@@ -493,19 +508,9 @@ export class ProductsService {
       );
     }
 
-    // Replace variants if provided
+    // Sync variants if provided
     if (dto.variants && dto.variants.length > 0) {
-      const existingVariants = await this.variantRepo.find({
-        where: { productId: id },
-        select: { id: true },
-      });
-      if (existingVariants.length > 0) {
-        await this.stockAlertRepo.delete({
-          variantId: In(existingVariants.map((v) => v.id)),
-        });
-      }
-      await this.variantRepo.delete({ productId: id });
-      await this.createVariants(id, dto.variants);
+      await this.syncVariants(id, dto.variants);
     } else if (dto.sku) {
       let variant = await this.variantRepo.findOne({
         where: { productId: id, sku: dto.sku },
@@ -540,9 +545,33 @@ export class ProductsService {
           reorderQuantity: 50,
         });
         await this.inventoryRepo.save(inventory);
-      } else if (dto.price !== undefined) {
-        variant.price = dto.price;
-        await this.variantRepo.save(variant);
+      } else {
+        if (dto.price !== undefined) {
+          variant.price = dto.price;
+          await this.variantRepo.save(variant);
+        }
+        if (dto.stockQuantity !== undefined && dto.stockQuantity !== null) {
+          const newQty = Number(dto.stockQuantity);
+          if (!isNaN(newQty) && newQty >= 0) {
+            let inventory = await this.inventoryRepo.findOne({ where: { variantId: variant.id } });
+            if (inventory) {
+              inventory.quantity = newQty;
+              inventory.availableQuantity = Math.max(0, newQty - (inventory.reservedQuantity || 0));
+              await this.inventoryRepo.save(inventory);
+            } else {
+              inventory = this.inventoryRepo.create({
+                variantId: variant.id,
+                quantity: newQty,
+                availableQuantity: newQty,
+                reservedQuantity: 0,
+                lowStockThreshold: 5,
+                reorderPoint: 10,
+                reorderQuantity: 50,
+              });
+              await this.inventoryRepo.save(inventory);
+            }
+          }
+        }
       }
     }
 
@@ -832,31 +861,39 @@ export class ProductsService {
       relations: {
         brand: true,
         category: true,
+        subCategory: true,
         images: true,
-        variants: { inventories: true },
+        variants: {
+          inventories: true,
+          attributes: {
+            attribute: true,
+            attributeValue: true,
+          },
+        },
       },
     });
     if (!product) throw new NotFoundException('Product not found.');
     return product;
   }
 
-  private async createVariants(productId: string, variants: Array<{ sku: string; price: number; compareAtPrice?: number; costPrice?: number; stockQuantity?: number; isDefault?: boolean; attributes?: Array<{ attributeId: string; attributeValueId: string }> }>) {
+  private async createVariants(productId: string, variants: Array<{ id?: string; sku: string; price: number; compareAtPrice?: number; costPrice?: number; stockQuantity?: number; isDefault?: boolean; attributes?: Array<{ attributeId: string; attributeValueId: string }> }>) {
     for (const v of variants) {
+      const trimmedSku = v.sku.trim();
       const existingSku = await this.variantRepo.findOne({
-        where: { sku: v.sku },
+        where: { sku: trimmedSku },
         withDeleted: true,
       });
       if (existingSku) {
         if (existingSku.deletedAt) {
           await this.variantRepo.remove(existingSku);
         } else {
-          throw new ConflictException(`SKU "${v.sku}" already exists`);
+          throw new ConflictException(`SKU "${trimmedSku}" already exists`);
         }
       }
 
       const variant = this.variantRepo.create({
         productId,
-        sku: v.sku,
+        sku: trimmedSku,
         price: v.price,
         compareAtPrice: v.compareAtPrice,
         costPrice: v.costPrice,
@@ -864,7 +901,9 @@ export class ProductsService {
       });
       const saved = await this.variantRepo.save(variant);
 
-      const stockQty = v.stockQuantity ?? 0;
+      const stockQty = (v.stockQuantity !== undefined && v.stockQuantity !== null && !isNaN(Number(v.stockQuantity)))
+        ? Math.max(0, Number(v.stockQuantity))
+        : 0;
       const inventory = this.inventoryRepo.create({
         variantId: saved.id,
         quantity: stockQty,
@@ -886,6 +925,174 @@ export class ProductsService {
         );
         await this.variantAttributeRepo.save(mappings);
       }
+    }
+  }
+
+  private async syncVariants(
+    productId: string,
+    variants: Array<{
+      id?: string;
+      sku: string;
+      price: number;
+      compareAtPrice?: number;
+      costPrice?: number;
+      stockQuantity?: number;
+      isDefault?: boolean;
+      attributes?: Array<{ attributeId: string; attributeValueId: string }>;
+    }>,
+  ) {
+    const existingVariants = await this.variantRepo.find({
+      where: { productId },
+      relations: { inventories: true, attributes: true },
+    });
+
+    const existingById = new Map<string, ProductVariant>();
+    const existingBySku = new Map<string, ProductVariant>();
+    existingVariants.forEach((v) => {
+      existingById.set(v.id, v);
+      existingBySku.set(v.sku.trim().toLowerCase(), v);
+    });
+
+    // Identify incoming variants that match existing records
+    const matchedExistingIds = new Set<string>();
+
+    for (const v of variants) {
+      const trimmedSku = v.sku.trim();
+      const existing =
+        (v.id && existingById.get(v.id)) ||
+        existingBySku.get(trimmedSku.toLowerCase());
+
+      if (existing) {
+        matchedExistingIds.add(existing.id);
+
+        // Update fields on existing variant
+        existing.sku = trimmedSku;
+        existing.price = v.price;
+        if (v.compareAtPrice !== undefined) existing.compareAtPrice = v.compareAtPrice;
+        if (v.costPrice !== undefined) existing.costPrice = v.costPrice;
+        if (v.isDefault !== undefined) existing.isDefault = v.isDefault;
+        await this.variantRepo.save(existing);
+
+        // Manage inventory for existing variant safely
+        let inventory =
+          existing.inventories?.[0] ||
+          (await this.inventoryRepo.findOne({
+            where: { variantId: existing.id },
+          }));
+
+        if (inventory) {
+          // If stockQuantity is explicitly passed as a valid number, update quantity
+          if (v.stockQuantity !== undefined && v.stockQuantity !== null) {
+            const newQty = Number(v.stockQuantity);
+            if (!isNaN(newQty) && newQty >= 0) {
+              inventory.quantity = newQty;
+              inventory.availableQuantity = Math.max(
+                0,
+                newQty - (inventory.reservedQuantity || 0),
+              );
+              await this.inventoryRepo.save(inventory);
+            }
+          }
+          // If stockQuantity is undefined, existing inventory quantity is safely PRESERVED!
+        } else {
+          // Inventory didn't exist yet, create one
+          const stockQty =
+            v.stockQuantity !== undefined &&
+            v.stockQuantity !== null &&
+            !isNaN(Number(v.stockQuantity))
+              ? Math.max(0, Number(v.stockQuantity))
+              : 0;
+
+          inventory = this.inventoryRepo.create({
+            variantId: existing.id,
+            quantity: stockQty,
+            availableQuantity: stockQty,
+            reservedQuantity: 0,
+            lowStockThreshold: 5,
+            reorderPoint: 10,
+            reorderQuantity: 50,
+          });
+          await this.inventoryRepo.save(inventory);
+        }
+
+        // Update attribute mappings if provided
+        if (v.attributes && v.attributes.length > 0) {
+          await this.variantAttributeRepo.delete({ variantId: existing.id });
+          const mappings = v.attributes.map((a) =>
+            this.variantAttributeRepo.create({
+              variantId: existing.id,
+              attributeId: a.attributeId,
+              attributeValueId: a.attributeValueId,
+            }),
+          );
+          await this.variantAttributeRepo.save(mappings);
+        }
+      } else {
+        // Create new variant
+        const existingSku = await this.variantRepo.findOne({
+          where: { sku: trimmedSku },
+          withDeleted: true,
+        });
+        if (existingSku) {
+          if (existingSku.deletedAt) {
+            await this.variantRepo.remove(existingSku);
+          } else {
+            throw new ConflictException(`SKU "${trimmedSku}" already exists`);
+          }
+        }
+
+        const newVariant = this.variantRepo.create({
+          productId,
+          sku: trimmedSku,
+          price: v.price,
+          compareAtPrice: v.compareAtPrice,
+          costPrice: v.costPrice,
+          isDefault: v.isDefault || false,
+        });
+        const saved = await this.variantRepo.save(newVariant);
+        matchedExistingIds.add(saved.id);
+
+        const stockQty =
+          v.stockQuantity !== undefined &&
+          v.stockQuantity !== null &&
+          !isNaN(Number(v.stockQuantity))
+            ? Math.max(0, Number(v.stockQuantity))
+            : 0;
+
+        const inventory = this.inventoryRepo.create({
+          variantId: saved.id,
+          quantity: stockQty,
+          availableQuantity: stockQty,
+          reservedQuantity: 0,
+          lowStockThreshold: 5,
+          reorderPoint: 10,
+          reorderQuantity: 50,
+        });
+        await this.inventoryRepo.save(inventory);
+
+        if (v.attributes && v.attributes.length > 0) {
+          const mappings = v.attributes.map((a) =>
+            this.variantAttributeRepo.create({
+              variantId: saved.id,
+              attributeId: a.attributeId,
+              attributeValueId: a.attributeValueId,
+            }),
+          );
+          await this.variantAttributeRepo.save(mappings);
+        }
+      }
+    }
+
+    // Only remove variants that were explicitly removed by the user
+    const variantsToRemove = existingVariants.filter(
+      (v) => !matchedExistingIds.has(v.id),
+    );
+
+    for (const v of variantsToRemove) {
+      await this.stockAlertRepo.delete({ variantId: v.id });
+      await this.variantAttributeRepo.delete({ variantId: v.id });
+      await this.inventoryRepo.delete({ variantId: v.id });
+      await this.variantRepo.delete({ id: v.id });
     }
   }
 
@@ -960,12 +1167,40 @@ export class ProductsService {
       (availableQuantity !== null && availableQuantity <= 0);
     const inStock = !isOutOfStock && variant.status === VariantStatus.ACTIVE;
 
+    const attributeValues = (variant.attributes ?? []).map((va) => ({
+      id: va.attributeValue?.id ?? va.attributeValueId,
+      attributeValueId: va.attributeValueId,
+      attributeId: va.attributeId,
+      value: va.attributeValue?.value ?? '',
+      attribute: va.attribute
+        ? {
+            id: va.attribute.id,
+            name: va.attribute.name,
+          }
+        : undefined,
+    }));
+
+    const attributes = (variant.attributes ?? []).map((va) => ({
+      id: va.id,
+      variantId: va.variantId,
+      attributeId: va.attributeId,
+      attributeValueId: va.attributeValueId,
+      attribute: va.attribute
+        ? { id: va.attribute.id, name: va.attribute.name }
+        : undefined,
+      attributeValue: va.attributeValue
+        ? { id: va.attributeValue.id, value: va.attributeValue.value }
+        : undefined,
+    }));
+
     return plainToInstance(
       ProductVariantResponseDto,
       {
         ...variant,
+        attributes,
+        attributeValues,
         availableQuantity: availableQuantity !== null ? availableQuantity : null,
-        stockQuantity: inv ? inv.quantity : null,
+        stockQuantity: inv ? inv.quantity : ((variant as any).stockQuantity ?? null),
         isOutOfStock,
         inStock,
       },

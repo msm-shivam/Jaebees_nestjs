@@ -146,11 +146,19 @@ export class UpdateProductDto {
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    return value === true || value === 'true' || value === 1 || value === '1';
+  })
   @IsBoolean()
   isFeatured?: boolean;
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    return value === true || value === 'true' || value === 1 || value === '1';
+  })
   @IsBoolean()
   isActive?: boolean;
 
