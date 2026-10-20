@@ -248,7 +248,8 @@ export class OrdersService implements OnModuleInit {
         where: { variantId: cartItem.variantId },
       });
       if (inventory) {
-        inventory.availableQuantity -= cartItem.quantity;
+        inventory.quantity = Math.max(0, Number(inventory.quantity) - cartItem.quantity);
+        inventory.availableQuantity = Math.max(0, Number(inventory.availableQuantity) - cartItem.quantity);
         await this.inventoryRepo.save(inventory);
 
         // Auto-create alert if stock falls to or below threshold
@@ -624,6 +625,7 @@ export class OrdersService implements OnModuleInit {
           lock: { mode: 'pessimistic_write' },
         });
         if (inventory) {
+          inventory.quantity = Number(inventory.quantity) + item.quantity;
           inventory.availableQuantity = Number(inventory.availableQuantity) + item.quantity;
           await manager.save(Inventory, inventory);
         }

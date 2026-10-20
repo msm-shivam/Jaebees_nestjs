@@ -292,7 +292,7 @@ export class ProductVariantsService {
       inv !== undefined
         ? inv.availableQuantity
         : (variant as any).availableQuantity ?? null;
-    const stockQuantity = inv ? inv.quantity : ((variant as any).stockQuantity ?? null);
+    const stockQuantity = inv ? (inv.availableQuantity !== undefined && inv.availableQuantity !== null ? inv.availableQuantity : inv.quantity) : ((variant as any).stockQuantity ?? null);
 
     const attributeValues = (variant.attributes ?? []).map((va) => ({
       id: va.attributeValue?.id ?? va.attributeValueId,

@@ -1200,7 +1200,7 @@ export class ProductsService {
         attributes,
         attributeValues,
         availableQuantity: availableQuantity !== null ? availableQuantity : null,
-        stockQuantity: inv ? inv.quantity : ((variant as any).stockQuantity ?? null),
+        stockQuantity: inv ? (inv.availableQuantity !== undefined && inv.availableQuantity !== null ? inv.availableQuantity : inv.quantity) : ((variant as any).stockQuantity ?? null),
         isOutOfStock,
         inStock,
       },

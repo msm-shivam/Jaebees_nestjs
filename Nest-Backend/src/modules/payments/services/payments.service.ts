@@ -538,7 +538,8 @@ export class PaymentsService implements OnModuleInit {
         for (const item of snapshot.items) {
           const inv = await manager.findOne(Inventory, { where: { variantId: item.variantId } });
           if (inv) {
-            inv.availableQuantity -= item.quantity;
+            inv.quantity = Math.max(0, Number(inv.quantity) - item.quantity);
+            inv.availableQuantity = Math.max(0, Number(inv.availableQuantity) - item.quantity);
             await manager.save(Inventory, inv);
           }
         }
