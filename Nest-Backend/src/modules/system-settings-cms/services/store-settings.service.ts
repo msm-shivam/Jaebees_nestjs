@@ -9,6 +9,7 @@ import {
   UpdateEmailConfigDto,
   UpdateBusinessInfoDto,
   UpdateSmtpConfigDto,
+  UpdateTaxSettingsDto,
 } from '../dto/store-settings.dto';
 
 @Injectable()
@@ -79,6 +80,10 @@ export class StoreSettingsService implements OnModuleInit {
       postalCode: settings.postalCode,
       latitude: settings.latitude,
       longitude: settings.longitude,
+      gstEnabled: settings.gstEnabled ?? true,
+      gstType: settings.gstType ?? 'exclusive',
+      gstRate: Number(settings.gstRate ?? 10),
+      gstNumber: settings.gstNumber ?? '',
       createdAt: settings.createdAt,
       updatedAt: settings.updatedAt,
     };
@@ -151,6 +156,26 @@ export class StoreSettingsService implements OnModuleInit {
     Object.assign(settings, dto);
     await this.storeSettingRepo.save(settings);
     return this.getBusinessInfo();
+  }
+
+  async getTaxSettings() {
+    const settings = await this.getOrCreateStoreSettings();
+    return {
+      gstEnabled: settings.gstEnabled ?? true,
+      gstType: settings.gstType ?? 'exclusive',
+      gstRate: Number(settings.gstRate ?? 10),
+      gstNumber: settings.gstNumber ?? '',
+    };
+  }
+
+  async updateTaxSettings(dto: UpdateTaxSettingsDto) {
+    const settings = await this.getOrCreateStoreSettings();
+    if (dto.gstEnabled !== undefined) settings.gstEnabled = dto.gstEnabled;
+    if (dto.gstType !== undefined) settings.gstType = dto.gstType;
+    if (dto.gstRate !== undefined) settings.gstRate = dto.gstRate;
+    if (dto.gstNumber !== undefined) settings.gstNumber = dto.gstNumber;
+    await this.storeSettingRepo.save(settings);
+    return this.getTaxSettings();
   }
 
   async updateLogo(logoUrl: string) {

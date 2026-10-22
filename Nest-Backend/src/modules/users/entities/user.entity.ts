@@ -39,8 +39,14 @@ export class User extends BaseEntity {
   @Column({ name: 'mobile_verified_at', type: 'timestamptz', nullable: true, default: null })
   mobileVerifiedAt: Date | null;
 
-  @Column({ name: 'password_hash', length: 255 })
-  passwordHash: string;
+  @Column({
+    name: 'password_hash',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  passwordHash: string | null;
 
   @Column({ name: 'is_email_verified', default: false })
   isEmailVerified: boolean;
@@ -56,6 +62,9 @@ export class User extends BaseEntity {
 
   @Column({ name: 'first_order_id', type: 'uuid', nullable: true, default: null })
   firstOrderId: string | null;
+
+  @Column({ name: 'email_notifications_enabled', type: 'boolean', default: true })
+  emailNotificationsEnabled: boolean;
 
   @OneToMany(() => UserSession, (session) => session.user)
   sessions: UserSession[];

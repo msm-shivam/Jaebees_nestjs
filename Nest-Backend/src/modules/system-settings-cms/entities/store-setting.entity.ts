@@ -186,6 +186,34 @@ export class StoreSetting extends BaseEntity {
   gstNumber: string | null;
 
   @Column({
+    name: 'gst_enabled',
+    type: 'boolean',
+    default: true,
+  })
+  gstEnabled: boolean;
+
+  @Column({
+    name: 'gst_type',
+    type: 'varchar',
+    length: 20,
+    default: 'exclusive',
+  })
+  gstType: string;
+
+  @Column({
+    name: 'gst_rate',
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 10.0,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value ? parseFloat(value) : 10.0),
+    },
+  })
+  gstRate: number;
+
+  @Column({
     name: 'pan_number',
     type: 'varchar',
     length: 50,

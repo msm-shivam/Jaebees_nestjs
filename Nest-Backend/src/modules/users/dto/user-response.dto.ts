@@ -46,4 +46,12 @@ export class UserResponseDto {
   @Expose()
   @ApiPropertyOptional()
   firstOrderId: string | null;
+
+  @Expose()
+  @ApiPropertyOptional()
+  hasPassword?: boolean;
+
+  @Expose()
+  @ApiProperty()
+  emailNotificationsEnabled: boolean;
 }

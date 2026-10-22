@@ -38,6 +38,7 @@ import { ShipmentsService } from '../../shipments/shipments.service';
 import { Coupon } from '../../coupons-promotions/entities/coupon.entity';
 import { CouponUsage } from '../../coupons-promotions/entities/coupon-usage.entity';
 import { CouponValidationService } from '../../coupons-promotions/services/coupon-validation.service';
+import { StoreSettingsService } from '../../system-settings-cms/services/store-settings.service';
 import { CreatePaymentIntentDto } from '../dto/create-payment-intent.dto';
 import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
 import { PaymentQueryDto } from '../dto/payment-query.dto';
@@ -92,6 +93,7 @@ export class PaymentsService implements OnModuleInit {
     private readonly deliverySettingsService: DeliverySettingsService,
     private readonly deliveryChargesService: DeliveryChargesService,
     private readonly shipmentsService: ShipmentsService,
+    private readonly storeSettingsService: StoreSettingsService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -266,7 +268,15 @@ export class PaymentsService implements OnModuleInit {
         couponCode = coupon.code;
       }
 
-      const taxAmount = Math.round(subtotal * 0.1 * 100) / 100;
+      // Calculate dynamic GST based on store tax settings
+      const taxSettings = await this.storeSettingsService.getTaxSettings();
+      let taxAmount = 0;
+      if (taxSettings.gstEnabled && taxSettings.gstType === 'exclusive') {
+        const taxableBase = Math.max(0, subtotal - discountAmount);
+        const rate = Number(taxSettings.gstRate) || 0;
+        taxAmount = Math.round(taxableBase * (rate / 100) * 100) / 100;
+      }
+
       const grandTotal = Math.max(
         0,
         subtotal + effectiveShippingCharge + taxAmount - discountAmount,
@@ -856,6 +866,15 @@ export class PaymentsService implements OnModuleInit {
             firstName: order.user.firstName,
             orderNumber: order.orderNumber,
             amount: Number(order.totalAmount),
+          })
+          .catch(() => {});
+
+        this.notificationsService
+          .sendOrderConfirmation({
+            to: order.user.email,
+            userId: order.user.id,
+            firstName: order.user.firstName,
+            orderNumber: order.orderNumber,
           })
           .catch(() => {});
       } else if (type === 'failed') {

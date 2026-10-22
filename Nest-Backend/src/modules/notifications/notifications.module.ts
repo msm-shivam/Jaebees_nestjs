@@ -7,6 +7,7 @@ import { EmailTemplate } from './entities/email-template.entity';
 import { NotificationPreference } from './entities/notification-preference.entity';
 import { NotificationLog } from './entities/notification-log.entity';
 import { AdminNotification } from './entities/admin-notification.entity';
+import { User } from '../users/entities/user.entity';
 import { EmailService } from './email.service';
 import { EmailQueueService, EMAIL_QUEUE } from './email-queue.service';
 import { EmailProcessor } from './email.processor';
@@ -30,6 +31,7 @@ import { SystemSettingsCmsModule } from '../system-settings-cms/system-settings-
       NotificationPreference,
       NotificationLog,
       AdminNotification,
+      User,
     ]),
     BullModule.forRootAsync({
       imports: [ConfigModule],

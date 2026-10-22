@@ -33,7 +33,7 @@ export class ShipmentsController {
     type: ShipmentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
-  async findByOrder(@Param('orderId', ParseUUIDPipe) orderId: string) {
+  async findByOrder(@Param('orderId') orderId: string) {
     return this.shipmentsService.findByOrderId(orderId);
   }
 }

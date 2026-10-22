@@ -4,13 +4,40 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import {
   EmailTemplate,
   EmailTemplateCode,
 } from './entities/email-template.entity';
 import { CreateEmailTemplateDto } from './dto/create-email-template.dto';
 import { UpdateEmailTemplateDto } from './dto/update-email-template.dto';
+
+export const ACTIVE_OPERATIONAL_EMAIL_CODES: string[] = [
+  // Authentication & Security (5)
+  EmailTemplateCode.WELCOME,
+  EmailTemplateCode.VERIFY_EMAIL,
+  EmailTemplateCode.EMAIL_VERIFIED,
+  EmailTemplateCode.PASSWORD_RESET,
+  EmailTemplateCode.PASSWORD_RESET_CONFIRM,
+  // Orders (2)
+  EmailTemplateCode.ORDER_CONFIRMATION,
+  EmailTemplateCode.ORDER_STATUS_UPDATE,
+  // Payments & Receipts (3)
+  EmailTemplateCode.PAYMENT_SUCCESS,
+  EmailTemplateCode.PAYMENT_FAILED,
+  EmailTemplateCode.REFUND_PROCESSED,
+  // Shipping & Delivery (3)
+  EmailTemplateCode.SHIPMENT_CREATED,
+  EmailTemplateCode.SHIPMENT_OUT_FOR_DELIVERY,
+  EmailTemplateCode.ORDER_DELIVERED,
+  // Returns & Refunds (3)
+  EmailTemplateCode.RETURN_REQUESTED,
+  EmailTemplateCode.RETURN_APPROVED,
+  EmailTemplateCode.RETURN_REJECTED,
+  // Customer Support (2)
+  EmailTemplateCode.TICKET_CREATED,
+  EmailTemplateCode.TICKET_REPLY,
+];
 
 @Injectable()
 export class EmailTemplateService {
@@ -40,6 +67,11 @@ export class EmailTemplateService {
   ): Promise<any> {
     const qb = this.templateRepo.createQueryBuilder('template');
 
+    // Only return working templates actively used in the platform
+    qb.andWhere('template.code IN (:...activeCodes)', {
+      activeCodes: ACTIVE_OPERATIONAL_EMAIL_CODES,
+    });
+
     if (search && search.trim() !== '') {
       const searchTerm = `%${search.trim().toLowerCase()}%`;
       qb.andWhere(
@@ -60,9 +92,13 @@ export class EmailTemplateService {
 
     const [totalTemplates, activeTemplates, inactiveTemplates] =
       await Promise.all([
-        this.templateRepo.count(),
-        this.templateRepo.count({ where: { isActive: true } }),
-        this.templateRepo.count({ where: { isActive: false } }),
+        this.templateRepo.count({ where: { code: In(ACTIVE_OPERATIONAL_EMAIL_CODES) } }),
+        this.templateRepo.count({
+          where: { code: In(ACTIVE_OPERATIONAL_EMAIL_CODES), isActive: true },
+        }),
+        this.templateRepo.count({
+          where: { code: In(ACTIVE_OPERATIONAL_EMAIL_CODES), isActive: false },
+        }),
       ]);
 
     return {

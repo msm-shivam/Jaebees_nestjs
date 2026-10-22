@@ -40,7 +40,7 @@ export class CustomerReturnController {
   @Get('by-order/:orderId')
   async findByOrder(
     @CurrentUser() user: JwtPayload,
-    @Param('orderId', ParseUUIDPipe) orderId: string,
+    @Param('orderId') orderId: string,
   ) {
     return this.returnService.findByOrderDetailed(orderId, user.sub);
   }

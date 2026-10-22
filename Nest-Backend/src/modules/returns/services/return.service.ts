@@ -179,8 +179,17 @@ export class ReturnService {
   }
 
   async findByOrderDetailed(orderId: string, userId?: string) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+    let resolvedOrderId = orderId;
+    if (!isUuid) {
+      const order = await this.orderRepo.findOne({ where: { orderNumber: orderId } });
+      if (!order) return null;
+      resolvedOrderId = order.id;
+    }
+
     const returnRequest = await this.returnRepo.findOne({
-      where: { orderId, ...(userId ? { userId } : {}) },
+      where: { orderId: resolvedOrderId, ...(userId ? { userId } : {}) },
       order: { createdAt: 'DESC' },
     });
     if (!returnRequest) return null;

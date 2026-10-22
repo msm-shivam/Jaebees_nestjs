@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsObject,
@@ -39,7 +40,8 @@ export class RegisterDto {
   })
   mobile?: string;
 
-  @ApiProperty({ example: 'Str0ng@Pass!' })
+  @ApiPropertyOptional({ example: 'Str0ng@Pass!' })
+  @IsOptional()
   @IsString()
   @MinLength(8)
   @MaxLength(100)
@@ -47,7 +49,7 @@ export class RegisterDto {
     message:
       'Password must contain at least one uppercase, one lowercase, one number, and one special character.',
   })
-  password: string;
+  password?: string;
 
   @ApiPropertyOptional({ description: 'FCM device token for push notifications' })
   @IsOptional()
@@ -58,4 +60,9 @@ export class RegisterDto {
   @IsOptional()
   @IsObject()
   deviceInfo?: Record<string, any>;
+
+  @ApiPropertyOptional({ example: true, description: 'Optional email notifications preference' })
+  @IsOptional()
+  @IsBoolean()
+  emailNotificationsEnabled?: boolean;
 }

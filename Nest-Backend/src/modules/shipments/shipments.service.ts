@@ -56,8 +56,19 @@ export class ShipmentsService {
   }
 
   async findByOrderId(orderId: string) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+    let resolvedOrderId = orderId;
+    if (!isUuid) {
+      const order = await this.orderRepo.findOne({ where: { orderNumber: orderId } });
+      if (!order) {
+        throw new NotFoundException('Shipment not found for this order');
+      }
+      resolvedOrderId = order.id;
+    }
+
     const shipment = await this.shipmentRepo.findOne({
-      where: { orderId },
+      where: { orderId: resolvedOrderId },
       relations: { trackingLogs: true, warehouse: true },
     });
     if (!shipment) {

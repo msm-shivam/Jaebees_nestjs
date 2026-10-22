@@ -84,7 +84,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found.' })
   async getMyOrder(
     @CurrentUser() user: JwtPayload,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
   ) {
     return this.ordersService.getMyOrder(user.sub, id);
   }
@@ -108,7 +108,7 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Order not found.' })
   async cancelOrder(
     @CurrentUser() user: JwtPayload,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() dto: CancelOrderDto,
   ) {
     return this.ordersService.cancelOrder(id, user.sub, dto, false);

@@ -32,6 +32,7 @@ import {
   UpdateSmtpConfigDto,
   UpdateSenderConfigDto,
   TestSmtpDto,
+  UpdateTaxSettingsDto,
 } from '../dto/store-settings.dto';
 
 @ApiTags('Admin — Store Settings')
@@ -151,6 +152,20 @@ export class AdminStoreSettingsController {
   @Permissions(DefaultPermissions.SETTINGS_MANAGE)
   async updateBusinessInfo(@Body() dto: UpdateBusinessInfoDto) {
     return this.storeSettingsService.updateBusinessInfo(dto);
+  }
+
+  @Get('tax')
+  @Public()
+  @ApiOperation({ summary: 'Get GST and Tax configuration' })
+  async getTaxSettings() {
+    return this.storeSettingsService.getTaxSettings();
+  }
+
+  @Patch('tax')
+  @Permissions(DefaultPermissions.SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Update GST and Tax configuration' })
+  async updateTaxSettings(@Body() dto: UpdateTaxSettingsDto) {
+    return this.storeSettingsService.updateTaxSettings(dto);
   }
 
   @Get('email-smtp')

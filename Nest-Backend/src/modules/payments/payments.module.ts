@@ -34,6 +34,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { Coupon } from '../coupons-promotions/entities/coupon.entity';
 import { CouponUsage } from '../coupons-promotions/entities/coupon-usage.entity';
 import { CouponsPromotionsModule } from '../coupons-promotions/coupons-promotions.module';
+import { SystemSettingsCmsModule } from '../system-settings-cms/system-settings-cms.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { CouponsPromotionsModule } from '../coupons-promotions/coupons-promotion
     ShipmentsModule,
     NotificationsModule,
     CouponsPromotionsModule,
+    SystemSettingsCmsModule,
   ],
   controllers: [
     PaymentsController,

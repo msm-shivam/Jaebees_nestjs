@@ -43,6 +43,7 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { FcmUserType } from '../firebase/entities/fcm-token.entity';
 import { AdminNotificationService } from '../notifications/admin-notification.service';
 import { AdminNotificationType } from '../notifications/entities/admin-notification.entity';
+import { StoreSettingsService } from '../system-settings-cms/services/store-settings.service';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -106,6 +107,7 @@ export class OrdersService implements OnModuleInit {
     private readonly auditLogService: AuditLogService,
     private readonly firebaseService: FirebaseService,
     private readonly adminNotificationService: AdminNotificationService,
+    private readonly storeSettingsService: StoreSettingsService,
     private readonly dataSource: DataSource,
   ) { }
 
@@ -191,8 +193,17 @@ export class OrdersService implements OnModuleInit {
     const activeCharges = await this.deliveryChargesService.getActiveCharges();
     const { deliveryCharge, codCharge, handlingCharge } =
       this.deliveryChargesService.calculateCharges(subtotal, activeCharges);
-    const taxAmount = 0;
+    
+    // Calculate dynamic GST based on store tax settings
+    const taxSettings = await this.storeSettingsService.getTaxSettings();
     const discountAmount = 0;
+    let taxAmount = 0;
+    if (taxSettings.gstEnabled && taxSettings.gstType === 'exclusive') {
+      const taxableBase = Math.max(0, subtotal - discountAmount);
+      const rate = Number(taxSettings.gstRate) || 0;
+      taxAmount = Math.round(taxableBase * (rate / 100) * 100) / 100;
+    }
+
     const totalAmount =
       subtotal +
       shippingAmount +
@@ -381,8 +392,10 @@ export class OrdersService implements OnModuleInit {
   }
 
   async getMyOrder(userId: string, orderId: string): Promise<OrderResponseDto> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
     const order = await this.orderRepo.findOne({
-      where: { id: orderId, userId },
+      where: isUuid ? { id: orderId, userId } : { orderNumber: orderId, userId },
       relations: {
         items: {
           product: { images: true, category: true },
@@ -445,8 +458,10 @@ export class OrdersService implements OnModuleInit {
   }
 
   async getOrder(orderId: string): Promise<OrderResponseDto> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
     const order = await this.orderRepo.findOne({
-      where: { id: orderId },
+      where: isUuid ? { id: orderId } : { orderNumber: orderId },
       relations: {
         items: {
           product: { images: true, category: true },
@@ -465,8 +480,10 @@ export class OrdersService implements OnModuleInit {
     dto: UpdateOrderStatusDto,
     adminId: string
   ): Promise<{ message: string; data: OrderResponseDto }> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
     const order = await this.orderRepo.findOne({
-      where: { id: orderId },
+      where: isUuid ? { id: orderId } : { orderNumber: orderId },
       relations: { user: true },
     });
     if (!order) throw new NotFoundException('Order not found.');
@@ -522,7 +539,7 @@ export class OrdersService implements OnModuleInit {
         orderNumber: saved.orderNumber,
         oldStatus,
         newStatus: saved.status,
-        orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
+        orderUrl: `${process.env.FRONTEND_URL || ''}/orders/tracking?id=${saved.orderNumber}`,
       }).catch(() => { });
     }
 
@@ -535,7 +552,7 @@ export class OrdersService implements OnModuleInit {
 
     // Reload with full relations for response
     const result = await this.orderRepo.findOne({
-      where: { id: orderId },
+      where: { id: order.id },
       relations: {
         items: {
           product: { images: true },
@@ -556,8 +573,10 @@ export class OrdersService implements OnModuleInit {
     dto?: CancelOrderDto,
     isAdmin = false,
   ): Promise<{ message: string; data: OrderResponseDto }> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
     const order = await this.orderRepo.findOne({
-      where: { id: orderId },
+      where: isUuid ? { id: orderId } : { orderNumber: orderId },
       relations: {
         items: {
           product: { images: true },
@@ -673,7 +692,7 @@ export class OrdersService implements OnModuleInit {
         orderNumber: saved.orderNumber,
         oldStatus,
         newStatus: OrderStatus.CANCELLED,
-        orderUrl: `${process.env.FRONTEND_URL || ''}/orders/${saved.id}`,
+        orderUrl: `${process.env.FRONTEND_URL || ''}/orders/tracking?id=${saved.orderNumber}`,
       }).catch(() => { });
     }
 

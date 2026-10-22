@@ -1,5 +1,7 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { EmailQueueService } from './email-queue.service';
 import { EmailService } from './email.service';
 import { EmailTemplateService } from './email-template.service';
@@ -8,6 +10,7 @@ import { NotificationPreferenceService } from './notification-preference.service
 import { EmailTemplateCode } from './entities/email-template.entity';
 import { NotificationStatus } from './entities/notification-log.entity';
 import { StoreSettingsService } from '../system-settings-cms/services/store-settings.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class NotificationsService {
@@ -24,6 +27,8 @@ export class NotificationsService {
     @Inject(forwardRef(() => StoreSettingsService))
     private readonly storeSettingsService: StoreSettingsService,
     private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {
     this.appUrl = (this.configService.get<string>('APP_URL') || 'https://jaebees.com').replace(/\/+$/, '');
   }
@@ -33,7 +38,7 @@ export class NotificationsService {
     return {
       shopUrl: this.appUrl,
       loginUrl: `${this.appUrl}/login`,
-      ordersUrl: `${this.appUrl}/account/orders`,
+      ordersUrl: `${this.appUrl}/orders`,
       ...extra,
     };
   }
@@ -96,6 +101,36 @@ export class NotificationsService {
     context: Record<string, any>;
     preferenceType?: string;
   }): Promise<void> {
+    // Global email suppression check:
+    // If the recipient has disabled email notifications (emailNotificationsEnabled === false),
+    // skip sending all notifications, order emails, promotional emails, etc.
+    // Critical auth OTP emails (account verification & password reset) are kept deliverable so the user is never locked out.
+    const isCriticalAuthOtp =
+      options.templateCode === EmailTemplateCode.VERIFY_EMAIL ||
+      options.templateCode === EmailTemplateCode.PASSWORD_RESET;
+
+    if (!isCriticalAuthOtp) {
+      let recipientUser: User | null = null;
+      if (options.userId) {
+        recipientUser = await this.userRepo.findOne({
+          where: { id: options.userId },
+          select: { id: true, emailNotificationsEnabled: true },
+        });
+      } else if (options.to) {
+        recipientUser = await this.userRepo.findOne({
+          where: { email: options.to.toLowerCase() },
+          select: { id: true, emailNotificationsEnabled: true },
+        });
+      }
+
+      if (recipientUser && recipientUser.emailNotificationsEnabled === false) {
+        this.logger.log(
+          `Skipping email [${options.templateCode}] to ${options.to} because user has disabled email notifications.`,
+        );
+        return;
+      }
+    }
+
     if (
       options.preferenceType &&
       options.userId &&
@@ -214,7 +249,7 @@ export class NotificationsService {
       context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
-        orderUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+        orderUrl: `${this.appUrl}/orders/tracking?id=${options.orderNumber}`,
         orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       }),
       preferenceType: 'order',
@@ -236,7 +271,7 @@ export class NotificationsService {
         firstName: options.firstName,
         orderNumber: options.orderNumber,
         amount: options.amount.toFixed(2),
-        orderUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+        orderUrl: `${this.appUrl}/orders/tracking?id=${options.orderNumber}`,
       }),
       preferenceType: 'payment',
     });
@@ -255,7 +290,7 @@ export class NotificationsService {
       context: this.baseContext({
         firstName: options.firstName,
         orderNumber: options.orderNumber,
-        retryUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+        retryUrl: `${this.appUrl}/orders/tracking?id=${options.orderNumber}`,
       }),
       preferenceType: 'payment',
     });
@@ -298,7 +333,7 @@ export class NotificationsService {
         firstName: options.firstName,
         orderNumber: options.orderNumber,
         trackingNumber: options.trackingNumber,
-        trackingUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+        trackingUrl: `${this.appUrl}/orders/tracking?id=${options.orderNumber}`,
       }),
       preferenceType: 'shipment',
     });
@@ -319,7 +354,7 @@ export class NotificationsService {
         firstName: options.firstName,
         orderNumber: options.orderNumber,
         trackingNumber: options.trackingNumber,
-        trackingUrl: `${this.appUrl}/account/orders/${options.orderNumber}`,
+        trackingUrl: `${this.appUrl}/orders/tracking?id=${options.orderNumber}`,
       }),
       preferenceType: 'shipment',
     });
@@ -375,9 +410,9 @@ export class NotificationsService {
         orderTotal: '999.00',
         amount: '999.00',
         trackingNumber: 'TRK123456',
-        orderUrl: `${this.appUrl}/account/orders/ORD-TEST-001`,
-        trackingUrl: `${this.appUrl}/account/orders/ORD-TEST-001`,
-        retryUrl: `${this.appUrl}/account/orders/ORD-TEST-001`,
+        orderUrl: `${this.appUrl}/orders/tracking?id=ORD-TEST-001`,
+        trackingUrl: `${this.appUrl}/orders/tracking?id=ORD-TEST-001`,
+        retryUrl: `${this.appUrl}/orders/tracking?id=ORD-TEST-001`,
         reviewUrl: `${this.appUrl}/products`,
       }),
     });

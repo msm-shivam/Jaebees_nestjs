@@ -292,3 +292,30 @@ export class TestSmtpDto {
   @Transform(({ value }) => value === true || value === 'true')
   smtpSecure?: boolean;
 }
+
+export class UpdateTaxSettingsDto {
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  gstEnabled?: boolean;
+
+  @ApiPropertyOptional({ example: 'exclusive', enum: ['disabled', 'inclusive', 'exclusive'] })
+  @IsOptional()
+  @IsString()
+  gstType?: string;
+
+  @ApiPropertyOptional({ example: 10.0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @Transform(({ value }) => (value !== undefined && value !== null ? parseFloat(value) : undefined))
+  gstRate?: number;
+
+  @ApiPropertyOptional({ example: 'GSTIN-12345678' })
+  @IsOptional()
+  @IsString()
+  gstNumber?: string;
+}
+

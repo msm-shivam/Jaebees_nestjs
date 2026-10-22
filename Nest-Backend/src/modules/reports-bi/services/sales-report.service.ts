@@ -17,8 +17,14 @@ export class SalesReportService {
       .from('orders', 'o')
       .where('o.status NOT IN (:...excluded)', { excluded: ['CANCELLED'] });
 
+    const normalizeDateTo = (d?: string) => {
+      if (!d) return undefined;
+      return d.includes(' ') || d.includes('T') ? d : `${d} 23:59:59.999`;
+    };
+    const dateToEnd = normalizeDateTo(dateTo);
+
     if (dateFrom) qb.andWhere('o.created_at >= :dateFrom', { dateFrom });
-    if (dateTo) qb.andWhere('o.created_at <= :dateTo', { dateTo });
+    if (dateToEnd) qb.andWhere('o.created_at <= :dateToEnd', { dateToEnd });
 
     qb.groupBy('DATE(o.created_at)');
     qb.orderBy('DATE(o.created_at)', 'DESC');
@@ -43,7 +49,7 @@ export class SalesReportService {
       .where('o.status NOT IN (:...excluded)', { excluded: ['CANCELLED'] });
 
     if (dateFrom) summaryQb.andWhere('o.created_at >= :dateFrom', { dateFrom });
-    if (dateTo) summaryQb.andWhere('o.created_at <= :dateTo', { dateTo });
+    if (dateToEnd) summaryQb.andWhere('o.created_at <= :dateToEnd', { dateToEnd });
 
     const summary = await summaryQb.getRawOne();
 
@@ -54,14 +60,14 @@ export class SalesReportService {
       .from('orders', 'o')
       .where("o.status IN ('RETURNED','RETURN_REQUESTED')");
     if (dateFrom) returnQb.andWhere('o.created_at >= :dateFrom', { dateFrom });
-    if (dateTo) returnQb.andWhere('o.created_at <= :dateTo', { dateTo });
+    if (dateToEnd) returnQb.andWhere('o.created_at <= :dateToEnd', { dateToEnd });
 
     const totalQb = this.dataSource
       .createQueryBuilder()
       .select(`COUNT(o.id) as "total"`)
       .from('orders', 'o');
     if (dateFrom) totalQb.andWhere('o.created_at >= :dateFrom', { dateFrom });
-    if (dateTo) totalQb.andWhere('o.created_at <= :dateTo', { dateTo });
+    if (dateToEnd) totalQb.andWhere('o.created_at <= :dateToEnd', { dateToEnd });
 
     const [returnResult, totalResult] = await Promise.all([
       returnQb.getRawOne(),
@@ -76,6 +82,7 @@ export class SalesReportService {
 
     return {
       sales: mappedRows,
+      dailySales: mappedRows,
       totalRevenue: parseFloat(summary?.totalRevenue ?? '0'),
       totalOrders: parseInt(summary?.totalOrders ?? '0', 10),
       averageOrderValue: parseFloat(summary?.averageOrderValue ?? '0'),

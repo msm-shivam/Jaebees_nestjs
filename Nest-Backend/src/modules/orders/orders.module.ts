@@ -19,6 +19,7 @@ import { DeliveryChargesModule } from '../delivery-charges/delivery-charges.modu
 import { ShipmentsModule } from '../shipments/shipments.module';
 import { SecurityComplianceModule } from '../security-compliance/security-compliance.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { SystemSettingsCmsModule } from '../system-settings-cms/system-settings-cms.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PaymentsModule } from '../payments/payments.module';
     DeliverySettingsModule,
     DeliveryChargesModule,
     ShipmentsModule,
+    SystemSettingsCmsModule,
     forwardRef(() => PaymentsModule),
   ],
   controllers: [OrdersController, AdminOrdersController],

@@ -51,4 +51,11 @@ export class PublicContentController {
     const data = await this.storeSettingsService.getSocialLinks();
     return { data };
   }
+
+  @Get('tax')
+  async getTax() {
+    const data = await this.storeSettingsService.getTaxSettings();
+    return { data };
+  }
 }
+

@@ -30,9 +30,11 @@ export class UsersService {
 
   async getProfile(userId: string): Promise<UserResponseDto> {
     const user = await this.findByIdOrFail(userId);
-    return plainToInstance(UserResponseDto, user, {
+    const dto = plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
     });
+    dto.hasPassword = !!user.passwordHash;
+    return dto;
   }
 
   async updateProfile(
@@ -70,11 +72,15 @@ export class UsersService {
     if (dto.email !== undefined && dto.email.trim()) {
       user.email = dto.email.toLowerCase().trim();
     }
+    if (dto.emailNotificationsEnabled !== undefined) {
+      user.emailNotificationsEnabled = Boolean(dto.emailNotificationsEnabled);
+    }
 
     const saved = await this.userRepo.save(user);
     const data = plainToInstance(UserResponseDto, saved, {
       excludeExtraneousValues: true,
     });
+    data.hasPassword = !!saved.passwordHash;
     return { message: UserMessages.PROFILE_UPDATED, data };
   }
 
@@ -84,19 +90,21 @@ export class UsersService {
   ): Promise<{ message: string }> {
     const user = await this.findByIdOrFail(userId);
 
-    const valid = await comparePassword(dto.currentPassword, user.passwordHash);
-    if (!valid) throw new BadRequestException(AuthMessages.INVALID_CREDENTIALS);
+    if (user.passwordHash) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required.');
+      }
+      const valid = await comparePassword(dto.currentPassword, user.passwordHash);
+      if (!valid) throw new BadRequestException(AuthMessages.INVALID_CREDENTIALS);
+    }
 
     const passwordHash = await hashPassword(dto.newPassword);
     await this.userRepo.update(userId, { passwordHash });
-    // await this.auditLogService.log({
-    //   userId,
-    //   action: 'PASSWORD_CHANGE',
-    //   entityType: 'USER',
-    //   entityId: userId,
-    //   newValues: { message: 'Password changed' },
-    // });
-    return { message: UserMessages.PASSWORD_CHANGED };
+    return {
+      message: user.passwordHash
+        ? UserMessages.PASSWORD_CHANGED
+        : 'Password set successfully.',
+    };
   }
 
   async updateAvatar(

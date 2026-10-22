@@ -23,6 +23,14 @@ async function bootstrap() {
   const logger: LoggerService = app.get(WINSTON_MODULE_NEST_PROVIDER);
   app.useLogger(logger);
 
+  // ─── Sanitize duplicate slashes in incoming URLs (e.g. //auth/refresh -> /auth/refresh)
+  app.use((req: any, _res: any, next: any) => {
+    if (req.url && req.url.includes('//')) {
+      req.url = req.url.replace(/\/{2,}/g, '/');
+    }
+    next();
+  });
+
   const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') ?? 3000;
 

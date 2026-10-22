@@ -83,6 +83,10 @@ export class AuthService {
       if (existingEmail.isEmailVerified && existingEmail.accountStatus === AccountStatus.ACTIVE) {
         throw new BadRequestException(UserMessages.EMAIL_TAKEN);
       }
+      if (dto.emailNotificationsEnabled !== undefined) {
+        existingEmail.emailNotificationsEnabled = dto.emailNotificationsEnabled === true;
+        await this.userRepo.save(existingEmail);
+      }
       // Unverified user trying again -> resend Email OTP
       const otp = await this.createAndSaveEmailOtp(email, OtpPurpose.EMAIL_VERIFICATION);
       this.notificationsService.sendVerifyEmail(email, otp).catch(() => {});
@@ -100,13 +104,14 @@ export class AuthService {
       }
     }
 
-    const passwordHash = await hashPassword(dto.password);
+    const passwordHash = dto.password ? await hashPassword(dto.password) : null;
     const user = this.userRepo.create({
       firstName: dto.firstName,
       lastName: dto.lastName,
       email,
       mobile: mobile || null,
       passwordHash,
+      emailNotificationsEnabled: dto.emailNotificationsEnabled === true,
       accountStatus: AccountStatus.PENDING_VERIFICATION,
       isMobileVerified: false,
       isEmailVerified: false,
@@ -289,6 +294,21 @@ export class AuthService {
         newValues: { email: dto.email, reason: 'Account disabled' },
       }).catch(() => {});
       throw new ForbiddenException(AuthMessages.ACCOUNT_DISABLED);
+    }
+
+    if (!user.passwordHash) {
+      await this.auditLogService.log({
+        userId: user.id,
+        action: 'LOGIN_FAILED',
+        entityType: 'auth',
+        entityId: user.id,
+        ipAddress,
+        userAgent,
+        newValues: { email: dto.email, reason: 'Account has no password set' },
+      }).catch(() => {});
+      throw new UnauthorizedException(
+        'This account was registered without a password. Please log in using Email OTP or set a password in your profile.',
+      );
     }
 
     const valid = await comparePassword(dto.password, user.passwordHash);
